@@ -4,10 +4,8 @@ using Microsoft.Identity.Web.Resource;
 
 namespace Group1.Sem3.Backend.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("[controller]")]
-[RequiredScope(RequiredScopesConfigurationKey = "AzureAd:Scopes")]
 public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries = new[]
