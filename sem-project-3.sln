@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "group1.sem3.frontend", "src\group1.sem3.frontend\group1.sem3.frontend.esproj", "{AF8A575B-F16F-5829-FC7D-782E7FE25901}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,12 @@ Global
 		{14ECD946-AB14-2994-C761-AFEFDCB63591}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14ECD946-AB14-2994-C761-AFEFDCB63591}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14ECD946-AB14-2994-C761-AFEFDCB63591}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF8A575B-F16F-5829-FC7D-782E7FE25901}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF8A575B-F16F-5829-FC7D-782E7FE25901}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF8A575B-F16F-5829-FC7D-782E7FE25901}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{AF8A575B-F16F-5829-FC7D-782E7FE25901}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF8A575B-F16F-5829-FC7D-782E7FE25901}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF8A575B-F16F-5829-FC7D-782E7FE25901}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
