@@ -25,10 +25,12 @@ jobs:
       # 3️⃣ Install dependencies
       - name: Install dependencies
         run: npm install
+        working-directory: src/group1.sem3.frontend/
 
       # 4️⃣ Build React app
       - name: Build React app
         run: npm run build
+        working-directory: src/group1.sem3.frontend/
 
       # 5️⃣ Install MinIO CLI
       - name: Install MinIO mc
