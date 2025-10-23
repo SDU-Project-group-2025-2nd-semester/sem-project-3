@@ -1,0 +1,60 @@
+name: Build and Upload React to MinIO
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - integrate
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 4️⃣ Build React app
+      - name: Build React app
+        run: npm run build
+
+      # 5️⃣ Install MinIO CLI
+      - name: Install MinIO mc
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          sudo mv mc /usr/local/bin/
+
+      # 6️⃣ Configure MinIO alias
+      - name: Configure mc alias
+        env:
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+        run: |
+          mc alias set ucloud https://app-nes-minio.cloud.sdu.dk $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+
+      # 7️⃣ Upload React build to branch folder in MinIO
+      - name: Upload React build
+        run: |
+          echo "Current branch: $GITHUB_REF_NAME"
+          BRANCH_FOLDER=$GITHUB_REF_NAME
+          TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+          echo "Uploading build to branch folder: $BRANCH_FOLDER/$TIMESTAMP/"
+          
+          # Upload to timestamped folder
+          mc mirror --overwrite dist/ ucloud/proj3-frontend/$BRANCH_FOLDER/$TIMESTAMP/
+          
+          # Update 'latest' symlink/folder for branch
+          mc mirror --overwrite --remove dist/ ucloud/proj3-frontend/$BRANCH_FOLDER/latest/
