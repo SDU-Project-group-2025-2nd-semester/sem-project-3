@@ -60,3 +60,4 @@ jobs:
           
           # Update 'latest' symlink/folder for branch
           mc mirror --overwrite --remove dist/ ucloud/proj3-frontend/$BRANCH_FOLDER/latest/
+        working-directory: src/group1.sem3.frontend/
