@@ -13,18 +13,29 @@ export default function SignInPage() {
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-6 bg-white rounded shadow">
-                <h2 className="text-2xl font-bold text-center mb-6">Sign In</h2>
+        <div className="flex items-center justify-center min-h-screen bg-background">
+            <div className="w-full max-w-md p-6 bg-white rounded-2xl shadow">
+
+                {/* Placeholder image */}
+                <div className="w-24 h-24 bg-gray-300 mx-auto squared-full mb-6 flex items-center justify-center">
+                    <span className="text-primary text-sm">Image</span>
+                </div>
+
+                <h2 className="text-2xl font-bold text-center mb-6 text-primary">
+                    Welcome Back!
+                </h2>
                 <form className="space-y-5" onSubmit={handleSubmit}>
                     <div>
-                        <label className="block mb-1 text-sm font-semibold" htmlFor="email">
+                        <label
+                            className="block mb-1 text-sm font-semibold text-primary"
+                            htmlFor="email"
+                        >
                             Email
                         </label>
                         <input
                             id="email"
                             type="email"
-                            className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
                             placeholder="you@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -33,7 +44,7 @@ export default function SignInPage() {
                     </div>
                     <div>
                         <label
-                            className="block mb-1 text-sm font-semibold"
+                            className="block mb-1 text-sm font-semibold text-primary"
                             htmlFor="password"
                         >
                             Password
@@ -41,7 +52,7 @@ export default function SignInPage() {
                         <input
                             id="password"
                             type="password"
-                            className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
                             placeholder="*******"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -50,14 +61,14 @@ export default function SignInPage() {
                     </div>
                     <div>
                         <label
-                            className="block mb-1 text-sm font-semibold"
+                            className="block mb-1 text-sm font-semibold text-primary"
                             htmlFor="userType"
                         >
                             User Type
                         </label>
                         <select
                             id="userType"
-                            className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-400"
+                            className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
                             value={selectedUser}
                             onChange={(e) => setSelectedUser(e.target.value)}
                         >
@@ -70,9 +81,9 @@ export default function SignInPage() {
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition-colors"
+                        className="w-full bg-accent text-white font-semibold py-2 rounded hover:bg-secondary transition-colors"
                     >
-                        Sign In
+                        Login
                     </button>
                 </form>
             </div>

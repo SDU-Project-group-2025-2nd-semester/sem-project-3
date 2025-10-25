@@ -1,3 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@layer base {
+    :root {
+        --color-primary: #707070;
+        --color-secondary: #95CDCD;
+        --color-accent: #1CAFAF;
+        --color-bg: #ffffff;
+    }
+
+    body {
+        font-family: 'Work Sans', sans-serif;
+    }
+
+}
