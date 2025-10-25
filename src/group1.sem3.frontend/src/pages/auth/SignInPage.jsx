@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function SignInPage() {
     const { login, users } = useAuth();
@@ -7,68 +8,54 @@ export default function SignInPage() {
     const [password, setPassword] = useState("");
     const [selectedUser, setSelectedUser] = useState(users[0]?.username || "");
 
+    const inputClasses = "w-full border border-secondary rounded px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 outline-none focus:ring-2 focus:ring-accent bg-background text-primary";
+    const labelClasses = "block mb-1 text-sm font-semibold text-primary";
+
     function handleSubmit(e) {
         e.preventDefault();
         login(selectedUser);
     }
 
-    return (
-        <div className="flex items-center justify-center min-h-screen bg-background">
-            <div className="w-full max-w-md p-6 bg-white rounded-2xl shadow">
+    const InputField = ({ id, type, value, onChange, placeholder }) => (
+        <div>
+            <label className={labelClasses} htmlFor={id}>
+                {placeholder}
+            </label>
+            <input
+                id={id}
+                type={type}
+                className={inputClasses}
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+                required
+            />
+        </div>
+    );
 
-                {/* Placeholder image */}
-                <div className="w-24 h-24 bg-gray-300 mx-auto squared-full mb-6 flex items-center justify-center">
-                    <span className="text-primary text-sm">Image</span>
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-background px-4">
+            <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-4 sm:p-6 md:p-8 bg-white rounded-2xl shadow">
+
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 bg-gray-300 mx-auto rounded-full mb-4 sm:mb-6 flex items-center justify-center">
+                    <span className="text-primary text-xs sm:text-sm md:text-base">Image</span>
                 </div>
 
-                <h2 className="text-2xl font-bold text-center mb-6 text-primary">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-6 text-primary">
                     Welcome Back!
                 </h2>
-                <form className="space-y-5" onSubmit={handleSubmit}>
+
+                <form className="space-y-3 sm:space-y-5 md:space-y-6" onSubmit={handleSubmit}>
+                    <InputField id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+                    <InputField id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+
                     <div>
-                        <label
-                            className="block mb-1 text-sm font-semibold text-primary"
-                            htmlFor="email"
-                        >
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
-                            placeholder="you@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label
-                            className="block mb-1 text-sm font-semibold text-primary"
-                            htmlFor="password"
-                        >
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            type="password"
-                            className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
-                            placeholder="*******"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label
-                            className="block mb-1 text-sm font-semibold text-primary"
-                            htmlFor="userType"
-                        >
+                        <label className={labelClasses} htmlFor="userType">
                             User Type
                         </label>
                         <select
                             id="userType"
-                            className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
+                            className={inputClasses}
                             value={selectedUser}
                             onChange={(e) => setSelectedUser(e.target.value)}
                         >
@@ -79,13 +66,24 @@ export default function SignInPage() {
                             ))}
                         </select>
                     </div>
+
                     <button
                         type="submit"
-                        className="w-full bg-accent text-white font-semibold py-2 rounded hover:bg-secondary transition-colors"
+                        className="w-full bg-accent text-white font-semibold py-2 sm:py-2.5 md:py-3 rounded hover:bg-secondary transition-colors"
                     >
                         Login
                     </button>
                 </form>
+
+                <div className="mt-3 sm:mt-4 text-center">
+                    <Link
+                        to="/signuppage"
+                        className="text-accent font-semibold text-sm sm:text-base hover:underline"
+                    >
+                        Register
+                    </Link>
+                </div>
+
             </div>
         </div>
     );
