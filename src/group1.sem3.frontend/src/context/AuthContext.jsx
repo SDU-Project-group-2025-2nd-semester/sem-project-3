@@ -1,21 +1,20 @@
 import { createContext, useContext, useState } from "react";
 
-// User types: admin, staff, user
-const users = [
-    { username: "admin", role: "admin" },
-    { username: "staff", role: "staff" },
-    { username: "user", role: "user" },
-];
-
 const AuthContext = createContext(null);
+export const roles = ["admin", "staff", "user"];
 
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
 
-    // Simulate login: accepts username, sets user if found in list
-    function login(username) {
-        const foundUser = users.find((u) => u.username === username);
-        setCurrentUser(foundUser || null);
+    // Login setzt currentUser
+    function login({ email, password, role }) {
+        if (!role) throw new Error("Role required"); 
+        setCurrentUser({ email: email || "unknown", role });
+    }
+
+    function signup({ username, fullName, email, password, role }) {
+        if (!role) throw new Error("Role required");
+        setCurrentUser({ email: email || username, role });
     }
 
     function logout() {
@@ -23,7 +22,7 @@ export function AuthProvider({ children }) {
     }
 
     return (
-        <AuthContext.Provider value={{ currentUser, login, logout, users }}>
+        <AuthContext.Provider value={{ currentUser, login, logout, signup, roles }}>
             {children}
         </AuthContext.Provider>
     );
