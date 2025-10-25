@@ -8,6 +8,7 @@ export default function BookingPage() {
 
     const times = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00"];
 
+    const [selectedDate, setSelectedDate] = useState("");
     const [selectedRoom, setSelectedRoom] = useState(rooms[0]);
     const [selectedTable, setSelectedTable] = useState(null);
     const [startTime, setStartTime] = useState("");
@@ -19,7 +20,16 @@ export default function BookingPage() {
 
     return (
         <div className="relative bg-background min-h-screen px-4 mt-16 pb-32">
-            {/* Room Selection */}
+
+            <div className="max-w-3xl mx-auto mb-6 mt-8">
+                <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border border-primary bg-white text-primary font-medium shadow hover:bg-primary/90"
+                />
+            </div>
+
             <div className="max-w-3xl mx-auto flex gap-4 mb-8 overflow-x-auto">
                 {rooms.map((room) => (
                     <button
@@ -35,7 +45,6 @@ export default function BookingPage() {
                 ))}
             </div>
 
-            {/* Tables Layout */}
             <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
                 {selectedRoom.tables.map((table) => (
                     <button
@@ -51,20 +60,15 @@ export default function BookingPage() {
                 ))}
             </div>
 
-            {/* Time Selection */}
             {selectedTable && (
                 <div className="max-w-3xl mx-auto mb-8 flex flex-col gap-4">
-                    <h3 className="text-xl font-semibold text-secondary">
-                        Select Time for {selectedTable}
-                    </h3>
 
                     <div className="flex gap-4">
-                        {/* Start Time Dropdown */}
                         <select
                             value={startTime}
                             onChange={(e) => {
                                 setStartTime(e.target.value);
-                                setEndTime(""); // Reset end time when start changes
+                                setEndTime("");
                             }}
                             className="px-4 py-2 rounded-lg border border-primary bg-white text-primary font-medium shadow hover:bg-primary/90"
                         >
@@ -76,7 +80,6 @@ export default function BookingPage() {
                             ))}
                         </select>
 
-                        {/* End Time Dropdown */}
                         <select
                             value={endTime}
                             onChange={(e) => setEndTime(e.target.value)}
@@ -98,10 +101,13 @@ export default function BookingPage() {
             )}
 
             <button
-                disabled={!selectedTable || !startTime || !endTime}
-                onClick={() => alert(`Booked ${selectedTable} from ${startTime} til ${endTime} in ${selectedRoom.name}`)}
-
-                className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 w-11/12 max-w-md py-4 rounded-2xl text-lg font-semibold shadow-lg transition z-30 ${selectedTable
+                disabled={!selectedTable || !startTime || !endTime || !selectedDate}
+                onClick={() =>
+                    alert(
+                        `Booked ${selectedTable} on ${selectedDate} from ${startTime} to ${endTime} in ${selectedRoom.name}`
+                    )
+                }
+                className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 w-11/12 max-w-md py-4 rounded-2xl text-lg font-semibold shadow-lg transition z-30 ${selectedTable && startTime && endTime && selectedDate
                         ? "bg-accent text-white hover:bg-accent/90"
                         : "bg-gray-300 text-gray-600 cursor-not-allowed"
                     }`}
