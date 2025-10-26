@@ -91,3 +91,5 @@ jobs:
 
             echo "Starting new backend in detached screen session..."
             screen -dmS backend bash -c 'dotnet ~/myapp/publish/Group1.Sem3.Backend.dll > ~/myapp/log.txt 2>&1'
+            sleep 2
+            
