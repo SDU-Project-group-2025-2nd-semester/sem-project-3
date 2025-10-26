@@ -1,0 +1,73 @@
+name: Build and Deploy Backend to SDU Cloud
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  BACKEND_PATH: src/Group1.Sem3.Backend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: dotnet restore Group1.Sem3.Backend.csproj
+
+      - name: Build
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: dotnet build Group1.Sem3.Backend.csproj -c Release --no-restore
+
+      - name: Publish
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: dotnet publish Group1.Sem3.Backend.csproj -c Release -o ../../publish /p:UseAppHost=false
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-publish
+          path: publish/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-publish
+          path: publish/
+
+      - name: Deploy to SDU Cloud
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ssh.cloud.sdu.dk
+          port: ${{ secrets.SDU_PORT }}
+          username: ucloud
+          key: ${{ secrets.SDU_SSH_KEY }}
+          source: "publish/*"
+          target: "~/myapp"
+
+      - name: Restart app on SDU Cloud
+        uses: appleboy/ssh-action@v1.0.2
+        with:
+          host: ssh.cloud.sdu.dk
+          port: ${{ secrets.SDU_PORT }}
+          username: ucloud
+          key: ${{ secrets.SDU_SSH_KEY }}
+          script: |
+            pkill -f 'dotnet Group1.Sem3.Backend.dll' || true
+            nohup dotnet ~/myapp/Group1.Sem3.Backend.dll > ~/myapp/log.txt 2>&1 &
