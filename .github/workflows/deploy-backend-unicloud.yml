@@ -69,5 +69,26 @@ jobs:
           username: ucloud
           key: ${{ secrets.SDU_SSH_KEY }}
           script: |
+            echo "Checking .NET installation..."
+            if ! command -v dotnet &> /dev/null; then
+              echo ".NET not found. Installing .NET 9 runtime..."
+              wget https://dot.net/v1/dotnet-install.sh -O ~/dotnet-install.sh
+              chmod +x ~/dotnet-install.sh
+              ~/dotnet-install.sh --channel 9.0
+              echo 'export PATH=$HOME/.dotnet:$PATH' >> ~/.bashrc
+              export PATH=$HOME/.dotnet:$PATH
+            else
+              echo ".NET is already installed."
+            fi
+
+            echo "Ensuring app directory exists..."
+            mkdir -p ~/myapp
+
+            echo "Stopping any running instance..."
             pkill -f 'dotnet Group1.Sem3.Backend.dll' || true
+
+            echo "Starting new instance..."
             nohup dotnet ~/myapp/Group1.Sem3.Backend.dll > ~/myapp/log.txt 2>&1 &
+
+            echo "✅ Deployment complete. Logs at ~/myapp/log.txt"
+
