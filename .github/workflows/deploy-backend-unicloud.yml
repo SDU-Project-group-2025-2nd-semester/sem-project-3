@@ -84,12 +84,10 @@ jobs:
             echo "Ensuring app directory exists..."
             mkdir -p ~/myapp
 
-            echo "Stopping any running instance..."
-            pkill -f 'dotnet Group1.Sem3.Backend.dll' || true
+            echo "Stopping any running backend..."
+            # Kill previous screen session if it exists
+            screen -S backend -X quit || true
+            pkill -f 'dotnet ~/myapp/publish/Group1.Sem3.Backend.dll' || true
 
-            echo "Starting new instance..."
-            nohup dotnet ~/myapp/Group1.Sem3.Backend.dll > ~/myapp/log.txt 2>&1 &
-
-            echo "✅ Deployment complete. Logs at ~/myapp/log.txt"
-
-
+            echo "Starting new backend in detached screen session..."
+            screen -dmS backend bash -c 'dotnet ~/myapp/publish/Group1.Sem3.Backend.dll > ~/myapp/log.txt 2>&1'
