@@ -69,27 +69,13 @@ jobs:
           username: ucloud
           key: ${{ secrets.SDU_SSH_KEY }}
           script: |
-            echo "Checking .NET installation..."
-            if ! command -v dotnet &> /dev/null; then
-              echo ".NET not found. Installing .NET 9 runtime..."
-              wget https://dot.net/v1/dotnet-install.sh -O ~/dotnet-install.sh
-              chmod +x ~/dotnet-install.sh
-              ~/dotnet-install.sh --channel 9.0
-              echo 'export PATH=$HOME/.dotnet:$PATH' >> ~/.bashrc
-              export PATH=$HOME/.dotnet:$PATH
-            else
-              echo ".NET is already installed."
-            fi
-
             echo "Ensuring app directory exists..."
             mkdir -p ~/myapp
 
-            echo "Stopping any running backend..."
-            # Kill previous screen session if it exists
-            screen -S backend -X quit || true
-            pkill -f 'dotnet ~/myapp/publish/Group1.Sem3.Backend.dll' || true
-
-            echo "Starting new backend in detached screen session..."
-            screen -dmS backend bash -c 'dotnet ~/myapp/publish/Group1.Sem3.Backend.dll > ~/myapp/log.txt 2>&1'
-            sleep 2
+            # Stop previous container
+            ~/udocker-1.3.17/udocker/udocker rm -f backend || true
+            
+            # Deploy new backend
+            ~/udocker-1.3.17/udocker/udocker create --name backend -v ~/myapp/publish:/app mcr.microsoft.com/dotnet/aspnet:9.0
+            ~/udocker-1.3.17/udocker/udocker run --name backend
             
