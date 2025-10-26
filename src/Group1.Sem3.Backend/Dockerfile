@@ -12,8 +12,8 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["src/Group1.Sem3.Backend/Group1.Sem3.Backend.csproj", "src/Group1.Sem3.Backend/"]
-RUN dotnet restore "./src/Group1.Sem3.Backend/Group1.Sem3.Backend.csproj"
+COPY ["Group1.Sem3.Backend.csproj", "."]
+RUN dotnet restore "./Group1.Sem3.Backend.csproj"
 COPY . .
 WORKDIR "/src/src/Group1.Sem3.Backend"
 RUN dotnet build "./Group1.Sem3.Backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
@@ -24,6 +24,24 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Group1.Sem3.Backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Group1.Sem3.Backend.dll"]
+
+# Copy the project file and restore dependencies
+
+
+# Copy the rest of the source code and build
+COPY . .
+RUN dotnet build "Group1.Sem3.Backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+# Publish stage
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "Group1.Sem3.Backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+# Final stage
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
