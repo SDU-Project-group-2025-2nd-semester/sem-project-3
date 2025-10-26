@@ -76,5 +76,5 @@ jobs:
             ~/udocker-1.3.17/udocker/udocker rm -f backend || true
             
             # Deploy new backend
-            ~/udocker-1.3.17/udocker/udocker create --name backend -v ~/myapp/publish:/app mcr.microsoft.com/dotnet/aspnet:9.0
-            ~/udocker-1.3.17/udocker/udocker run -d --name backend -v ~/myapp/publish:/app mcr.microsoft.com/dotnet/aspnet:9.0 dotnet /app/Group1.Sem3.Backend.dll            
+            ~/udocker-1.3.17/udocker/udocker create --name=backend mcr.microsoft.com/dotnet/aspnet:9.0
+            ~/udocker-1.3.17/udocker/udocker run --volume=/home/ucloud/myapp/publish:/app backend bash -c "dotnet /app/Group1.Sem3.Backend.dll > /home/ucloud/myapp/log.txt 2>&1 &"
