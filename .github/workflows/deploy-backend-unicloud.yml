@@ -92,3 +92,4 @@ jobs:
 
             echo "✅ Deployment complete. Logs at ~/myapp/log.txt"
 
+
