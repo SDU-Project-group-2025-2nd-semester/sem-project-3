@@ -1,0 +1,94 @@
+name: Build and Deploy Backend to SDU Cloud
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  BACKEND_PATH: src/Group1.Sem3.Backend
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: dotnet restore Group1.Sem3.Backend.csproj
+
+      - name: Build
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: dotnet build Group1.Sem3.Backend.csproj -c Release --no-restore
+
+      - name: Publish
+        working-directory: ${{ env.BACKEND_PATH }}
+        run: dotnet publish Group1.Sem3.Backend.csproj -c Release -o ../../publish /p:UseAppHost=false
+
+      - name: Build Docker image
+        run: |
+          docker build -t backend:latest -f ${{ env.BACKEND_PATH }}/Dockerfile .
+
+      - name: Save Docker image as tarball
+        run: docker save backend:latest -o backend.tar
+
+      - name: Upload Docker image tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-image
+          path: backend.tar
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Docker image tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+          path: .
+
+      - name: Copy Docker image to SDU Cloud
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ssh.cloud.sdu.dk
+          port: ${{ secrets.SDU_PORT }}
+          username: ucloud
+          key: ${{ secrets.SDU_SSH_KEY }}
+          source: "backend.tar"
+          target: "~/myapp/backend.tar"
+
+      - name: Load and run backend in udocker on SDU Cloud
+        uses: appleboy/ssh-action@v1.0.2
+        with:
+          host: ssh.cloud.sdu.dk
+          port: ${{ secrets.SDU_PORT }}
+          username: ucloud
+          key: ${{ secrets.SDU_SSH_KEY }}
+          script: |
+            echo "Ensuring app directory exists..."
+            mkdir -p ~/myapp
+
+            # Remove previous container if exists
+            ~/udocker-1.3.17/udocker/udocker rm -f backend || true
+
+            # Load new image
+            ~/udocker-1.3.17/udocker/udocker load --input ~/myapp/backend.tar
+
+            # Create container
+            ~/udocker-1.3.17/udocker/udocker create --name backend backend:latest
+
+            # Run backend in background
+            ~/udocker-1.3.17/udocker/udocker run backend bash -c "dotnet /app/Group1.Sem3.Backend.dll > ~/myapp/log.txt 2>&1 &"
+
+            echo "✅ Backend deployed and running in udocker container"
