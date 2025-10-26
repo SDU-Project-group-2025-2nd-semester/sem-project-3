@@ -28,21 +28,3 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Group1.Sem3.Backend.dll"]
-
-# Copy the project file and restore dependencies
-
-
-# Copy the rest of the source code and build
-COPY . .
-RUN dotnet build "Group1.Sem3.Backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-# Publish stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "Group1.Sem3.Backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-# Final stage
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Group1.Sem3.Backend.dll"]
