@@ -19,9 +19,9 @@ export default function BookingPage() {
         : times;
 
     return (
-        <div className="relative bg-background min-h-screen px-4 mt-16 pb-32">
+        <div className="relative bg-background min-h-screen px-4 pt-24 pb-32">
 
-            <div className="max-w-3xl mx-auto mb-6 mt-8">
+            <div className="max-w-3xl mx-auto mb-6">
                 <input
                     type="date"
                     value={selectedDate}

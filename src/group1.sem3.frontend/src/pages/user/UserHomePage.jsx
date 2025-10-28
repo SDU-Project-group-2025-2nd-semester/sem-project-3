@@ -12,7 +12,7 @@ export default function UserHomePage() {
     ];
 
     return (
-        <div className="relative bg-background min-h-screen px-4 mt-16">
+        <div className="relative bg-background min-h-screen px-4 pt-24">
             <main className="max-w-3xl mx-auto flex flex-col gap-8 pb-32">
                 <section>
                     <h2 className="text-2xl font-semibold text-secondary mb-4">
