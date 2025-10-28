@@ -37,14 +37,12 @@ export default function Header() {
             )}
 
             {showScanner ? (
-                /* 
                 <Link
                     to="/scan"
                     className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-400"
                 >
-                    <span className="text-white font-bold">S</span>
-                </Link> */
-                <Icon name="upc-scan" className="w-8 h-8 text-black hover:text-gray-600 cursor-pointer" />
+                    <Icon name="upc-scan" className="w-8 h-8 text-black hover:text-gray-600 cursor-pointer" />
+                </Link> 
             ) : (
                 <div className="w-8 h-8"></div>
             )}

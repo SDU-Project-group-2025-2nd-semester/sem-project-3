@@ -7,6 +7,7 @@ import UserSettingsPage from "./pages/user/UserSettingsPage";
 import StaffSettingsPage from "./pages/staff/StaffSettingsPage";
 import BookingPage from "./pages/user/BookingPage";
 import Header from "./components/Header";
+import Scanning from "./pages/Scanning";
 
 export default function App() {
 
@@ -23,6 +24,7 @@ export default function App() {
                     <Route path="/user/settings" element={<UserSettingsPage />} />
                     <Route path="/staff/settings" element={<StaffSettingsPage />} />
                     <Route path="/user/booking" element={<BookingPage />} />
+                    <Route path="/scan" element={<Scanning />} />
                 </Routes>
             </main>
         </div>
