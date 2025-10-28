@@ -3,43 +3,24 @@ import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function SignInPage() {
-    const { login, roles } = useAuth();
+    const { login, roles, currentUser } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    const inputClasses = "w-full border border-secondary rounded px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 outline-none focus:ring-2 focus:ring-accent bg-background text-primary";
-    const labelClasses = "block mb-1 text-sm font-semibold text-primary";
 
     function handleSubmit(e) {
         e.preventDefault();
         setError("");
         try {
             login({ email, password, role: selectedRole });
-            navigate("/user/homepage");
+            navigate(`/${currentUser.role}/homepage`);
         } catch (err) {
             setError(err.message || "Failed to log in");
         }
     }
-
-    const InputField = ({ id, type, value, onChange, placeholder }) => (
-        <div>
-            <label className={labelClasses} htmlFor={id}>
-                {placeholder}
-            </label>
-            <input
-                id={id}
-                type={type}
-                className={inputClasses}
-                placeholder={placeholder}
-                value={value}
-                onChange={onChange}
-                required
-            />
-        </div>
-    );
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background px-4">
@@ -64,13 +45,16 @@ export default function SignInPage() {
                             className={inputClasses}
                             value={selectedRole}
                             onChange={(e) => setSelectedRole(e.target.value)}
+                            required
                         >
+                            <option value="" disabled>Select a role</option>
                             {roles.map(role => (
                                 <option key={role} value={role}>
                                     {role.charAt(0).toUpperCase() + role.slice(1)}
                                 </option>
                             ))}
                         </select>
+
                     </div>
 
                     <button
@@ -94,3 +78,23 @@ export default function SignInPage() {
         </div>
     );
 }
+
+const inputClasses = "w-full border border-secondary rounded px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 outline-none focus:ring-2 focus:ring-accent bg-background text-primary";
+const labelClasses = "block mb-1 text-sm font-semibold text-primary";
+
+const InputField = ({ id, type, value, onChange, placeholder }) => (
+    <div>
+        <label className={labelClasses} htmlFor={id}>
+            {placeholder}
+        </label>
+        <input
+            id={id}
+            type={type}
+            className={inputClasses}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            required
+        />
+    </div>
+);
