@@ -18,11 +18,11 @@ export default function UserHomePage() {
                     <h2 className="text-2xl font-semibold text-secondary mb-4">
                         Current Bookings
                     </h2>
-                    <div className="grid gap-4">
+                    <div className="flex flex-wrap gap-4">
                         {currentBookings.map((booking) => (
                             <div
                                 key={booking.id}
-                                className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
+                                className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between sm:w-64 items-start sm:items-center"
                             >
                                 <div>
                                     <p className="text-primary font-semibold">
@@ -35,8 +35,8 @@ export default function UserHomePage() {
                                         {booking.date} | {booking.time}
                                     </p>
                                 </div>
-                                <button className="mt-4 sm:mt-0 bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition">
-                                    Cancel Booking
+                                <button className="mt-4 sm:mt-0 ml-4 sm:ml:0 bg-accent text-white px-3 py-2 rounded-lg hover:bg-accent/90 transition">
+                                    Cancel
                                 </button>
                             </div>
                         ))}
@@ -47,7 +47,7 @@ export default function UserHomePage() {
                     <h2 className="text-2xl font-semibold text-secondary mb-4">
                         Recent Bookings
                     </h2>
-                    <div className="grid gap-4">
+                    <div className="flex flex-wrap gap-4">
                         {recentBookings.map((booking) => (
                             <div
                                 key={booking.id}
@@ -61,7 +61,7 @@ export default function UserHomePage() {
                                         Room: {booking.room}
                                     </p>
                                 </div>
-                                <button className="mt-4 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
+                                <button className="mt-4 sm:mt-0 ml-4 sm:ml:0 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
                                     Rebook
                                 </button>
                             </div>
