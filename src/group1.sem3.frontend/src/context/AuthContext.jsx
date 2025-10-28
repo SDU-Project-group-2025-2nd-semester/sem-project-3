@@ -6,7 +6,6 @@ export const roles = ["admin", "staff", "user"];
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
 
-    // Login setzt currentUser
     function login({ email, password, role }) {
         if (!role) throw new Error("Role required"); 
         setCurrentUser({ email: email || "unknown", role });
@@ -26,6 +25,7 @@ export function AuthProvider({ children }) {
             {children}
         </AuthContext.Provider>
     );
+
 }
 
 export function useAuth() {
