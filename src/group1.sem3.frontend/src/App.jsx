@@ -24,6 +24,7 @@ export default function App() {
                     <Route path="/user/settings" element={<UserSettingsPage />} />
                     <Route path="/staff/settings" element={<StaffSettingsPage />} />
                     <Route path="/user/booking" element={<BookingPage />} />
+                    <Route path="/user/desk" element={<DeskPage />} />
                 </Routes>
             </main>
         </div>
