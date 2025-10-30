@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
 
 @tailwind base;
 @tailwind components;
@@ -7,10 +8,19 @@
 
 @layer base {
     :root {
-        --color-primary: #707070;
+        --color-primary: #707070ff;
         --color-secondary: #95CDCD;
-        --color-accent: #1CAFAF;
+        --color-accent: #1cafafff;
         --color-bg: #ffffff;
+
+        /* danger color palette */
+        --color-danger-50: #fff1f2;
+        --color-danger-100: #ffe4e6;
+        --color-danger-500: #ef4444;
+        --color-danger-600: #dc2626;
+        --color-danger-700: #b91c1c;
+
+        --color-accent: 28 175 175;
     }
 
     body {
