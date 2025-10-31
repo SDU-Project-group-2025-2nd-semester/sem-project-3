@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  vite-frontend:
+    build: .
+    container_name: vite-frontend
+    ports:
+      - "80:80"
+    restart: always
