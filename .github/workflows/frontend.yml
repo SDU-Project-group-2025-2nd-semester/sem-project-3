@@ -1,0 +1,52 @@
+name: CI/CD React Vite Multi-Branch (Runner + Compose)
+
+on:
+  push:
+    branches:
+      - main
+      - integrate
+      - develop
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine branch-specific values
+        id: vars
+        run: |
+          if [ "${GITHUB_REF_NAME}" == "main" ]; then
+            echo "service=react-main" >> $GITHUB_OUTPUT
+            echo "port=3000" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF_NAME}" == "integrate" ]; then
+            echo "service=react-integrate" >> $GITHUB_OUTPUT
+            echo "port=3001" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF_NAME}" == "develop" ]; then
+            echo "service=react-develop" >> $GITHUB_OUTPUT
+            echo "port=3002" >> $GITHUB_OUTPUT
+          fi
+
+      - name: List files in frontend folder (debug)
+        run: ls -la src/group1.sem3.frontend
+
+      - name: Build Docker image for this branch
+        working-directory: src/group1.sem3.frontend
+        run: docker compose build --no-cache ${{ steps.vars.outputs.service }}
+
+      - name: Stop and remove old container
+        working-directory: src/group1.sem3.frontend
+        run: |
+          docker compose stop ${{ steps.vars.outputs.service }} || true
+          docker compose rm -f ${{ steps.vars.outputs.service }} || true
+
+      - name: Start updated container
+        working-directory: src/group1.sem3.frontend
+        run: docker compose up -d ${{ steps.vars.outputs.service }}
+
+      - name: Show running containers (for verification)
+        run: docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
+

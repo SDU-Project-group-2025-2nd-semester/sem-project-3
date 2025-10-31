@@ -1,36 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import SignInPage from "./pages/auth/SignInPage";
+import SignUpPage from "./pages/auth/SignUpPage";
+import UserHomePage from "./pages/user/UserHomePage";
+import StaffHomePage from "./pages/staff/StaffHomePage"; 
+import UserSettingsPage from "./pages/user/UserSettingsPage"; 
+import StaffSettingsPage from "./pages/staff/StaffSettingsPage";
+import BookingPage from "./pages/user/BookingPage";
+import Header from "./components/Header";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      <p>Update on integrate branch</p>
-    </>
-  )
+    return (
+        <div className="min-h-screen flex flex-col">
+            <Header />
+
+            <main className="flex-1">
+                <Routes>
+                    <Route path="/" element={<SignInPage />} />
+                    <Route path="/signuppage" element={<SignUpPage />} />
+                    <Route path="/user/homepage" element={<UserHomePage />} />
+                    <Route path="/staff/homepage" element={<StaffHomePage />} />
+                    <Route path="/user/settings" element={<UserSettingsPage />} />
+                    <Route path="/staff/settings" element={<StaffSettingsPage />} />
+                    <Route path="/user/booking" element={<BookingPage />} />
+                </Routes>
+            </main>
+        </div>
+    );
 }
-
-export default App
