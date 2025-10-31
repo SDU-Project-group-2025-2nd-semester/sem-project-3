@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted   # runs directly on your own server
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
@@ -30,18 +30,23 @@ jobs:
             echo "port=3002" >> $GITHUB_OUTPUT
           fi
 
+      - name: List files in frontend folder (debug)
+        run: ls -la src/group1.sem3.frontend
+
       - name: Build Docker image for this branch
-        run: |
-          docker compose build --no-cache ${{ steps.vars.outputs.service }}
+        working-directory: src/group1.sem3.frontend
+        run: docker compose build --no-cache ${{ steps.vars.outputs.service }}
 
       - name: Stop and remove old container
+        working-directory: frontend
         run: |
           docker compose stop ${{ steps.vars.outputs.service }} || true
           docker compose rm -f ${{ steps.vars.outputs.service }} || true
 
       - name: Start updated container
-        run: |
-          docker compose up -d ${{ steps.vars.outputs.service }}
+        working-directory: src/group1.sem3.frontend
+        run: docker compose up -d ${{ steps.vars.outputs.service }}
 
       - name: Show running containers (for verification)
         run: docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
+
