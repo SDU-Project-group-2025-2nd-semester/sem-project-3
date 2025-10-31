@@ -27,10 +27,9 @@ export default function UserManagerPage() {
                     Users
                 </h2>
                 <div className="bg-white rounded-2xl shadow">
-                  {/* Desktop table (hidden on small screens) */}
-                  <div className="overflow-x-auto hidden md:block">
-                    <table className="min-w-full table-auto">
-                      <thead className="bg-gray-50">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full table-auto  max-lg:block">
+                      <thead className="bg-gray-50 max-lg:hidden">
                         <tr>
                           <th className="px-4 py-3 text-left text-sm font-medium">Id</th>
                           <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
@@ -42,17 +41,27 @@ export default function UserManagerPage() {
                           <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="max-lg:block">
                         {users.map((u) => (
-                          <tr key={u.id} className="border-t last:border-b">
-                            <td className="px-4 py-3 text-sm">{u.id}</td>
-                            <td className="px-4 py-3 text-sm">{u.Name}</td>
-                            <td className="px-4 py-3 text-sm text-primary/90">{u.Email}</td>
-                            <td className="px-4 py-3 text-sm">{u.CurrentBooked ?? '-'}</td>
-                            <td className="px-4 py-3 text-sm">{formatDate(u.LastBook)}</td>
-                            <td className="px-4 py-3 text-sm">{u.DeskTime ?? '-'}</td>
-                            <td className="px-4 py-3 text-sm">{u.SittingTime ?? '-'}</td>
-                            <td className="px-4 py-3 text-sm">
+                          <tr key={u.id} className="border-t last:border-b max-lg:flex max-lg:flex-wrap max-lg:items-center">
+                            <td className="px-4 py-3 lg:text-sm max-lg:text-m max-lg:w-1/10 max-lg:flex-shrink-0 max-lg:pr-2 max-lg:py-1">
+                              {u.id}</td>
+                            <td className="px-4 py-3 lg:text-sm max-lg:flex-1 max-lg:w-9/10 max-lg:text-m max-lg:py-0">
+                              {u.Name}</td>
+                            <td className="px-4 py-3 text-sm max-lg: max-lg:w-full max-lg:py-0">{u.Email}</td>
+                            <td className="px-4 py-3 text-sm max-lg:block max-lg:w-full max-lg:pt-2 max-lg:pb-0">
+                              <span className="font-semibold lg:hidden">Current Booked: </span>
+                              {u.CurrentBooked ?? '-'}</td>
+                            <td className="px-4 py-3 text-sm max-lg:block max-lg:w-full max-lg:py-0">
+                              <span className="font-semibold lg:hidden">Last Booked: </span>
+                              {formatDate(u.LastBook)}</td>
+                            <td className="px-4 py-3 text-sm max-lg:block max-lg:w-full max-lg:py-0">
+                              <span className="font-semibold lg:hidden">Desk Time: </span>
+                              {u.DeskTime ?? '-'}</td>
+                            <td className="px-4 py-3 text-sm max-lg:block max-lg:w-full max-lg:py-0">
+                              <span className="font-semibold lg:hidden">Sitting Time: </span>
+                              {u.SittingTime ?? '-'}</td>
+                            <td className="px-4 py-3 text-sm max-lg:flex max-lg:justify-between max-lg:items-center">
                               <button
                                 className="bg-accent text-white px-3 py-1 rounded-lg text-xs hover:bg-accent/90 disabled:opacity-50"
                                 disabled={!u.CurrentBooked}
@@ -79,46 +88,6 @@ export default function UserManagerPage() {
                       </tbody>
                     </table>
                   </div>
-
-                  {/* Mobile stacked cards*/}
-                  <div className="md:hidden p-4 space-y-3 mt-20">
-                    {users.map((u) => (
-                      <div key={u.id} className="bg-gray-50 rounded-lg p-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="text-m font-medium">{u.Name}</div>
-                            <div className="text-xs text-primary/90">{u.Email}</div>
-                          </div>
-                          <div className="text-right">
-                            <button
-                                    className="bg-danger-500 text-white px-2 py-1 rounded-lg text-xs hover:bg-danger-600"
-                                    onClick={() => console.log('Remove Account for', u.id)}
-                                >
-                                    <span className="material-symbols-outlined text-sm leading-none">delete</span>
-                            </button>
-                          </div>
-                        </div>
-                        <div className="mt-2 gap-2 text-xs">
-                          <div><span className="font-semibold">Current Book:</span> {u.CurrentBooked ?? '-'}</div>
-                          <div><span className="font-semibold">Last Book:</span> {formatDate(u.LastBook)}</div>
-                          <div><span className="font-semibold">Desk Time:</span> {u.DeskTime ?? '-'}</div>
-                          <div><span className="font-semibold">Sitting Time:</span> {u.SittingTime ?? '-'}</div>
-                          <div className="flex gap-2 justify-end">
-                            <button
-                              className="bg-accent text-white px-3 py-1 rounded-lg text-xxs hover:bg-accent/90 disabled:opacity-50"
-                              disabled={!u.CurrentBooked}
-                              onClick={() => console.log('Cancel booking for', u.id)}
-                            >
-                              Cancel Booking
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {users.length === 0 && (
-                      <div className="text-center text-sm text-gray-500">No users found</div>
-                    )}
-                  </div>
                 </div>
             </section>
 
@@ -127,10 +96,9 @@ export default function UserManagerPage() {
                     Staff
                 </h2>
                 <div className="bg-white rounded-2xl shadow">
-                  {/* Desktop table (hidden on small screens) */}
                   <div className="overflow-x-auto">
-                    <table className="min-w-full table-auto">
-                      <thead className="bg-gray-50">
+                    <table className="min-w-full table-auto max-lg:block">
+                      <thead className="bg-gray-50 max-lg:hidden">
                         <tr>
                           <th className="px-4 py-3 text-left text-sm font-medium">Id</th>
                           <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
@@ -140,16 +108,18 @@ export default function UserManagerPage() {
                           <th className="px-4 py-3 text-left text-sm font-medium">Action</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="max-lg:block">
                         {staff.map((s) => (
-                          <tr key={s.id} className="border-t last:border-b">
-                            <td className="px-4 py-3 text-sm">{s.id}</td>
-                            <td className="px-4 py-3 text-sm">{s.Name}</td>
-                            <td className="px-4 py-3 text-sm text-primary/90">{s.Email}</td>
-                            <td className="px-4 py-3 text-sm">{s.JobDescription}</td>
-                            <td className="px-4 py-3 text-sm">
+                          <tr key={s.id} className="border-t last:border-b max-lg:flex max-lg:flex-wrap max-lg:items-center">
+                            <td className="px-4 py-3 text-sm max-lg:w-1/10 max-lg:flex-shrink-0 max-lg:pr-2 max-lg:py-1">{s.id}</td>
+                            <td className="px-4 py-3 lg:text-sm max-lg:flex-1 max-lg:w-9/10 max-lg:text-m max-lg:py-0">{s.Name}</td>
+                            <td className="px-4 py-3 text-sm max-lg: max-lg:w-full max-lg:py-0">{s.Email}</td>
+                            <td className="px-4 py-3 text-sm max-lg:block max-lg:w-full max-lg:py-0">
+                              <span className="font-semibold lg:hidden">Job Description: </span>
+                              {s.JobDescription}</td>
+                            <td className="px-4 py-3 text-sm max-lg:block max-lg:w-full max-lg:py-0">
                               <details className="cursor-pointer group">
-                                {/* <summary className="cursor-pointer text-sm text-primary/90">View schedule</summary> */}
+                                <summary className="text-sm max-lg:font-semibold">View schedule</summary>
                                 <div className="cursor-pointer mt-2 text-xs space-y-1">
                                   {s.WorkingSchedule
                                     ? Object.entries(s.WorkingSchedule).map(([day, time]) => (
@@ -160,9 +130,9 @@ export default function UserManagerPage() {
                                 </div>
                               </details>
                             </td>
-                            <td className="px-4 py-3 text-sm">
+                            <td className="px-4 py-3 text-sm max-lg:flex max-lg:flex-col max-lg:items-start  max-lg:justify-start">
                               <button
-                                className="bg-danger-500 text-white mx-4 px-3 py-1 rounded-lg text-xs hover:bg-danger-600 disabled:opacity-50"
+                                className="bg-danger-500 text-white mx-4 px-3 py-1 rounded-lg text-xs hover:bg-danger-600 disabled:opacity-50 max-lg:mx-0"
                                 onClick={() => console.log('Remove Account for', s.id)}
                               >
                                 <span className="material-symbols-outlined text-sm leading-none">delete</span>

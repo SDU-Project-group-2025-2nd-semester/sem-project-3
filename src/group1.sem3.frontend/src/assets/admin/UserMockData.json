@@ -1,6 +1,15 @@
 {
   "Users": [
     {
+      "id": 0,
+      "Name": "Static Data",
+      "Email": "alice.johnson@example.com",
+      "CurrentBooked": "Desk A12",
+      "LastBook": "2025-10-29T09:00:00Z",
+      "DeskTime": "6h 45m",
+      "SittingTime": "4h 10m"
+    },
+    {
       "id": 1,
       "Name": "Alice Johnson",
       "Email": "alice.johnson@example.com",
@@ -47,6 +56,19 @@
     }
   ],
 "Staff": [
+    {
+      "id": 0,
+      "Name": "Static Data",
+      "Email": "james.porter@company.com",
+      "JobDescription": "Cleaning Supervisor",
+      "WorkingSchedule": {
+        "Monday": "08:00 - 16:00",
+        "Tuesday": "08:00 - 16:00",
+        "Wednesday": "08:00 - 16:00",
+        "Thursday": "08:00 - 16:00",
+        "Friday": "08:00 - 15:00"
+      }
+    },
     {
       "id": 1,
       "Name": "James Porter",
