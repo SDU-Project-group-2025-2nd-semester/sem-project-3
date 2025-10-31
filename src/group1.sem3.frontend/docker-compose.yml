@@ -1,8 +1,23 @@
 version: "3.8"
+
 services:
-  vite-frontend:
+  react-main:
     build: .
-    container_name: vite-frontend
+    container_name: react-main
     ports:
-      - "80:80"
-    restart: always
+      - "3000:80"
+    restart: unless-stopped
+
+  react-integrate:
+    build: .
+    container_name: react-integrate
+    ports:
+      - "3001:80"
+    restart: unless-stopped
+
+  react-develop:
+    build: .
+    container_name: react-develop
+    ports:
+      - "3002:80"
+    restart: unless-stopped
