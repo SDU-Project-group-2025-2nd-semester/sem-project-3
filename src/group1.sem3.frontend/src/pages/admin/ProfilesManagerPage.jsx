@@ -113,7 +113,7 @@ export default function ProfilesManager() {
                     <span>{profile.autoApply ? 'Auto-apply enabled' : 'Manual only'}</span>
                 </div>
             </div>
-            <button className="mt-3 w-full bg-accent-50 text-accent py-2 rounded-lg text-sm font-medium hover:bg-accent-100 transition-colors">
+            <button className="mt-3 w-full bg-secondary-100 text-secondary-700 border border-secondary-300 py-2 rounded-lg text-sm font-medium hover:bg-secondary-200 transition-colors">
                 Edit Profile
             </button>
         </div>
