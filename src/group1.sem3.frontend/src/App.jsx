@@ -7,6 +7,7 @@ import UserSettingsPage from "./pages/user/UserSettingsPage";
 import StaffSettingsPage from "./pages/staff/StaffSettingsPage";
 import BookingPage from "./pages/user/BookingPage";
 import UserManagerPage from "./pages/admin/UserManagerPage";
+import ProfilesManagerPage from "./pages/admin/ProfilesManagerPage";
 import Header from "./components/Header";
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
                     <Route path="/staff/settings" element={<StaffSettingsPage />} />
                     <Route path="/user/booking" element={<BookingPage />} />
                     <Route path="/admin/UserManager" element={<UserManagerPage />} />
+                    <Route path="/admin/ProfilesManager" element={<ProfilesManagerPage />} />
                 </Routes>
             </main>
         </div>
