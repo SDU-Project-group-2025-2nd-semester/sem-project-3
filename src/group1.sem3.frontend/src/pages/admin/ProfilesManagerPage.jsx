@@ -113,7 +113,7 @@ export default function ProfilesManager() {
                     <span>{profile.autoApply ? 'Auto-apply enabled' : 'Manual only'}</span>
                 </div>
             </div>
-            <button className="mt-3 w-full bg-accent-50 text-accent-700 py-2 rounded-lg text-sm font-medium hover:bg-accent-100 transition-colors">
+            <button className="mt-3 w-full bg-accent-50 text-accent py-2 rounded-lg text-sm font-medium hover:bg-accent-100 transition-colors">
                 Edit Profile
             </button>
         </div>
@@ -317,14 +317,14 @@ export default function ProfilesManager() {
                         <div className="flex gap-3">
                             <button
                                 type="submit"
-                                className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-secondary-400 transition-colors font-medium"
+                                className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
                             >
                                 Save
                             </button>
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                                className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
                             >
                                 Cancel
                             </button>
