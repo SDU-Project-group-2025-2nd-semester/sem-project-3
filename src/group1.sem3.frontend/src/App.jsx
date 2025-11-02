@@ -9,6 +9,7 @@ import BookingPage from "./pages/user/BookingPage";
 import UserManagerPage from "./pages/admin/UserManagerPage";
 import ProfilesManagerPage from "./pages/admin/ProfilesManagerPage";
 import DesksManagerPage from "./pages/admin/DesksManagerPage";
+import HealthStatsManagerPage from "./pages/admin/HealthStatsManagerPage";
 import Header from "./components/Header";
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
                     <Route path="/admin/UserManager" element={<UserManagerPage />} />
                     <Route path="/admin/ProfilesManager" element={<ProfilesManagerPage />} />
                     <Route path="/admin/DesksManager" element={<DesksManagerPage />} />
+                    <Route path="/admin/HealthStatsManager" element={<HealthStatsManagerPage />} />
                 </Routes>
             </main>
         </div>
