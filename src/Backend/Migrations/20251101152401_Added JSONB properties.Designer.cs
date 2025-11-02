@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(BackendContext))]
-    partial class BackendContextModelSnapshot : ModelSnapshot
+    [Migration("20251101152401_Added JSONB properties")]
+    partial class AddedJSONBproperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,7 +74,10 @@ namespace Backend.Migrations
                     b.Property<DateTime>("SubmitTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("SubmittedById")
+                    b.Property<Guid>("SubmittedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SubmittedById1")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -82,7 +88,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("ResolvedById");
 
-                    b.HasIndex("SubmittedById");
+                    b.HasIndex("SubmittedById1");
 
                     b.ToTable("DamageReports");
                 });
@@ -118,7 +124,7 @@ namespace Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("DeskId")
+                    b.Property<Guid?>("DeskId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("End")
@@ -128,7 +134,6 @@ namespace Backend.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -418,7 +423,7 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Data.User", "SubmittedBy")
                         .WithMany()
-                        .HasForeignKey("SubmittedById");
+                        .HasForeignKey("SubmittedById1");
 
                     b.Navigation("Company");
 
@@ -438,32 +443,24 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Data.Reservation", b =>
                 {
-                    b.HasOne("Backend.Data.Desk", "Desk")
+                    b.HasOne("Backend.Data.Desk", null)
                         .WithMany("Reservations")
-                        .HasForeignKey("DeskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("DeskId");
 
                     b.HasOne("Backend.Data.User", "User")
                         .WithMany("Reservations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Desk");
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("Backend.Data.Rooms", b =>
                 {
-                    b.HasOne("Backend.Data.Company", "Company")
+                    b.HasOne("Backend.Data.Company", null)
                         .WithMany("Rooms")
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("Backend.Data.User", b =>

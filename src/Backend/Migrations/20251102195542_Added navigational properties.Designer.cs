@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(BackendContext))]
-    partial class BackendContextModelSnapshot : ModelSnapshot
+    [Migration("20251102195542_Added navigational properties")]
+    partial class Addednavigationalproperties
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,7 +74,10 @@ namespace Backend.Migrations
                     b.Property<DateTime>("SubmitTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("SubmittedById")
+                    b.Property<Guid>("SubmittedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SubmittedById1")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -82,7 +88,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("ResolvedById");
 
-                    b.HasIndex("SubmittedById");
+                    b.HasIndex("SubmittedById1");
 
                     b.ToTable("DamageReports");
                 });
@@ -418,7 +424,7 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Data.User", "SubmittedBy")
                         .WithMany()
-                        .HasForeignKey("SubmittedById");
+                        .HasForeignKey("SubmittedById1");
 
                     b.Navigation("Company");
 

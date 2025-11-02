@@ -1,8 +1,9 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Backend | v1",
-    "version": "1.0.0"
+    "title": "Backend API",
+    "description": "API for desk reservation system",
+    "version": "v1"
   },
   "paths": {
     "/api/auth/register": {
@@ -408,10 +409,10 @@
         }
       }
     },
-    "/api/users/{userId}": {
+    "/api/Users/{userId}": {
       "get": {
         "tags": [
-          "users"
+          "Users"
         ],
         "parameters": [
           {
@@ -447,10 +448,10 @@
         }
       }
     },
-    "/api/users": {
+    "/api/Users": {
       "put": {
         "tags": [
-          "users"
+          "Users"
         ],
         "requestBody": {
           "content": {
@@ -1032,7 +1033,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Desk"
+                    "$ref": "#/components/schemas/Reservation"
                   }
                 }
               },
@@ -1040,7 +1041,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Desk"
+                    "$ref": "#/components/schemas/Reservation"
                   }
                 }
               },
@@ -1048,7 +1049,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Desk"
+                    "$ref": "#/components/schemas/Reservation"
                   }
                 }
               }
@@ -1074,17 +1075,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Reservation"
+                "$ref": "#/components/schemas/CreateReservationDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Reservation"
+                "$ref": "#/components/schemas/CreateReservationDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Reservation"
+                "$ref": "#/components/schemas/CreateReservationDto"
               }
             }
           },
@@ -1096,74 +1097,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Reservation"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Reservation"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Reservation"
-        ],
-        "parameters": [
-          {
-            "name": "companyId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Reservation"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Reservation"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/Reservation"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/Rooms"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Rooms"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Reservation"
                 }
               }
             }
@@ -1249,17 +1193,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Reservation"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Reservation"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Reservation"
                 }
               }
             }
@@ -1307,7 +1251,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1361,74 +1306,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DamageReport"
+                "$ref": "#/components/schemas/CreateDamageReportDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/DamageReport"
+                "$ref": "#/components/schemas/CreateDamageReportDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/DamageReport"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "DamageReport"
-        ],
-        "parameters": [
-          {
-            "name": "companyId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DamageReport"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DamageReport"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/DamageReport"
+                "$ref": "#/components/schemas/CreateDamageReportDto"
               }
             }
           },
@@ -1482,6 +1370,73 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DamageReport"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DamageReport"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DamageReport"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "DamageReport"
+        ],
+        "parameters": [
+          {
+            "name": "damageReportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -1562,6 +1517,40 @@
           }
         }
       },
+      "CreateDamageReportDto": {
+        "required": [
+          "description",
+          "deskId"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "maxLength": 512,
+            "type": "string"
+          },
+          "deskId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateReservationDto": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deskId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "DamageReport": {
         "type": "object",
         "properties": {
@@ -1577,21 +1566,29 @@
             "type": "string",
             "format": "date-time"
           },
-          "submittedBy": {
-            "$ref": "#/components/schemas/User"
-          },
           "resolveTime": {
             "type": "string",
-            "format": "date-time"
-          },
-          "resolvedBy": {
-            "$ref": "#/components/schemas/User"
+            "format": "date-time",
+            "nullable": true
           },
           "isResolved": {
             "type": "boolean"
           },
-          "desk": {
-            "$ref": "#/components/schemas/Desk"
+          "submittedById": {
+            "type": "string",
+            "nullable": true
+          },
+          "resolvedById": {
+            "type": "string",
+            "nullable": true
+          },
+          "deskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -1797,8 +1794,12 @@
             "type": "string",
             "format": "date-time"
           },
-          "user": {
-            "$ref": "#/components/schemas/User"
+          "userId": {
+            "type": "string"
+          },
+          "deskId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -1835,14 +1836,12 @@
               "format": "uuid"
             }
           },
-          "desks": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Desk"
-            }
-          },
           "openingHours": {
             "$ref": "#/components/schemas/OpeningHours"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -1900,9 +1899,6 @@
         }
       },
       "User": {
-        "required": [
-          "firstName"
-        ],
         "type": "object",
         "properties": {
           "firstName": {
@@ -1931,6 +1927,10 @@
           "standingTime": {
             "type": "integer",
             "format": "int32"
+          },
+          "accountCreation": {
+            "type": "string",
+            "format": "date-time"
           },
           "id": {
             "type": "string",
@@ -1991,8 +1991,21 @@
           }
         }
       }
+    },
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "description": "Cookie-based authentication. Login via /api/auth/login to receive authentication cookie.",
+        "name": "Identity.Application",
+        "in": "cookie"
+      }
     }
   },
+  "security": [
+    {
+      "cookieAuth": [ ]
+    }
+  ],
   "tags": [
     {
       "name": "Backend"
@@ -2001,7 +2014,7 @@
       "name": "Company"
     },
     {
-      "name": "users"
+      "name": "Users"
     },
     {
       "name": "Rooms"
