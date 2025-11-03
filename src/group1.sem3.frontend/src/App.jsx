@@ -27,7 +27,7 @@ export default function App() {
                     <Route path="/staff/settings" element={<StaffSettingsPage />} />
                     <Route path="/user/booking" element={<BookingPage />} />
                     <Route path="/user/scan" element={<Scanning />} />
-                    <Route path="/user/desk" element={<DeskPage />} /
+                    <Route path="/user/desk" element={<DeskPage />} />
                     <Route path="/staff/damagereport" element={<DamageReportPage />} />
                 </Routes>
             </main>
