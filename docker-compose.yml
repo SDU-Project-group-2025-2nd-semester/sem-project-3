@@ -1,0 +1,32 @@
+services:
+  backend:
+    image: ${DOCKER_REGISTRY-}backend
+    build:
+      context: .
+      dockerfile: src/Backend/Dockerfile
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pgadmin:
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    image: dpage/pgadmin4
+    ports:
+      - "6050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+    
+volumes:
+  postgres_data:
+  pgadmin_data:

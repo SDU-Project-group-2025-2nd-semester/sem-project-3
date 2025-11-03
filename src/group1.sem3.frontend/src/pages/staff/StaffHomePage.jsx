@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function StaffHomePage() {
     const [selectedRoom, setSelectedRoom] = useState("Room A");
@@ -21,6 +22,25 @@ export default function StaffHomePage() {
         ],
     });
 
+    const location = useLocation();
+
+    // Set the isDamaged flag to true after submitting a report
+    // NOTE: The flag does not persist after reload
+    useEffect(() => {
+        const damagedId = location.state?.damagedTableId;
+        if (damagedId) {
+            setRooms((prev) => {
+                const updated = { ...prev };
+                for (const room in updated) {
+                    updated[room] = updated[room].map((table) =>
+                        table.id === damagedId ? { ...table, isDamaged: true } : table
+                    );
+                }
+                return updated;
+            });
+        }
+    }, [location.state]);
+
     const currentTables = rooms[selectedRoom];
 
     const handleAllTables = (action) => {
@@ -33,13 +53,19 @@ export default function StaffHomePage() {
         }));
     };
 
-    const reportDamage = (id) => {
+    /* const reportDamage = (id) => {
         setRooms((prev) => ({
             ...prev,
             [selectedRoom]: prev[selectedRoom].map((table) =>
                 table.id === id ? { ...table, isDamaged: true } : table
             ),
         }));
+    }; */ 
+
+    const navigate = useNavigate();
+
+    const reportDamage = (id) => {
+        navigate("/staff/damagereport", { state: { tableId: id } });
     };
 
     return (
