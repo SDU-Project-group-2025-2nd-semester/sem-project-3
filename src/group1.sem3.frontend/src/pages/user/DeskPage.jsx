@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Icon from "@reacticons/bootstrap-icons";
 
 export default function DeskPage() {
@@ -22,9 +23,29 @@ export default function DeskPage() {
     const [height, setHeight] = useState(desk.currentHeight);
     const setSittingHeight = () => setHeight(desk.optimalSitting);
     const setStandingHeight = () => setHeight(desk.optimalStanding);
-    const reportDamage = () => alert("Damage report submitted!");
 
     const hasReservation = !!desk.currentReservation;
+
+    const location = useLocation();
+
+    const [isDamaged, setIsDamaged] = useState(desk.damaged);
+
+    // Check if damage was reported
+    useEffect(() => {
+        if (location.state?.damagedDeskId === desk.name) {
+            setIsDamaged(true);
+
+            // Clear navigation state after marking desk as damaged to prevent message showing up repeatedly
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+
+    }, [location.state]);
+
+    const navigate = useNavigate();
+
+    const reportDamage = () => {
+        navigate("/user/damagereport", { state: { tableId: desk.name } });
+    };
 
     return (
         <div className="relative bg-background min-h-screen px-4 pt-24">
@@ -74,12 +95,19 @@ export default function DeskPage() {
 
             {/* Report Damage */}
             <div className="mt-4 flex justify-center">
-                <button
-                    onClick={reportDamage}
-                    className="bg-red-500/80 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition text-sm w-full max-w-xs sm:w-auto"
-                >
-                    Report Damage
-                </button>
+
+                {!isDamaged ? (
+                    <button
+                        onClick={reportDamage}
+                        className="bg-red-500/80 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition text-sm w-full max-w-xs sm:w-auto"
+                    >
+                        Report Damage
+                    </button>
+                ) : (
+                    <span className="text-red-600 text-sm font-semibold">
+                        Damage reported
+                    </span>
+                )}
             </div>
 
             {/* Reservation Info */}
@@ -87,7 +115,7 @@ export default function DeskPage() {
                 <div className="mt-6 space-y-2">
                     <p className="text-primary text-sm">
                         Your Reservations: {desk.currentReservation.date} |{" "}
-                        {desk.currentReservation.time})
+                        {desk.currentReservation.time}
                     </p>
 
                     {/* Available times */}

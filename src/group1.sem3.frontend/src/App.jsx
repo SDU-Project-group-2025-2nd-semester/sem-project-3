@@ -29,6 +29,7 @@ export default function App() {
                     <Route path="/user/scan" element={<Scanning />} />
                     <Route path="/user/desk" element={<DeskPage />} />
                     <Route path="/staff/damagereport" element={<DamageReportPage />} />
+                    <Route path="/user/damagereport" element={<DamageReportPage />} />
                 </Routes>
             </main>
         </div>
