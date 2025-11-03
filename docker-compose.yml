@@ -44,7 +44,7 @@ configs:
         "Servers": {
           "1": {
             "Group": "Servers",
-            "Name": "Semester Project 3",
+            "Name": "postgres",
             "Host": "postgres",
             "Port": 5432,
             "MaintenanceDB": "postgres",
