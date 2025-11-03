@@ -40,7 +40,7 @@ export default function DeskPage() {
             navigate(location.pathname, { replace: true, state: {} });
         }
 
-    }, [location.state, navigate, desk.name]); // Should list all dependencies used inside useEffect
+    }, [location.state, navigate, location.pathname]);
 
     const reportDamage = () => {
         navigate("/user/damagereport", { state: { tableId: desk.name } });
