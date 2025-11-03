@@ -409,98 +409,10 @@
         }
       }
     },
-    "/api/Users/{userId}": {
+    "/api/{companyId}/DamageReport": {
       "get": {
         "tags": [
-          "Users"
-        ],
-        "parameters": [
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/Users": {
-      "put": {
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/User"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/User"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/User"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{companyId}/Rooms": {
-      "get": {
-        "tags": [
-          "Rooms"
+          "DamageReport"
         ],
         "parameters": [
           {
@@ -508,7 +420,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -520,7 +433,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/DamageReport"
                   }
                 }
               },
@@ -528,7 +441,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/DamageReport"
                   }
                 }
               },
@@ -536,7 +449,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/DamageReport"
                   }
                 }
               }
@@ -546,7 +459,7 @@
       },
       "post": {
         "tags": [
-          "Rooms"
+          "DamageReport"
         ],
         "parameters": [
           {
@@ -554,7 +467,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -562,17 +476,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/CreateDamageReportDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/CreateDamageReportDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/CreateDamageReportDto"
               }
             }
           },
@@ -584,74 +498,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/DamageReport"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/DamageReport"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Rooms"
-        ],
-        "parameters": [
-          {
-            "name": "companyId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Rooms"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Rooms"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/Rooms"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/Rooms"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Rooms"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/DamageReport"
                 }
               }
             }
@@ -659,14 +516,14 @@
         }
       }
     },
-    "/api/{companyId}/Rooms/{roomId}": {
+    "/api/{companyId}/DamageReport/{damageReportId}": {
       "get": {
         "tags": [
-          "Rooms"
+          "DamageReport"
         ],
         "parameters": [
           {
-            "name": "roomId",
+            "name": "damageReportId",
             "in": "path",
             "required": true,
             "schema": {
@@ -689,17 +546,84 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/DamageReport"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/DamageReport"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/DamageReport"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "DamageReport"
+        ],
+        "parameters": [
+          {
+            "name": "damageReportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DamageReport"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DamageReport"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DamageReport"
                 }
               }
             }
@@ -708,11 +632,11 @@
       },
       "delete": {
         "tags": [
-          "Rooms"
+          "DamageReport"
         ],
         "parameters": [
           {
-            "name": "roomId",
+            "name": "damageReportId",
             "in": "path",
             "required": true,
             "schema": {
@@ -982,6 +906,15 @@
         ],
         "parameters": [
           {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "userId",
             "in": "query",
             "schema": {
@@ -1014,14 +947,6 @@
               "type": "string",
               "format": "date-time",
               "default": null
-            }
-          },
-          {
-            "name": "companyId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
             }
           }
         ],
@@ -1067,7 +992,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1126,7 +1052,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1229,7 +1156,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1240,10 +1168,10 @@
         }
       }
     },
-    "/api/{companyId}/DamageReport": {
+    "/api/{companyId}/Rooms": {
       "get": {
         "tags": [
-          "DamageReport"
+          "Rooms"
         ],
         "parameters": [
           {
@@ -1251,8 +1179,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
@@ -1264,7 +1191,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/DamageReport"
+                    "$ref": "#/components/schemas/Rooms"
                   }
                 }
               },
@@ -1272,7 +1199,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/DamageReport"
+                    "$ref": "#/components/schemas/Rooms"
                   }
                 }
               },
@@ -1280,7 +1207,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/DamageReport"
+                    "$ref": "#/components/schemas/Rooms"
                   }
                 }
               }
@@ -1290,7 +1217,7 @@
       },
       "post": {
         "tags": [
-          "DamageReport"
+          "Rooms"
         ],
         "parameters": [
           {
@@ -1306,17 +1233,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateDamageReportDto"
+                "$ref": "#/components/schemas/Rooms"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateDamageReportDto"
+                "$ref": "#/components/schemas/Rooms"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateDamageReportDto"
+                "$ref": "#/components/schemas/Rooms"
               }
             }
           },
@@ -1328,65 +1255,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
+                  "$ref": "#/components/schemas/Rooms"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
+                  "$ref": "#/components/schemas/Rooms"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/{companyId}/DamageReport/{damageReportId}": {
-      "get": {
-        "tags": [
-          "DamageReport"
-        ],
-        "parameters": [
-          {
-            "name": "damageReportId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "companyId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
+                  "$ref": "#/components/schemas/Rooms"
                 }
               }
             }
@@ -1395,11 +1274,70 @@
       },
       "put": {
         "tags": [
-          "DamageReport"
+          "Rooms"
         ],
         "parameters": [
           {
-            "name": "damageReportId",
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rooms"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rooms"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rooms"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rooms"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rooms"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rooms"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{companyId}/Rooms/{roomId}": {
+      "get": {
+        "tags": [
+          "Rooms"
+        ],
+        "parameters": [
+          {
+            "name": "roomId",
             "in": "path",
             "required": true,
             "schema": {
@@ -1412,48 +1350,27 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "boolean"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "type": "boolean"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "type": "boolean"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
+                  "$ref": "#/components/schemas/Rooms"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
+                  "$ref": "#/components/schemas/Rooms"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DamageReport"
+                  "$ref": "#/components/schemas/Rooms"
                 }
               }
             }
@@ -1462,11 +1379,11 @@
       },
       "delete": {
         "tags": [
-          "DamageReport"
+          "Rooms"
         ],
         "parameters": [
           {
-            "name": "damageReportId",
+            "name": "roomId",
             "in": "path",
             "required": true,
             "schema": {
@@ -1486,6 +1403,94 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Users/{userId}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Users": {
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
           }
         }
       }
@@ -1602,12 +1607,6 @@
             "type": "string",
             "format": "uuid"
           },
-          "reservations": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Reservation"
-            }
-          },
           "height": {
             "type": "number",
             "format": "double"
@@ -1619,6 +1618,21 @@
           "minHeight": {
             "type": "number",
             "format": "double"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -1798,6 +1812,10 @@
             "type": "string"
           },
           "deskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyId": {
             "type": "string",
             "format": "uuid"
           }
@@ -2014,10 +2032,7 @@
       "name": "Company"
     },
     {
-      "name": "Users"
-    },
-    {
-      "name": "Rooms"
+      "name": "DamageReport"
     },
     {
       "name": "Desks"
@@ -2026,7 +2041,10 @@
       "name": "Reservation"
     },
     {
-      "name": "DamageReport"
+      "name": "Rooms"
+    },
+    {
+      "name": "Users"
     }
   ]
 }
