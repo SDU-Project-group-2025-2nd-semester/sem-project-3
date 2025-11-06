@@ -20,25 +20,29 @@ export default function UserHomePage() {
                     </h2>
                     <div className="grid gap-4">
                         {currentBookings.map((booking) => (
-                            <div
-                                key={booking.id}
-                                className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
+                            <Link
+                                to="/user/desk"
                             >
-                                <div>
-                                    <p className="text-primary font-semibold">
-                                        Desk: {booking.desk}
-                                    </p>
-                                    <p className="text-primary font-semibold">
-                                        Room: {booking.room}
-                                    </p>
-                                    <p className="text-primary text-sm mt-1">
-                                        {booking.date} | {booking.time}
-                                    </p>
+                                <div
+                                    key={booking.id}
+                                    className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
+                                >
+                                    <div>
+                                        <p className="text-primary font-semibold">
+                                            Desk: {booking.desk}
+                                        </p>
+                                        <p className="text-primary font-semibold">
+                                            Room: {booking.room}
+                                        </p>
+                                        <p className="text-primary text-sm mt-1">
+                                            {booking.date} | {booking.time}
+                                        </p>
+                                    </div>
+                                    <button className="mt-4 sm:mt-0 bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition">
+                                        Cancel Booking
+                                    </button>
                                 </div>
-                                <button className="mt-4 sm:mt-0 bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition">
-                                    Cancel Booking
-                                </button>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </section>
@@ -49,22 +53,26 @@ export default function UserHomePage() {
                     </h2>
                     <div className="grid gap-4">
                         {recentBookings.map((booking) => (
-                            <div
-                                key={booking.id}
-                                className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
+                            <Link
+                                to="/user/desk"
                             >
-                                <div>
-                                    <p className="text-primary font-semibold">
-                                        Desk: {booking.desk}
-                                    </p>
-                                    <p className="text-primary font-semibold">
-                                        Room: {booking.room}
-                                    </p>
+                                <div
+                                    key={booking.id}
+                                    className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
+                                >
+                                    <div>
+                                        <p className="text-primary font-semibold">
+                                            Desk: {booking.desk}
+                                        </p>
+                                        <p className="text-primary font-semibold">
+                                            Room: {booking.room}
+                                        </p>
+                                    </div>
+                                    <button className="mt-4 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
+                                        Rebook
+                                    </button>
                                 </div>
-                                <button className="mt-4 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
-                                    Rebook
-                                </button>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </section>
