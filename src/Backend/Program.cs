@@ -46,7 +46,16 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-builder.Services.AddTransient<IDamageReportService, DamageReportService>();
+builder.Services
+    .AddTransient<IDamageReportService, DamageReportService>()
+    .AddTransient<IReservationService, ReservationService>()
+    .AddTransient<IDeskApi, DeskApi>();
+
+builder.Services.AddHttpClient("DeskApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["DeskApi:BaseUrl"] ?? "http://localhost:5000");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 
 builder.Services.AddControllers();
 
