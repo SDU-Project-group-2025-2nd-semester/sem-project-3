@@ -1,218 +1,119 @@
-﻿//using Backend.Data;
-//using Backend.Hubs;
-//using Microsoft.AspNetCore.SignalR;
-//using Microsoft.EntityFrameworkCore;
-
-//namespace Backend.Services;
-
-//public class DeskControlService(
-//    BackendContext context,
-//    IHttpClientFactory httpClientFactory,
-//    ILogger<DeskControlService> logger,
-//    IHubContext<DeskHub> hubContext)
-//    : IDeskControlService
-//{
-//    public async Task<bool> SetDeskHeightAsync(Guid deskId, double newHeight)
-//    {
-//        var desk = await context.Desks
-//            .Include(d => d.Room)
-//            .Include(d => d.Company)
-//            .FirstOrDefaultAsync(d => d.Id == deskId);
-
-//        if (desk == null)
-//        {
-//            logger.LogWarning("Desk {DeskId} not found", deskId);
-//            return false;
-//        }
-
-//        if (newHeight < desk.MinHeight || newHeight > desk.MaxHeight)
-//        {
-//            logger.LogWarning(
-//                "Invalid height {Height} for desk {DeskId}. Must be between {Min} and {Max}",
-//                newHeight, deskId, desk.MinHeight, desk.MaxHeight);
-//            return false;
-//        }
-
-//        try
-//        {
-//            // Call external API
-//            var success = await CallExternalDeskApiAsync(deskId, newHeight);
-
-//            if (!success)
-//            {
-//                logger.LogError("External API call failed for desk {DeskId}", deskId);
-//                return false;
-//            }
-
-//            // Update database
-//            var oldHeight = desk.Height;
-//            desk.Height = newHeight;
-//            await context.SaveChangesAsync();
-
-//            // Notify clients via SignalR
-//            await NotifyDeskHeightChanged(desk, oldHeight, newHeight);
-
-//            logger.LogInformation("Desk {DeskId} height changed to {Height}cm", deskId, newHeight);
-//            return true;
-//        }
-//        catch (Exception ex)
-//        {
-//            logger.LogError(ex, "Error changing height for desk {DeskId}", deskId);
-//            return false;
-//        }
-//    }
-
-//    public async Task<bool> SetRoomDesksHeightAsync(Guid roomId, double newHeight)
-//    {
-//        var desks = await context.Desks
-//            .Where(d => d.RoomId == roomId)
-//            .ToListAsync();
-
-//        var tasks = desks.Select(desk => SetDeskHeightAsync(desk.Id, newHeight));
-//        var results = await Task.WhenAll(tasks);
-
-//        return results.All(r => r);
-//    }
-
-//    public async Task<double?> GetCurrentDeskHeightAsync(Guid deskId)
-//    {
-//        var httpClient = httpClientFactory.CreateClient("DeskApi");
-
-//        try
-//        {
-//            var response = await httpClient.GetAsync($"/api/desk/{deskId}/height");
-
-//            if (!response.IsSuccessStatusCode)
-//                return null;
-
-//            var result = await response.Content.ReadFromJsonAsync<DeskHeightResponse>();
-//            return result?.Height;
-//        }
-//        catch (Exception ex)
-//        {
-//            logger.LogError(ex, "Error getting height for desk {DeskId}", deskId);
-//            return null;
-//        }
-//    }
-
-//    public async Task SyncDeskHeightAsync(Guid deskId)
-//    {
-//        var currentHeight = await GetCurrentDeskHeightAsync(deskId);
-
-//        if (currentHeight == null)
-//            return;
-
-//        var desk = await context.Desks
-//            .Include(d => d.Room)
-//            .Include(d => d.Company)
-//            .FirstOrDefaultAsync(d => d.Id == deskId);
-
-//        if (desk == null)
-//            return;
-
-//        var oldHeight = desk.Height;
-
-//        // Only update if height has changed
-//        if (Math.Abs(desk.Height - currentHeight.Value) > 0.1) // Tolerance for floating point comparison
-//        {
-//            desk.Height = currentHeight.Value;
-//            await context.SaveChangesAsync();
-
-//            // Notify clients
-//            await NotifyDeskHeightChanged(desk, oldHeight, currentHeight.Value);
-
-//            logger.LogInformation(
-//                "Desk {DeskId} height synced from {OldHeight}cm to {NewHeight}cm",
-//                deskId, oldHeight, currentHeight.Value);
-//        }
-//    }
-
-//    private async Task<bool> CallExternalDeskApiAsync(Guid deskId, double height)
-//    {
-//        var httpClient = httpClientFactory.CreateClient("DeskApi");
-
-//        var request = new
-//        {
-//            deskId = deskId.ToString(),
-//            height = height
-//        };
-
-//        try
-//        {
-//            var response = await httpClient.PostAsJsonAsync("/api/desk/set-height", request);
-//            return response.IsSuccessStatusCode;
-//        }
-//        catch (HttpRequestException ex)
-//        {
-//            logger.LogError(ex, "HTTP error calling desk API for {DeskId}", deskId);
-//            return false;
-//        }
-//    }
-
-//    private async Task NotifyDeskHeightChanged(Desk desk, double oldHeight, double newHeight)
-//    {
-//        var update = new DeskHeightUpdate
-//        {
-//            DeskId = desk.Id,
-//            RoomId = desk.RoomId,
-//            CompanyId = desk.CompanyId,
-//            OldHeight = oldHeight,
-//            NewHeight = newHeight,
-//            Timestamp = DateTime.UtcNow
-//        };
-
-//        // Send to all clients watching this specific desk
-//        await hubContext.Clients
-//            .Group($"desk-{desk.Id}")
-//            .SendAsync("DeskHeightChanged", update);
-
-//        // Send to all clients watching this room
-//        await hubContext.Clients
-//            .Group($"room-{desk.RoomId}")
-//            .SendAsync("DeskHeightChanged", update);
-
-//        // Send to all clients watching this company
-//        await hubContext.Clients
-//            .Group($"company-{desk.CompanyId}")
-//            .SendAsync("DeskHeightChanged", update);
-//    }
-//}
-
-//public record DeskHeightResponse(double Height);
-
-//public class DeskHeightUpdate
-//{
-//    public Guid DeskId { get; set; }
-//    public Guid RoomId { get; set; }
-//    public Guid CompanyId { get; set; }
-//    public double OldHeight { get; set; }
-//    public double NewHeight { get; set; }
-//    public DateTime Timestamp { get; set; }
-//}
-//public interface IDeskControlService
-//{
-//    /// <summary>
-//    /// Changes the desk height both in the database and via the external API
-//    /// </summary>
-//    Task<bool> SetDeskHeightAsync(Guid deskId, double newHeight);
-
-//    /// <summary>
-//    /// Changes height for all desks in a room
-//    /// </summary>
-//    Task<bool> SetRoomDesksHeightAsync(Guid roomId, double newHeight);
-
-//    /// <summary>
-//    /// Gets current desk height from external API
-//    /// </summary>
-//    Task<double?> GetCurrentDeskHeightAsync(Guid deskId);
-
-//    /// <summary>
-//    /// Synchronizes desk height from external API to database
-//    /// </summary>
-//    Task SyncDeskHeightAsync(Guid deskId);
-//}
+﻿using Backend.Data;
+using Backend.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using System.Net.Http;
 
 namespace Backend.Services;
+
+
+public class DeskControlService(BackendContext dbContext, ILogger<DeskControlService> logger, IDeskApi deskApi, IHubContext<DeskHub> hubContext)
+{
+
+    public async Task<bool> SetDeskHeightAsync(Guid deskId, int newHeight)
+    {
+        var desk = await dbContext.Desks
+            .Include(d => d.Room)
+            .Include(d => d.Company)
+            .FirstOrDefaultAsync(d => d.Id == deskId);
+
+        if (desk == null)
+        {
+            logger.LogWarning("Desk {DeskId} not found", deskId);
+            return false;
+        }
+
+        if (newHeight < desk.MinHeight || newHeight > desk.MaxHeight)
+        {
+            logger.LogWarning(
+                "Invalid height {Height} for desk {DeskId}. Must be between {Min} and {Max}",
+                newHeight, deskId, desk.MinHeight, desk.MaxHeight);
+            return false;
+        }
+
+        try
+        {
+            var newState = await deskApi.SetState(desk.MacAddress, new State()
+            {
+                PositionMm = newHeight,
+            });
+
+
+            // Update database
+            //var oldHeight = desk.Height;
+            desk.Height = newState.PositionMm;
+            await dbContext.SaveChangesAsync();
+
+            // Notify clients via SignalR
+            //await NotifyDeskHeightChanged(desk, oldHeight, newHeight);
+
+            logger.LogInformation("Desk {DeskId} height changed to {Height}mm", deskId, newHeight);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error changing height for desk {DeskId}", deskId);
+            return false;
+        }
+    }
+
+    public async Task<bool> SetRoomDesksHeightAsync(Guid roomId, int newHeight)
+    {
+        var desks = await dbContext.Desks
+            .Where(d => d.RoomId == roomId)
+            .ToListAsync();
+
+        var tasks = desks.Select(desk => SetDeskHeightAsync(desk.Id, newHeight));
+        var results = await Task.WhenAll(tasks);
+
+        return results.All(r => r);
+    }
+
+    public async Task<int?> GetCurrentDeskHeightAsync(string macAddress)
+    {
+        try
+        {
+            var response = await deskApi.GetDeskState(macAddress);
+
+
+            return response.PositionMm;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting height for desk {macAddress}", macAddress);
+            return null;
+        }
+    }
+
+    //private async Task NotifyDeskHeightChanged(Desk desk, int oldHeight, int newHeight)
+    //{
+    //    var update = new DeskHeightUpdate
+    //    {
+    //        DeskId = desk.Id,
+    //        RoomId = desk.RoomId,
+    //        CompanyId = desk.CompanyId,
+    //        OldHeight = oldHeight,
+    //        NewHeight = newHeight,
+    //        Timestamp = DateTime.UtcNow
+    //    };
+
+    //    // Send to all clients watching this specific desk
+    //    await hubContext.Clients
+    //        .Group($"desk-{desk.Id}")
+    //        .SendAsync("DeskHeightChanged", update);
+
+    //    // Send to all clients watching this room
+    //    await hubContext.Clients
+    //        .Group($"room-{desk.RoomId}")
+    //        .SendAsync("DeskHeightChanged", update);
+
+    //    // Send to all clients watching this company
+    //    await hubContext.Clients
+    //        .Group($"company-{desk.CompanyId}")
+    //        .SendAsync("DeskHeightChanged", update);
+    //}
+
+}
 
 public interface IDeskApi
 {
