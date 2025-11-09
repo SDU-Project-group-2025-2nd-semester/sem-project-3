@@ -2,82 +2,82 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Icon from "@reacticons/bootstrap-icons";
-
-export default function Sidebar({isOpen}) {
+export default function Sidebar({ isOpen, onClose }) {
     const { currentUser } = useAuth();
-    const location = useLocation(); // necessary for viewing URL 
+    const location = useLocation();
+    if (["/", "/signuppage"].includes(location.pathname)) return null;
 
-    // Hide sidebar on login and signup pages
-    const hiddenPaths = ["/", "/signuppage"];
-    if (hiddenPaths.includes(location.pathname)) return null;
-    // if (!currentUser) return null; // Don't show sidebar if not logged in
+    const role = currentUser?.role;
+    if (role === "admin") return null;
 
-    const role = currentUser.role;
-
-    if (role === "admin") return null; // Don't show sidebar for Admin (for now)
-
-    const companies = ["Company A", "Company B", "Company C"]; // For now
-
+    const companies = ["Company A", "Company B", "Company C"];
     const [showCompanies, setShowCompanies] = useState(false);
-    const [selectedCompany, setSelectedCompany] = useState(companies[0]); // Default selection
+    const [selectedCompany, setSelectedCompany] = useState(companies[0]);
 
     function handleCompanySelect(company) {
         setSelectedCompany(company);
-        setShowCompanies(false); // Close list after selection
+        setShowCompanies(false);
     }
 
     return (
-        <aside className={`fixed top-16 left-0 h-screen bg-gray-100 shadow p-4 transition-all duration-300 ${isOpen ? "w-30 sm:w-48 md:w-48 lg:w-48" : "w-13 sm:w-16 md:w-16 lg:w-16"}`}>   
-    
-            {/* Profile Link */}         
-            <Link to={`/${role}/settings`} className="group flex items-center mb-4 hover:text-blue-600">
-                <Icon name="person" className="mr-2" />
-                {isOpen ? (
-                    <span>Profile</span>
-                ) : (
-                    <span className="absolute left-full ml-2 bg-white shadow px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        Profile
-                    </span>
-                )}
-            </Link>
-
-            {/* Company Section */}
-            <div className="mb-4">
-                <button onClick={() => setShowCompanies(!showCompanies)} className="group flex items-center hover:text-blue-600">
-                    <Icon name="building" className="mr-2" />
-                    {isOpen ? (
-                        <span>{selectedCompany}</span>
-                    ) : (
-                        <span className="absolute left-full ml-2 bg-white shadow px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            {selectedCompany}
-                        </span>
-                    )}
-                </button>
-                {showCompanies && isOpen && (
-                    <ul className="mt-2 ml-6 list-disc">
-                        {companies.map((company, index) => (
-                            <li key={index} onClick={() => handleCompanySelect(company)} className="hover:text-blue-500 cursor-pointer">
-                                {company}
-                            </li>    
-                        ))}
-                    </ul>
-                )}
-            </div>
-
-            {/* Statistics (only for user) */}
-            {role === "user" && (
-                <Link to="/user/statistics" className="group flex items-center hover:text-blue-600">
-                {/* No such page yet */}     
-                    <Icon name="bar-chart" className="mr-2" />
-                    {isOpen ? (
-                        <span>Statistics</span>
-                    ) : (
-                        <span className="absolute left-full ml-2 bg-white shadow px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            Statistics
-                        </span>
-                    )}
-                </Link>
+        <>
+            {/* Overlay background */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                    onClick={onClose}
+                ></div>
             )}
-        </aside>
+
+            <aside
+                className={`fixed top-0 left-0 h-screen bg-white shadow-lg transition-transform duration-300 z-50 
+                    ${isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}`}
+            >
+                <div className="p-4 pt-20">
+                    <Link
+                        to={`/${role}/settings`}
+                        className="group flex items-center mb-4 hover:text-blue-600"
+                        onClick={onClose}
+                    >
+                        <Icon name="person" className="mr-2" />
+                        <span>Profile</span>
+                    </Link>
+
+                    <div className="mb-4">
+                        <button
+                            onClick={() => setShowCompanies(!showCompanies)}
+                            className="group flex items-center hover:text-blue-600"
+                        >
+                            <Icon name="building" className="mr-2" />
+                            <span>{selectedCompany}</span>
+                        </button>
+                        {showCompanies && (
+                            <ul className="mt-2 ml-6 list-disc">
+                                {companies.map((company) => (
+                                    <li
+                                        key={company}
+                                        onClick={() => { handleCompanySelect(company); onClose(); }}
+                                        className="hover:text-blue-500 cursor-pointer"
+                                    >
+                                        {company}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+
+                    {role === "user" && (
+                        <Link
+                            to="/user/statistics"
+                            className="flex items-center hover:text-blue-600"
+                            onClick={onClose}
+                        >
+                            <Icon name="bar-chart" className="mr-2" />
+                            <span>Statistics</span>
+                        </Link>
+                    )}
+                </div>
+            </aside>
+        </>
     );
 }

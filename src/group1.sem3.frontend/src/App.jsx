@@ -19,13 +19,10 @@ export default function App() {
     
     return (
         <div className="min-h-screen flex flex-col">
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-            <div className="flex flex-1 pt-16">
-                <Sidebar isOpen={sidebarOpen}/>
-                <main className={`flex-1 p-4
-                    ${sidebarOpen 
-                        ? "ml-30 sm:ml-48 md:ml-48 lg:ml-48" 
-                        : "ml-13 sm:ml-16 md:ml-16 lg:ml-16"}`}>
+            <div className="flex flex-1">
+                <main className="flex-1">
                     <Routes>
                         <Route path="/" element={<SignInPage />} />
                         <Route path="/signuppage" element={<SignUpPage />} />
