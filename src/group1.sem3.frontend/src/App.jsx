@@ -6,7 +6,8 @@ import StaffHomePage from "./pages/staff/StaffHomePage";
 import UserSettingsPage from "./pages/user/UserSettingsPage";
 import StaffSettingsPage from "./pages/staff/StaffSettingsPage";
 import BookingPage from "./pages/user/BookingPage";
-import UserManagerPage from "./pages/admin/UserManagerPage";
+import UsersManagerPage from "./pages/admin/UsersManagerPage";
+import DamagesManagerPage from "./pages/admin/DamagesManagerPage";
 import ProfilesManagerPage from "./pages/admin/ProfilesManagerPage";
 import DesksManagerPage from "./pages/admin/DesksManagerPage";
 import HealthStatsManagerPage from "./pages/admin/HealthStatsManagerPage";
@@ -27,10 +28,11 @@ export default function App() {
                     <Route path="/user/settings" element={<UserSettingsPage />} />
                     <Route path="/staff/settings" element={<StaffSettingsPage />} />
                     <Route path="/user/booking" element={<BookingPage />} />
-                    <Route path="/admin/UserManager" element={<UserManagerPage />} />
-                    <Route path="/admin/ProfilesManager" element={<ProfilesManagerPage />} />
-                    <Route path="/admin/DesksManager" element={<DesksManagerPage />} />
-                    <Route path="/admin/HealthStatsManager" element={<HealthStatsManagerPage />} />
+                    <Route path="/admin/usersManager" element={<UsersManagerPage />} />
+                    <Route path="/admin/damagesManager" element={<DamagesManagerPage />} />
+                    <Route path="/admin/profilesManager" element={<ProfilesManagerPage />} />
+                    <Route path="/admin/desksManager" element={<DesksManagerPage />} />
+                    <Route path="/admin/healthStatsManager" element={<HealthStatsManagerPage />} />
                 </Routes>
             </main>
         </div>
