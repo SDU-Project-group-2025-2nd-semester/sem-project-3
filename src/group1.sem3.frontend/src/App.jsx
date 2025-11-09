@@ -8,7 +8,7 @@ import StaffSettingsPage from "./pages/staff/StaffSettingsPage";
 import BookingPage from "./pages/user/BookingPage";
 import Header from "./components/Header";
 import Scanning from "./pages/user/Scanning";
-import DeskPage from "./pages/user/Deskpage";
+import DeskPage from "./pages/user/DeskPage";
 import DamageReportPage from "./pages/staff/DamageReportPage";
 
 export default function App() {
