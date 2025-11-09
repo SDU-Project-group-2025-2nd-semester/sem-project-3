@@ -1,40 +1,56 @@
 ﻿using Backend.Data;
+using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers;
 
 [Route("api/{companyId}/[controller]")]
 [ApiController]
-public class RoomsController(string companyId) : ControllerBase
+public class RoomsController(IRoomService roomService) : ControllerBase
 {
 
     [HttpGet]
-    public List<Rooms> GetRooms()
+    public async Task<ActionResult<List<Rooms>>> GetRooms(Guid companyId)
     {
-        return null!;
+        var rooms = await roomService.GetAllRoomsAsync(companyId);
+        return Ok(rooms);
     }
 
     [HttpGet("{roomId}")]
-    public Rooms GetRoom(Guid roomId)
+    public async Task<ActionResult<Rooms>> GetRoom(Guid companyId, Guid roomId)
     {
-        return null!;
+        var room = await roomService.GetRoomAsync(companyId, roomId);
+        if (room is null)
+            return NotFound();
+        
+        return Ok(room);
     }
 
     [HttpPost]
-    public Rooms CreateRoom(Rooms room)
+    public async Task<ActionResult<Rooms>> CreateRoom(Guid companyId, [FromBody] Rooms room)
     {
-        return null!;
+        var created = await roomService.CreateRoomAsync(companyId, room);
+        return CreatedAtAction(nameof(GetRoom), new { companyId, room.Id }, created);
     }
 
-    [HttpPut]
-    public Rooms UpdateRoom(Rooms room) // Just for room changes
+    [HttpPut("{roomId}")]
+    public async Task<IActionResult> UpdateRoom(Guid companyId, Guid roomId, [FromBody] Rooms updated)
     {
-        return null!;
+        var update = await roomService.UpdateRoomAsync(companyId, roomId, updated);
+        if (!update)
+            return NotFound();
+
+        return NoContent();
     }
 
     [HttpDelete("{roomId}")]
-    public void DeleteRoom(Guid roomId)
+    public async Task<IActionResult> DeleteRoom(Guid companyId, Guid roomId)
     {
+        var delete = await roomService.DeleteRoomAsync(companyId, roomId);
+        if (!delete)
+            return NotFound();
+
+        return NoContent();
     }
 
 

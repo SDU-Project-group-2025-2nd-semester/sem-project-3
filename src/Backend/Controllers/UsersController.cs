@@ -1,22 +1,34 @@
 ﻿using Backend.Data;
+using Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/{companyId}/[controller]")]
 [ApiController]
-public class UsersController : ControllerBase
+public class UsersController(IUserService userService) : ControllerBase
 {
 
     [HttpGet("{userId}")]
-    public User GetUser(string userId)
+    public async Task<ActionResult<User>> GetUser(Guid companyId, string userId)
     {
-        return null!;
+        var user = await userService.GetUserAsync(companyId, userId);
+
+        if (user is null)
+            return NotFound();
+
+        return Ok(user);
     }
 
-    [HttpPut]
-    public User UpdateUser(User company)
+
+    [HttpPut("{userId}")]
+    public async Task<IActionResult> UpdateUser(Guid companyId, string userId, [FromBody] User updated)
     {
-        return null!;
+        var success = await userService.UpdateUserAsync(companyId, userId, updated);
+
+        if (!success)
+            return NotFound();
+
+        return NoContent();
     }
 }
