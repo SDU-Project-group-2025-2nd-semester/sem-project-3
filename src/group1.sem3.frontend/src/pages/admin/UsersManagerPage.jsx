@@ -56,9 +56,6 @@ export default function UsersManagerPage() {
 
   const UserRow = ({ user }) => (
     <tr key={user.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
-      <td className="px-4 py-2 text-sm max-lg:w-1/8 max-lg:flex-shrink-0 max-lg:pr-0 max-lg:text-lg">
-        {user.id}
-      </td>
       <td className="px-4 py-2 text-sm font-medium max-lg:w-7/8 max-lg:pl-2 max-lg:text-lg">
         {user.Name}
       </td>
@@ -106,9 +103,6 @@ export default function UsersManagerPage() {
 
   const StaffRow = ({ staffMember }) => (
     <tr key={staffMember.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
-      <td className="px-4 py-2 text-sm max-lg:w-1/8 max-lg:flex-shrink-0 max-lg:pr-0 max-lg:text-lg">
-        {staffMember.id}
-      </td>
       <td className="px-4 py-2 text-sm font-medium max-lg:w-7/8 max-lg:pl-2 max-lg:text-lg">
         {staffMember.Name}
       </td>
@@ -171,7 +165,6 @@ export default function UsersManagerPage() {
               <table className="min-w-full table-auto max-lg:block">
                 <TableHeader
                   columns={[
-                    'ID',
                     'Name',
                     'Email',
                     'Current Booked',
@@ -203,7 +196,6 @@ export default function UsersManagerPage() {
               <table className="min-w-full table-auto max-lg:block">
                 <TableHeader
                   columns={[
-                    'ID',
                     'Name',
                     'Email',
                     'Job Description',
