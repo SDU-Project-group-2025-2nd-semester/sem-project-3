@@ -1,0 +1,63 @@
+name: CI/CD Backend Multi-Branch (Runner + Compose)
+
+on:
+  push:
+    branches:
+      - main
+      - integrate
+      - develop
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine branch-specific values
+        id: vars
+        run: |
+          if [ "${GITHUB_REF_NAME}" == "main" ]; then
+            echo "backend_service=backend-main" >> $GITHUB_OUTPUT
+            echo "postgres_service=postgres-main" >> $GITHUB_OUTPUT
+            echo "pgadmin_service=pgadmin-main" >> $GITHUB_OUTPUT
+            echo "port=5000" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF_NAME}" == "integrate" ]; then
+            echo "backend_service=backend-integrate" >> $GITHUB_OUTPUT
+            echo "postgres_service=postgres-integrate" >> $GITHUB_OUTPUT
+            echo "pgadmin_service=pgadmin-integrate" >> $GITHUB_OUTPUT
+            echo "port=5001" >> $GITHUB_OUTPUT
+          elif [ "${GITHUB_REF_NAME}" == "develop" ]; then
+            echo "backend_service=backend-develop" >> $GITHUB_OUTPUT
+            echo "postgres_service=postgres-develop" >> $GITHUB_OUTPUT
+            echo "pgadmin_service=pgadmin-develop" >> $GITHUB_OUTPUT
+            echo "port=5002" >> $GITHUB_OUTPUT
+          fi
+
+      - name: List files in backend folder (debug)
+        run: ls -la src/Backend
+
+      - name: Build Docker images for this branch
+        working-directory: src/Backend
+        run: |
+          docker compose build --no-cache ${{ steps.vars.outputs.backend_service }}
+
+      - name: Stop and remove old containers
+        working-directory: src/Backend
+        run: |
+          docker compose stop ${{ steps.vars.outputs.backend_service }} ${{ steps.vars.outputs.postgres_service }} ${{ steps.vars.outputs.pgadmin_service }} || true
+          docker compose rm -f ${{ steps.vars.outputs.backend_service }} ${{ steps.vars.outputs.postgres_service }} ${{ steps.vars.outputs.pgadmin_service }} || true
+
+      - name: Start updated containers
+        working-directory: src/Backend
+        run: |
+          docker compose up -d ${{ steps.vars.outputs.postgres_service }}
+          docker compose up -d ${{ steps.vars.outputs.pgadmin_service }}
+          sleep 5  # Wait for postgres to be ready
+          docker compose up -d ${{ steps.vars.outputs.backend_service }}
+
+      - name: Show running containers (for verification)
+        run: docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
+
