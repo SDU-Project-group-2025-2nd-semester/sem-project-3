@@ -49,7 +49,7 @@ export default function UserHomePage() {
                 </section>
 
                 <section>
-                    <h2 className="text-2xl font-semibold text-secondary mb-4">
+                    <h2 className="text-2xl font-semibold text-secondary mb-4 mt-4">
                         Recent Bookings
                     </h2>
                     <div className="flex flex-wrap gap-4">
