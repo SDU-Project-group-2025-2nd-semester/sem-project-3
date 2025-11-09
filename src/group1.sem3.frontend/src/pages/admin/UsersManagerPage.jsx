@@ -1,7 +1,7 @@
 import { useState } from "react";
 import mockData from '../../assets/admin/UserMockData.json'
 
-export default function UserManagerPage() {
+export default function UsersManagerPage() {
   const users = mockData?.Users || []
   const staff = mockData?.Staff || []
 
