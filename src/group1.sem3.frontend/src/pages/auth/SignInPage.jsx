@@ -3,10 +3,9 @@ import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function SignInPage() {
-    const { login, roles, currentUser } = useAuth();
+    const { login, currentUser } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
@@ -15,7 +14,7 @@ export default function SignInPage() {
         e.preventDefault();
         setError("");
         try {
-            login({ email, password, role: selectedRole });
+            login({ email, password });
             navigate(`/${currentUser.role}/homepage`);
         } catch (err) {
             setError(err.message || "Failed to log in");
@@ -35,27 +34,6 @@ export default function SignInPage() {
                 <form className="space-y-3 sm:space-y-5 md:space-y-6" onSubmit={handleSubmit}>
                     <InputField id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
                     <InputField id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-
-                    <div>
-                        <label className={labelClasses} htmlFor="userType">
-                            User Type
-                        </label>
-                        <select
-                            id="userType"
-                            className={inputClasses}
-                            value={selectedRole}
-                            onChange={(e) => setSelectedRole(e.target.value)}
-                            required
-                        >
-                            <option value="" disabled>Select a role</option>
-                            {roles.map(role => (
-                                <option key={role} value={role}>
-                                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                                </option>
-                            ))}
-                        </select>
-
-                    </div>
 
                     <button
                         type="submit"

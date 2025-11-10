@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 
+export const roles = ["admin", "staff", "user"];
+
 export default function SignUpPage() {
-    const { signup, roles, currentUser } = useAuth();
+    const { signup } = useAuth();
     const [username, setUsername] = useState("");
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
@@ -16,8 +17,8 @@ export default function SignUpPage() {
         e.preventDefault();
         setError("");
         try {
-            signup({ username, fullName, email, password, role: selectedRole });
-            navigate(`/${currentUser.role}/homepage`);
+            signup({ username, fullName, email, password });
+            navigate(`/user/homepage`);
         } catch (err) {
             setError(err.message || "Failed to register");
         }
@@ -38,27 +39,6 @@ export default function SignUpPage() {
                     <InputField id="fullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full Name" />
                     <InputField id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
                     <InputField id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-
-                    <div>
-                        <label className={labelClasses} htmlFor="userType">
-                            User Type
-                        </label>
-                        <select
-                            id="userType"
-                            className={inputClasses}
-                            value={selectedRole}
-                            onChange={(e) => setSelectedRole(e.target.value)}
-                            required
-                        >
-                            <option value="" disabled>Select a role</option>
-                            {roles.map(role => (
-                                <option key={role} value={role}>
-                                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                                </option>
-                            ))}
-                        </select>
-
-                    </div>
 
                     <button
                         type="submit"
