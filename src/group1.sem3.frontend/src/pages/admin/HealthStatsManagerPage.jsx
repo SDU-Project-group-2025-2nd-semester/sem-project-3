@@ -69,7 +69,7 @@ export default function HealthStatsManagerPage() {
                         {MockData.roomData.room1.name}
                     </RoomButton>
                     <RoomButton active={activeRoom === 'room2'} onClick={() => setActiveRoom('room2')}>
-                        {MockData.roomData.room1.name}
+                        {MockData.roomData.room2.name}
                     </RoomButton>
                     <RoomButton active={activeRoom === 'room3'} onClick={() => setActiveRoom('room3')}>
                         {MockData.roomData.room3.name}

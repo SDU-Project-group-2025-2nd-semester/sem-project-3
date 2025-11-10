@@ -3,7 +3,7 @@ import mockData from '../../assets/admin/ProfileMockData.json'
 
 
 export default function ProfilesManager() {
-    const profiles = mockData || []
+    const profiles = mockData || [];
 
     // Default form values
     const DEFAULT_DESK_HEIGHT = 95;
@@ -245,13 +245,13 @@ export default function ProfilesManager() {
 
                             {/* Day Selection */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                                <DayCheckbox day="Monday" label="Monday" />
-                                <DayCheckbox day="Tuesday" label="Tuesday" />
-                                <DayCheckbox day="Wednesday" label="Wednesday" />
-                                <DayCheckbox day="Thursday" label="Thursday" />
-                                <DayCheckbox day="Friday" label="Friday" />
-                                <DayCheckbox day="Saturday" label="Saturday" />
-                                <DayCheckbox day="Sunday" label="Sunday" />
+                                <DayCheckbox day="Mon" label="Monday" />
+                                <DayCheckbox day="Tue" label="Tuesday" />
+                                <DayCheckbox day="Wed" label="Wednesday" />
+                                <DayCheckbox day="Thu" label="Thursday" />
+                                <DayCheckbox day="Fri" label="Friday" />
+                                <DayCheckbox day="Sat" label="Saturday" />
+                                <DayCheckbox day="Sun" label="Sunday" />
                             </div>
 
 

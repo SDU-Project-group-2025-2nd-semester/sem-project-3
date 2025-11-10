@@ -295,7 +295,7 @@ export default function DesksManagerPage() {
                                 <tbody className="max-lg:block divide-y divide-gray-100">
                                     {desks[activeRoom]?.map((desk) => {
                                         const bookedUser = getUserName(desk.currentBookId);
-                                        const activeProfile = getProfileById(desk.activeProfile);
+                                        // const activeProfile = getProfileById(desk.activeProfile);
 
                                         return (
                                             <tr key={desk.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
@@ -330,9 +330,9 @@ export default function DesksManagerPage() {
                                                         onClick={() => handleDeskStatus(desk.id)}
                                                         className="bg-accent text-white px-3 py-1.5 ml-2 rounded-lg text-xs hover:bg-accent-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                                         title="Change desk status"
-                                                        disabled={desk.status == 'booked'}
+                                                        disabled={desk.status === 'booked'}
                                                     >
-                                                        <span>{desk.status == 'unavailable' ? 'Activate' : 'Deactivate'}</span>
+                                                        <span>{desk.status === 'unavailable' ? 'Activate' : 'Deactivate'}</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeskUnBook(desk.id)}

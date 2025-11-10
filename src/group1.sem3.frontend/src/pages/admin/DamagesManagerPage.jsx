@@ -130,7 +130,7 @@ export default function DamagesManagerPage() {
       <td className="px-4 py-3 text-sm w-full flex flex-row gap-2 mt-2">
         <button
           className="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
-          disabled={damage.status != "pending"}
+          disabled={damage.status !== "pending"}
           onClick={() => handleIssue(damage.id)}
           title={"Open issue"}
         >
@@ -138,7 +138,7 @@ export default function DamagesManagerPage() {
         </button>
         <button
           className="bg-accent text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
-          disabled={damage.status != "in_progress"}
+          disabled={damage.status !== "in_progress"}
           onClick={() => handleIssue(damage.id)}
           title={"Close issue"}
         >
@@ -146,7 +146,7 @@ export default function DamagesManagerPage() {
         </button>
         <button
           className="bg-danger-500 text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center justify-center gap-1 max-lg:flex-1"
-          onClick={() => handleRemoveDamage(damage.id, 'damage')}
+          onClick={() => handleRemoveDamage(damage.id)}
           title="Remove issue"
         >
           <span className="material-symbols-outlined text-sm leading-none">delete</span>
