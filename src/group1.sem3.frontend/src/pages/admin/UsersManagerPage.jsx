@@ -25,7 +25,7 @@ export default function UsersManagerPage() {
     // TODO: Implement API call
   };
 
-  const handleRemoveUSer = (userId) => {
+  const handleRemoveUser = (userId) => {
     console.log('Remove User for', userId);
     // TODO: Implement API call
   };
