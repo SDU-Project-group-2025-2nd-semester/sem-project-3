@@ -12,6 +12,9 @@ import ProfilesManagerPage from "./pages/admin/ProfilesManagerPage";
 import DesksManagerPage from "./pages/admin/DesksManagerPage";
 import HealthStatsManagerPage from "./pages/admin/HealthStatsManagerPage";
 import Header from "./components/Header";
+import Scanning from "./pages/user/Scanning";
+import DeskPage from "./pages/user/DeskPage";
+import DamageReportPage from "./pages/staff/DamageReportPage";
 
 export default function App() {
 
@@ -33,6 +36,9 @@ export default function App() {
                     <Route path="/admin/profilesManager" element={<ProfilesManagerPage />} />
                     <Route path="/admin/desksManager" element={<DesksManagerPage />} />
                     <Route path="/admin/healthStatsManager" element={<HealthStatsManagerPage />} />
+                    <Route path="/user/scan" element={<Scanning />} />
+                    <Route path="/user/desk" element={<DeskPage />} />
+                    <Route path="/staff/damagereport" element={<DamageReportPage />} />
                 </Routes>
             </main>
         </div>

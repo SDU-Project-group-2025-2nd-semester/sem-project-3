@@ -1,6 +1,0 @@
-@Group1.Sem3.Backend_HostAddress = http://localhost:5170
-
-GET {{Group1.Sem3.Backend_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
