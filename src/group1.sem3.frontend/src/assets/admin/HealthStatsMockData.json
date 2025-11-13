@@ -1,0 +1,153 @@
+{
+  "roomOccupancy": {
+    "weekdays": [
+      { "time": "Mon 8:00", "occupancy": 8, "trend": 10 },
+      { "time": "Mon 9:00", "occupancy": 15, "trend": 12 },
+      { "time": "Mon 10:00", "occupancy": 22, "trend": 15 },
+      { "time": "Mon 11:00", "occupancy": 28, "trend": 18 },
+      { "time": "Mon 12:00", "occupancy": 25, "trend": 20 },
+      { "time": "Mon 13:00", "occupancy": 30, "trend": 22 },
+      { "time": "Mon 14:00", "occupancy": 35, "trend": 25 },
+      { "time": "Mon 15:00", "occupancy": 38, "trend": 27 },
+      { "time": "Mon 16:00", "occupancy": 32, "trend": 28 },
+      { "time": "Mon 17:00", "occupancy": 20, "trend": 30 },
+      { "time": "Tue 8:00", "occupancy": 12, "trend": 12 },
+      { "time": "Tue 9:00", "occupancy": 20, "trend": 15 },
+      { "time": "Tue 10:00", "occupancy": 32, "trend": 18 },
+      { "time": "Tue 11:00", "occupancy": 38, "trend": 22 },
+      { "time": "Tue 12:00", "occupancy": 35, "trend": 25 },
+      { "time": "Tue 13:00", "occupancy": 40, "trend": 28 },
+      { "time": "Tue 14:00", "occupancy": 45, "trend": 32 },
+      { "time": "Tue 15:00", "occupancy": 48, "trend": 35 },
+      { "time": "Tue 16:00", "occupancy": 42, "trend": 38 },
+      { "time": "Tue 17:00", "occupancy": 28, "trend": 40 },
+      { "time": "Wed 8:00", "occupancy": 10, "trend": 15 },
+      { "time": "Wed 9:00", "occupancy": 18, "trend": 18 },
+      { "time": "Wed 10:00", "occupancy": 28, "trend": 22 },
+      { "time": "Wed 11:00", "occupancy": 35, "trend": 25 },
+      { "time": "Wed 12:00", "occupancy": 32, "trend": 28 },
+      { "time": "Wed 13:00", "occupancy": 38, "trend": 30 },
+      { "time": "Wed 14:00", "occupancy": 42, "trend": 33 },
+      { "time": "Wed 15:00", "occupancy": 45, "trend": 35 },
+      { "time": "Wed 16:00", "occupancy": 40, "trend": 37 },
+      { "time": "Wed 17:00", "occupancy": 25, "trend": 38 },
+      { "time": "Thu 8:00", "occupancy": 14, "trend": 18 },
+      { "time": "Thu 9:00", "occupancy": 22, "trend": 20 },
+      { "time": "Thu 10:00", "occupancy": 30, "trend": 23 },
+      { "time": "Thu 11:00", "occupancy": 38, "trend": 27 },
+      { "time": "Thu 12:00", "occupancy": 36, "trend": 30 },
+      { "time": "Thu 13:00", "occupancy": 42, "trend": 32 },
+      { "time": "Thu 14:00", "occupancy": 48, "trend": 35 },
+      { "time": "Thu 15:00", "occupancy": 50, "trend": 38 },
+      { "time": "Thu 16:00", "occupancy": 44, "trend": 40 },
+      { "time": "Thu 17:00", "occupancy": 30, "trend": 42 },
+      { "time": "Fri 8:00", "occupancy": 15, "trend": 20 },
+      { "time": "Fri 9:00", "occupancy": 25, "trend": 22 },
+      { "time": "Fri 10:00", "occupancy": 35, "trend": 25 },
+      { "time": "Fri 11:00", "occupancy": 42, "trend": 28 },
+      { "time": "Fri 12:00", "occupancy": 38, "trend": 30 },
+      { "time": "Fri 13:00", "occupancy": 35, "trend": 32 },
+      { "time": "Fri 14:00", "occupancy": 40, "trend": 34 },
+      { "time": "Fri 15:00", "occupancy": 38, "trend": 35 },
+      { "time": "Fri 16:00", "occupancy": 30, "trend": 36 },
+      { "time": "Fri 17:00", "occupancy": 18, "trend": 37 }
+    ],
+    "weekends": [
+      { "time": "Sat 8:00", "occupancy": 2, "trend": 3 },
+      { "time": "Sat 9:00", "occupancy": 4, "trend": 4 },
+      { "time": "Sat 10:00", "occupancy": 6, "trend": 5 },
+      { "time": "Sat 11:00", "occupancy": 8, "trend": 6 },
+      { "time": "Sat 12:00", "occupancy": 10, "trend": 7 },
+      { "time": "Sat 13:00", "occupancy": 8, "trend": 7 },
+      { "time": "Sat 14:00", "occupancy": 6, "trend": 7 },
+      { "time": "Sat 15:00", "occupancy": 5, "trend": 7 },
+      { "time": "Sat 16:00", "occupancy": 3, "trend": 6 },
+      { "time": "Sat 17:00", "occupancy": 2, "trend": 5 },
+      { "time": "Sun 8:00", "occupancy": 1, "trend": 2 },
+      { "time": "Sun 9:00", "occupancy": 2, "trend": 3 },
+      { "time": "Sun 10:00", "occupancy": 3, "trend": 3 },
+      { "time": "Sun 11:00", "occupancy": 4, "trend": 4 },
+      { "time": "Sun 12:00", "occupancy": 5, "trend": 4 },
+      { "time": "Sun 13:00", "occupancy": 4, "trend": 4 },
+      { "time": "Sun 14:00", "occupancy": 3, "trend": 4 },
+      { "time": "Sun 15:00", "occupancy": 2, "trend": 3 },
+      { "time": "Sun 16:00", "occupancy": 2, "trend": 3 },
+      { "time": "Sun 17:00", "occupancy": 1, "trend": 2 }
+    ]
+  },
+  "deskTimeByDay": [
+    { "day": "Mon", "hours": 280, "avgHours": 3.5 },
+    { "day": "Tue", "hours": 350, "avgHours": 5.7 },
+    { "day": "Wed", "hours": 310, "avgHours": 4.0 },
+    { "day": "Thu", "hours": 340, "avgHours": 4.9 },
+    { "day": "Fri", "hours": 320, "avgHours": 5.9 }
+  ],
+  "avgDeskHeight": [
+    { "day": "Mon", "height": 98, "avgHeight": 95 },
+    { "day": "Tue", "height": 102, "avgHeight": 95 },
+    { "day": "Wed", "height": 105, "avgHeight": 95 },
+    { "day": "Thu", "height": 97, "avgHeight": 95 },
+    { "day": "Fri", "height": 100, "avgHeight": 95 }
+  ],
+  "comfortFactors": {
+    "humidity": [
+      { "day": "Monday", "value": 55 },
+      { "day": "Tuesday", "value": 52 },
+      { "day": "Wednesday", "value": 48 },
+      { "day": "Thursday", "value": 50 },
+      { "day": "Friday", "value": 53 },
+      { "day": "Saturday", "value": 45 },
+      { "day": "Sunday", "value": 42 }
+    ],
+    "temperature": [
+      { "day": "Monday", "value": 22 },
+      { "day": "Tuesday", "value": 23 },
+      { "day": "Wednesday", "value": 21 },
+      { "day": "Thursday", "value": 24 },
+      { "day": "Friday", "value": 22 },
+      { "day": "Saturday", "value": 20 },
+      { "day": "Sunday", "value": 19 }
+    ]
+  },
+  "roomData": {
+    "room1": {
+      "name": "Conference Room",
+      "avgOccupancy": 65,
+      "peakOccupancy": 92,
+      "avgDeskTime": 4.5,
+      "avgDeskHeight": 98,
+      "comfortScore": 8.2
+    },
+    "room2": {
+      "name": "Open Space",
+      "avgOccupancy": 78,
+      "peakOccupancy": 95,
+      "avgDeskTime": 5.2,
+      "avgDeskHeight": 102,
+      "comfortScore": 7.8
+    },
+    "room3": {
+      "name": "Quiet Zone",
+      "avgOccupancy": 45,
+      "peakOccupancy": 75,
+      "avgDeskTime": 6.1,
+      "avgDeskHeight": 95,
+      "comfortScore": 9.1
+    },
+    "room4": {
+      "name": "Collaboration Hub",
+      "avgOccupancy": 58,
+      "peakOccupancy": 87,
+      "avgDeskTime": 4.8,
+      "avgDeskHeight": 100,
+      "comfortScore": 8.5
+    }
+  },
+  "weeklyStats": {
+    "totalUsers": 60,
+    "avgSittingTime": 4.8,
+    "mostActiveDay": "Tuesday",
+    "peakHour": "14:00-15:00",
+    "healthScore": 82
+  }
+}

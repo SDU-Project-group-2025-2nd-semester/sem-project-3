@@ -1,0 +1,120 @@
+services:
+  backend-main:
+    build:
+      context: ../..
+      dockerfile: src/Backend/Dockerfile
+    container_name: backend-main
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres-main;Port=5432;Database=backend_main;Username=postgres;Password=postgres
+    depends_on:
+      - postgres-main
+    restart: unless-stopped
+
+  postgres-main:
+    image: postgres:latest
+    container_name: postgres-main
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: backend_main
+    volumes:
+      - postgres_main_data:/var/lib/postgresql
+    restart: unless-stopped
+
+  pgadmin-main:
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    image: dpage/pgadmin4
+    container_name: pgadmin-main
+    ports:
+      - "6050:80"
+    volumes:
+      - pgadmin_main_data:/var/lib/pgadmin
+    restart: unless-stopped
+
+  backend-integrate:
+    build:
+      context: ../..
+      dockerfile: src/Backend/Dockerfile
+    container_name: backend-integrate
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres-integrate;Port=5432;Database=backend_integrate;Username=postgres;Password=postgres
+    depends_on:
+      - postgres-integrate
+    restart: unless-stopped
+
+  postgres-integrate:
+    image: postgres:latest
+    container_name: postgres-integrate
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: backend_integrate
+    volumes:
+      - postgres_integrate_data:/var/lib/postgresql
+    restart: unless-stopped
+
+  pgadmin-integrate:
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    image: dpage/pgadmin4
+    container_name: pgadmin-integrate
+    ports:
+      - "6051:80"
+    volumes:
+      - pgadmin_integrate_data:/var/lib/pgadmin
+    restart: unless-stopped
+
+  backend-develop:
+    build:
+      context: ../..
+      dockerfile: src/Backend/Dockerfile
+    container_name: backend-develop
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres-develop;Port=5432;Database=backend_develop;Username=postgres;Password=postgres
+    depends_on:
+      - postgres-develop
+    restart: unless-stopped
+
+  postgres-develop:
+    image: postgres:latest
+    container_name: postgres-develop
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: backend_develop
+    volumes:
+      - postgres_develop_data:/var/lib/postgresql
+    restart: unless-stopped
+
+  pgadmin-develop:
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    image: dpage/pgadmin4
+    container_name: pgadmin-develop
+    ports:
+      - "6052:80"
+    volumes:
+      - pgadmin_develop_data:/var/lib/pgadmin
+    restart: unless-stopped
+
+volumes:
+  postgres_main_data:
+  postgres_integrate_data:
+  postgres_develop_data:
+  pgadmin_main_data:
+  pgadmin_integrate_data:
+  pgadmin_develop_data:
+

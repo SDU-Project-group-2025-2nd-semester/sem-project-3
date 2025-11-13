@@ -6,6 +6,8 @@ on:
       - main
       - integrate
       - develop
+    paths:
+      - 'src/group1.sem3.frontend/**'
   workflow_dispatch:
 
 jobs:
