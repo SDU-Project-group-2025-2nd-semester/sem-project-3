@@ -169,7 +169,7 @@ public class DatabaseMigrationHostedService(
             AccountCreation = DateTime.UtcNow.AddMonths(-1),
             Reservations = []
         };
-        await userManager.CreateAsync(aliceJohnson, "Alice123!");
+        await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
 
         await context.SaveChangesAsync();
 
