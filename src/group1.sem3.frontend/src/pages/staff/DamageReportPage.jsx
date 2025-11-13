@@ -18,11 +18,14 @@ export default function DamageReportPage() {
         }
 
         alert("Damage reported successfully!");
-        
-        // Navigate back and pass the damaged table ID
-        navigate("/staff/homepage", {
-            state: { damagedTableId: tableId },
+      
+        const isStaff = location.pathname.includes("/staff");
+
+        // Navigate back and pass the damaged table ID  
+        navigate(isStaff ? "/staff/homepage" : "/user/desk", {
+            state: isStaff ? { damagedTableId: tableId } : { damagedDeskId: tableId },
         });
+
     };
 
     return (
