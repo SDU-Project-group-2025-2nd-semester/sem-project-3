@@ -74,6 +74,7 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             Height = 75,
             MaxHeight = 120,
             MinHeight = 60,
+            MacAddress = "AA:BB:CC:DD:EE:02",
             RoomId = _testRoom.Id,
             CompanyId = _testCompany.Id,
             ReservationIds = [],
