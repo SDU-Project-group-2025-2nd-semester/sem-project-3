@@ -8,10 +8,25 @@ on:
       - develop
     paths:
       - 'src/Backend/**'
+      - 'tests/Backend.Tests/**'
   workflow_dispatch:
 
 jobs:
+  run-tests: 
+    runs-on: self-hosted # run on raspeberry server
+    # runs on: ubuntu-latest  # run directly in github actions
+
+    steps: 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run dotnet test
+        continue-on-error: ${{ github.ref_name == 'develop' }}
+        run: dotnet test tests/Backend.Tests/Backend.Tests.csproj
+
+
   build-and-deploy:
+    needs: run-tests
     runs-on: self-hosted
 
     steps:
@@ -62,4 +77,3 @@ jobs:
 
       - name: Show running containers (for verification)
         run: docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
-
