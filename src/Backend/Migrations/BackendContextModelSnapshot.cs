@@ -96,14 +96,19 @@ namespace Backend.Migrations
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
-                    b.Property<double>("Height")
-                        .HasColumnType("double precision");
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
 
-                    b.Property<double>("MaxHeight")
-                        .HasColumnType("double precision");
+                    b.Property<string>("MacAddress")
+                        .IsRequired()
+                        .HasMaxLength(17)
+                        .HasColumnType("character varying(17)");
 
-                    b.Property<double>("MinHeight")
-                        .HasColumnType("double precision");
+                    b.Property<int>("MaxHeight")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MinHeight")
+                        .HasColumnType("integer");
 
                     b.PrimitiveCollection<List<Guid>>("ReservationIds")
                         .IsRequired()
