@@ -8,11 +8,11 @@ All users have **email confirmed** and can log in immediately.
 
 | Email | Password | First Name | Last Name | User ID | Company |
 |-------|----------|------------|-----------|---------|---------|
-| admin@techcoworking.com | `Admin123!` | Admin | User | admin-user-1 | Tech Co-Working Space |
-| john.doe@techcoworking.com | `JohnDoe123!` | John | Doe | user-john-doe | Tech Co-Working Space |
-| jane.doe@techcoworking.com | `JaneDoe123!` | Jane | Doe | user-jane-doe | Tech Co-Working Space |
-| bob.smith@innovationhub.com | `BobSmith123!` | Bob | Smith | user-bob-smith | Innovation Hub |
-| alice.johnson@startupcenter.com | `Alice123!` | Alice | Johnson | user-alice-johnson | Startup Center |
+| admin@techcoworking.com | `Admin123!` | Admin | User | a1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
+| john.doe@techcoworking.com | `JohnDoe123!` | John | Doe | b1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
+| jane.doe@techcoworking.com | `JaneDoe123!` | Jane | Doe | c1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
+| bob.smith@innovationhub.com | `BobSmith123!` | Bob | Smith | d1111111-1111-1111-1111-111111111111 | Innovation Hub |
+| alice.johnson@startupcenter.com | `Alice123!` | Alice | Johnson | e1111111-1111-1111-1111-111111111111 | Startup Center |
 
 ### User Details
 
