@@ -1,0 +1,298 @@
+﻿using Backend.Data;
+using Backend.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using System.Net.Http;
+
+namespace Backend.Services;
+
+
+public class DeskControlService(BackendContext dbContext, ILogger<DeskControlService> logger, IDeskApi deskApi, IHubContext<DeskHub> hubContext)
+{
+
+    public async Task<bool> SetDeskHeightAsync(Guid deskId, int newHeight)
+    {
+        var desk = await dbContext.Desks
+            .Include(d => d.Room)
+            .Include(d => d.Company)
+            .FirstOrDefaultAsync(d => d.Id == deskId);
+
+        if (desk == null)
+        {
+            logger.LogWarning("Desk {DeskId} not found", deskId);
+            return false;
+        }
+
+        if (newHeight < desk.MinHeight || newHeight > desk.MaxHeight)
+        {
+            logger.LogWarning(
+                "Invalid height {Height} for desk {DeskId}. Must be between {Min} and {Max}",
+                newHeight, deskId, desk.MinHeight, desk.MaxHeight);
+            return false;
+        }
+
+        try
+        {
+            var newState = await deskApi.SetState(desk.MacAddress, new State()
+            {
+                PositionMm = newHeight,
+            });
+
+
+            // Update database
+            //var oldHeight = desk.Height;
+            desk.Height = newState.PositionMm;
+            await dbContext.SaveChangesAsync();
+
+            // Notify clients via SignalR
+            //await NotifyDeskHeightChanged(desk, oldHeight, newHeight);
+
+            logger.LogInformation("Desk {DeskId} height changed to {Height}mm", deskId, newHeight);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error changing height for desk {DeskId}", deskId);
+            return false;
+        }
+    }
+
+    public async Task<bool> SetRoomDesksHeightAsync(Guid roomId, int newHeight)
+    {
+        var desks = await dbContext.Desks
+            .Where(d => d.RoomId == roomId)
+            .ToListAsync();
+
+        var tasks = desks.Select(desk => SetDeskHeightAsync(desk.Id, newHeight));
+        var results = await Task.WhenAll(tasks);
+
+        return results.All(r => r);
+    }
+
+    public async Task<int?> GetCurrentDeskHeightAsync(string macAddress)
+    {
+        try
+        {
+            var response = await deskApi.GetDeskState(macAddress);
+
+
+            return response.PositionMm;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting height for desk {macAddress}", macAddress);
+            return null;
+        }
+    }
+
+    //private async Task NotifyDeskHeightChanged(Desk desk, int oldHeight, int newHeight)
+    //{
+    //    var update = new DeskHeightUpdate
+    //    {
+    //        DeskId = desk.Id,
+    //        RoomId = desk.RoomId,
+    //        CompanyId = desk.CompanyId,
+    //        OldHeight = oldHeight,
+    //        NewHeight = newHeight,
+    //        Timestamp = DateTime.UtcNow
+    //    };
+
+    //    // Send to all clients watching this specific desk
+    //    await hubContext.Clients
+    //        .Group($"desk-{desk.Id}")
+    //        .SendAsync("DeskHeightChanged", update);
+
+    //    // Send to all clients watching this room
+    //    await hubContext.Clients
+    //        .Group($"room-{desk.RoomId}")
+    //        .SendAsync("DeskHeightChanged", update);
+
+    //    // Send to all clients watching this company
+    //    await hubContext.Clients
+    //        .Group($"company-{desk.CompanyId}")
+    //        .SendAsync("DeskHeightChanged", update);
+    //}
+
+}
+
+public interface IDeskApi
+{
+    Task<List<string>> GetAllDesks();
+    Task<DeskJsonElement> GetDeskStatus(string macAddress);
+    Task<Config> GetDeskConfig(string macAddress);
+    Task<State> GetDeskState(string macAddress);
+    Task<Usage> GetDeskUsage(string macAddress);
+    Task<List<LastError>> GetDeskLastErrors(string macAddress);
+    Task<Config> SetConfig(string macAddress, Config config);
+    Task<State> SetState(string macAddress, State state);
+    Task<Usage> SetUsage(string macAddress, Usage usage);
+    Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors);
+}
+
+public class DeskApi(HttpClient httpClient) : IDeskApi
+{
+    public async Task<List<string>> GetAllDesks()
+    {
+        var result = await httpClient.GetAsync("desks");
+
+        result.EnsureSuccessStatusCode();
+
+        var desks = await result.Content.ReadFromJsonAsync<List<string>>();
+
+        return desks ?? [];
+    }
+
+    public async Task<DeskJsonElement> GetDeskStatus(string macAddress)
+    {
+        var result = await httpClient.GetAsync($"desk/{macAddress}/status");
+
+        result.EnsureSuccessStatusCode();
+
+        var desk = await result.Content.ReadFromJsonAsync<DeskJsonElement>();
+
+        if (desk == null)
+        {
+            throw new Exception("Failed to parse desk status");
+        }
+
+        return desk;
+    }
+
+    public async Task<Config> GetDeskConfig(string macAddress)
+    {
+        var result = await httpClient.GetAsync($"desk/{macAddress}/config");
+        result.EnsureSuccessStatusCode();
+        var config = await result.Content.ReadFromJsonAsync<Config>();
+        if (config == null)
+        {
+            throw new Exception("Failed to parse desk config");
+        }
+
+        return config;
+    }
+
+    public async Task<State> GetDeskState(string macAddress)
+    {
+        var result = await httpClient.GetAsync($"desk/{macAddress}/state");
+        result.EnsureSuccessStatusCode();
+        var state = await result.Content.ReadFromJsonAsync<State>();
+        if (state == null)
+        {
+            throw new Exception("Failed to parse desk state");
+        }
+
+        return state;
+    }
+
+    public async Task<Usage> GetDeskUsage(string macAddress)
+    {
+        var result = await httpClient.GetAsync($"desk/{macAddress}/usage");
+        result.EnsureSuccessStatusCode();
+        var usage = await result.Content.ReadFromJsonAsync<Usage>();
+        if (usage == null)
+        {
+            throw new Exception("Failed to parse desk usage");
+        }
+
+        return usage;
+    }
+
+    public async Task<List<LastError>> GetDeskLastErrors(string macAddress)
+    {
+        var result = await httpClient.GetAsync($"desk/{macAddress}/lastErrors");
+        result.EnsureSuccessStatusCode();
+        var lastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
+        if (lastErrors == null)
+        {
+            throw new Exception("Failed to parse desk last errors");
+        }
+
+        return lastErrors;
+    }
+
+    public async Task<Config> SetConfig(string macAddress, Config config)
+    {
+        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/config", config);
+        result.EnsureSuccessStatusCode();
+        var updatedConfig = await result.Content.ReadFromJsonAsync<Config>();
+        if (updatedConfig == null)
+        {
+            throw new Exception("Failed to parse updated desk config");
+        }
+        return updatedConfig;
+    }
+
+    public async Task<State> SetState(string macAddress, State state)
+    {
+        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/state", state);
+        result.EnsureSuccessStatusCode();
+        var updatedState = await result.Content.ReadFromJsonAsync<State>();
+        if (updatedState == null)
+        {
+            throw new Exception("Failed to parse updated desk state");
+        }
+        return updatedState;
+    }
+
+    public async Task<Usage> SetUsage(string macAddress, Usage usage)
+    {
+        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/usage", usage);
+        result.EnsureSuccessStatusCode();
+        var updatedUsage = await result.Content.ReadFromJsonAsync<Usage>();
+        if (updatedUsage == null)
+        {
+            throw new Exception("Failed to parse updated desk usage");
+        }
+        return updatedUsage;
+    }
+
+    public async Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors)
+    {
+        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/lastErrors", lastErrors);
+        result.EnsureSuccessStatusCode();
+        var updatedLastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
+        if (updatedLastErrors == null)
+        {
+            throw new Exception("Failed to parse updated desk last errors");
+        }
+        return updatedLastErrors;
+    }
+}
+
+
+public class DeskJsonElement
+{
+    public Config Config { get; set; }
+    public State State { get; set; }
+    public Usage Usage { get; set; }
+    public List<LastError> LastErrors { get; set; }
+}
+
+public class Config
+{
+    public string Name { get; set; }
+    public string Manufacturer { get; set; }
+}
+
+public class State
+{
+    public int PositionMm { get; set; }
+    public int SpeedMms { get; set; }
+    public string Status { get; set; }
+    public bool IsPositionLost { get; set; }
+    public bool IsOverloadProtectionUp { get; set; }
+    public bool IsOverloadProtectionDown { get; set; }
+    public bool IsAntiCollision { get; set; }
+}
+
+public class Usage
+{
+    public int ActivationsCounter { get; set; }
+    public int SitStandCounter { get; set; }
+}
+
+public class LastError
+{
+    public int TimeS { get; set; }
+    public int ErrorCode { get; set; }
+}
