@@ -12,7 +12,7 @@ All users have **email confirmed** and can log in immediately.
 | john.doe@techcoworking.com | `JohnDoe123!` | John | Doe | b1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
 | jane.doe@techcoworking.com | `JaneDoe123!` | Jane | Doe | c1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
 | bob.smith@innovationhub.com | `BobSmith123!` | Bob | Smith | d1111111-1111-1111-1111-111111111111 | Innovation Hub |
-| alice.johnson@startupcenter.com | `Alice123!` | Alice | Johnson | e1111111-1111-1111-1111-111111111111 | Startup Center |
+| alice.johnson@startupcenter.com | `AliceJohnson123!` | Alice | Johnson | e1111111-1111-1111-1111-111111111111 | Startup Center |
 
 ### User Details
 
