@@ -1,0 +1,138 @@
+{
+  "Users": [
+    {
+      "id": 0,
+      "Name": "Static Data",
+      "Email": "alice.johnson@example.com",
+      "CurrentBooked": "Desk A12",
+      "LastBook": "2025-10-29T09:00:00Z",
+      "DeskTime": "6h 45m",
+      "SittingTime": "4h 10m"
+    },
+    {
+      "id": 1,
+      "Name": "Alice Johnson",
+      "Email": "alice.johnson@example.com",
+      "CurrentBooked": "Desk A12",
+      "LastBook": "2025-10-29T09:00:00Z",
+      "DeskTime": "6h 45m",
+      "SittingTime": "4h 10m"
+    },
+    {
+      "id": 2,
+      "Name": "David Kim",
+      "Email": "david.kim@example.com",
+      "CurrentBooked": "Desk C03",
+      "LastBook": "2025-10-28T08:30:00Z",
+      "DeskTime": "7h 05m",
+      "SittingTime": "3h 50m"
+    },
+    {
+      "id": 3,
+      "Name": "Maria Lopez",
+      "Email": "maria.lopez@example.com",
+      "CurrentBooked": "Desk B07",
+      "LastBook": "2025-10-30T07:45:00Z",
+      "DeskTime": "5h 20m",
+      "SittingTime": "2h 15m"
+    },
+    {
+      "id": 4,
+      "Name": "Ethan Wright",
+      "Email": "ethan.wright@example.com",
+      "CurrentBooked": null,
+      "LastBook": "2025-10-25T10:15:00Z",
+      "DeskTime": "4h 30m",
+      "SittingTime": "3h 00m"
+    },
+    {
+      "id": 5,
+      "Name": "Sara Müller",
+      "Email": "sara.muller@example.com",
+      "CurrentBooked": "Desk D02",
+      "LastBook": "2025-10-30T09:30:00Z",
+      "DeskTime": "8h 10m",
+      "SittingTime": "5h 25m"
+    }
+  ],
+"Staff": [
+    {
+      "id": 0,
+      "Name": "Static Data",
+      "Email": "james.porter@company.com",
+      "JobDescription": "Cleaning Supervisor",
+      "WorkingSchedule": {
+        "Monday": "08:00 - 16:00",
+        "Tuesday": "08:00 - 16:00",
+        "Wednesday": "08:00 - 16:00",
+        "Thursday": "08:00 - 16:00",
+        "Friday": "08:00 - 15:00"
+      }
+    },
+    {
+      "id": 1,
+      "Name": "James Porter",
+      "Email": "james.porter@company.com",
+      "JobDescription": "Cleaning Supervisor",
+      "WorkingSchedule": {
+        "Monday": "08:00 - 16:00",
+        "Tuesday": "08:00 - 16:00",
+        "Wednesday": "08:00 - 16:00",
+        "Thursday": "08:00 - 16:00",
+        "Friday": "08:00 - 15:00"
+      }
+    },
+    {
+      "id": 2,
+      "Name": "Olivia Chen",
+      "Email": "olivia.chen@company.com",
+      "JobDescription": "Maintenance Technician",
+      "WorkingSchedule": {
+        "Monday": "09:00 - 17:00",
+        "Tuesday": "09:00 - 17:00",
+        "Wednesday": "Remote",
+        "Thursday": "09:00 - 17:00",
+        "Friday": "09:00 - 14:00"
+      }
+    },
+    {
+      "id": 3,
+      "Name": "Michael Brown",
+      "Email": "michael.brown@company.com",
+      "JobDescription": "IT Support Specialist",
+      "WorkingSchedule": {
+        "Monday": "07:30 - 15:30",
+        "Tuesday": "07:30 - 15:30",
+        "Wednesday": "07:30 - 15:30",
+        "Thursday": "07:30 - 15:30",
+        "Friday": "07:30 - 14:00"
+      }
+    },
+    {
+      "id": 4,
+      "Name": "Fatima Al-Sayed",
+      "Email": "fatima.alsayed@company.com",
+      "JobDescription": "Facilities Maintenance",
+      "WorkingSchedule": {
+        "Monday": "06:00 - 14:00",
+        "Tuesday": "06:00 - 14:00",
+        "Wednesday": "06:00 - 14:00",
+        "Thursday": "06:00 - 14:00",
+        "Friday": "06:00 - 13:00"
+      }
+    },
+    {
+      "id": 5,
+      "Name": "Liam O'Connor",
+      "Email": "liam.oconnor@company.com",
+      "JobDescription": "Security Officer",
+      "WorkingSchedule": {
+        "Monday": "14:00 - 22:00",
+        "Tuesday": "14:00 - 22:00",
+        "Wednesday": "14:00 - 22:00",
+        "Thursday": "14:00 - 22:00",
+        "Friday": "14:00 - 22:00"
+      }
+    }
+  ]
+}

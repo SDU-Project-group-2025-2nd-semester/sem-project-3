@@ -1,0 +1,188 @@
+{
+  "rooms": [
+    {
+      "id": "room1",
+      "name": "Conference Room",
+      "capacity": 12,
+      "floor": 2,
+      "currentStatus": "open"
+    },
+    {
+      "id": "room2",
+      "name": "Open Space",
+      "capacity": 20,
+      "floor": 3,
+      "currentStatus": "open"
+    },
+    {
+      "id": "room3",
+      "name": "Quiet Zone",
+      "capacity": 8,
+      "floor": 2,
+      "currentStatus": "maintenance"
+    }
+  ],
+  "desks": {
+    "room1": [
+      {
+        "id": 1,
+        "name": "Desk A12",
+        "status": "booked",
+        "currentHeight": "100cm",
+        "currentBookId": 1,
+        "lastMaintenance": "2025-10-15T10:00:00Z",
+        "activeProfile": 3
+      },
+      {
+        "id": 2,
+        "name": "D-102",
+        "status": "available",
+        "currentHeight": "95cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-20T14:30:00Z",
+        "activeProfile": null
+      },
+      {
+        "id": 3,
+        "name": "D-103",
+        "status": "available",
+        "currentHeight": "100cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-18T09:15:00Z",
+        "activeProfile": 3
+      },
+      {
+        "id": 4,
+        "name": "D-104",
+        "status": "unavailable",
+        "currentHeight": "90cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-10T11:00:00Z",
+        "activeProfile": null
+      },
+      {
+        "id": 5,
+        "name": "Desk B07",
+        "status": "booked",
+        "currentHeight": "105cm",
+        "currentBookId": 3,
+        "lastMaintenance": "2025-10-22T16:45:00Z",
+        "activeProfile": 4
+      },
+      {
+        "id": 6,
+        "name": "D-106",
+        "status": "available",
+        "currentHeight": "95cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-25T08:00:00Z",
+        "activeProfile": 3
+      }
+    ],
+    "room2": [
+      {
+        "id": 7,
+        "name": "Desk C03",
+        "status": "booked",
+        "currentHeight": "105cm",
+        "currentBookId": 2,
+        "lastMaintenance": "2025-10-12T13:20:00Z",
+        "activeProfile": 4
+      },
+      {
+        "id": 8,
+        "name": "Desk D02",
+        "status": "booked",
+        "currentHeight": "100cm",
+        "currentBookId": 5,
+        "lastMaintenance": "2025-10-19T10:30:00Z",
+        "activeProfile": 3
+      },
+      {
+        "id": 9,
+        "name": "D-203",
+        "status": "available",
+        "currentHeight": "95cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-23T15:00:00Z",
+        "activeProfile": 3
+      },
+      {
+        "id": 10,
+        "name": "D-204",
+        "status": "available",
+        "currentHeight": "100cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-21T09:45:00Z",
+        "activeProfile": null
+      },
+      {
+        "id": 11,
+        "name": "D-205",
+        "status": "available",
+        "currentHeight": "95cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-26T14:15:00Z",
+        "activeProfile": 3
+      },
+      {
+        "id": 12,
+        "name": "D-206",
+        "status": "unavailable",
+        "currentHeight": "90cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-09-30T11:00:00Z",
+        "activeProfile": null
+      }
+    ],
+    "room3": [
+      {
+        "id": 13,
+        "name": "D-301",
+        "status": "unavailable",
+        "currentHeight": "95cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-28T08:00:00Z",
+        "activeProfile": 5
+      },
+      {
+        "id": 14,
+        "name": "D-302",
+        "status": "unavailable",
+        "currentHeight": "100cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-28T08:00:00Z",
+        "activeProfile": 5
+      },
+      {
+        "id": 15,
+        "name": "D-303",
+        "status": "unavailable",
+        "currentHeight": "95cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-28T08:00:00Z",
+        "activeProfile": 5
+      },
+      {
+        "id": 16,
+        "name": "D-304",
+        "status": "unavailable",
+        "currentHeight": "90cm",
+        "currentBookId": null,
+        "lastMaintenance": "2025-10-28T08:00:00Z",
+        "activeProfile": 5
+      }
+    ]
+  },
+  "roomProfiles": {
+    "room1": {
+      "activeProfiles": [3, 4]
+    },
+    "room2": {
+      "activeProfiles": [3]
+    },
+    "room3": {
+      "activeProfiles": [5]
+    }
+  }
+}

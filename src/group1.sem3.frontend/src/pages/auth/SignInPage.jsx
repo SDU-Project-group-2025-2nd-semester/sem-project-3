@@ -16,7 +16,8 @@ export default function SignInPage() {
         setError("");
         try {
             login({ email, password, role: selectedRole });
-            navigate(`/${currentUser.role}/homepage`);
+            const subpath = currentUser.role === "admin" ? "usersManager" : "homepage";
+            navigate(`/${currentUser.role}/${subpath}`);
         } catch (err) {
             setError(err.message || "Failed to log in");
         }
