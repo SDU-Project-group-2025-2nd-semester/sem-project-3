@@ -19,6 +19,21 @@ jobs:
     steps: 
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+      - name: Check and install .NET
+        run: |
+          if ! command -v dotnet &> /dev/null; then
+            echo ".NET is not installed. Installing .NET 9.0 SDK..."
+            curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0
+            export PATH="$HOME/.dotnet:$PATH"
+            echo 'export PATH="$HOME/.dotnet:$PATH"' >> ~/.bashrc
+          else
+            echo ".NET is already installed:"
+            dotnet --version
+          fi
+          echo "$HOME/.dotnet" >> $GITHUB_PATH
       
       - name: Run dotnet test
         continue-on-error: ${{ github.ref_name == 'develop' }}
@@ -32,6 +47,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Determine branch-specific values
         id: vars

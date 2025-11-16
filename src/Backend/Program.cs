@@ -53,7 +53,7 @@ builder.Services
 
 builder.Services.AddHttpClient("DeskApi", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["DeskApi:BaseUrl"] ?? "http://localhost:5000/api/v2/<API-KEY>/");
+    client.BaseAddress = new Uri(builder.Configuration["DeskApi:BaseUrl"] ?? "http://box-simulator:8000/api/v2/<API-KEY>/");
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 
