@@ -18,7 +18,7 @@ services:
   simulator-main:
     build:
       context: ../..
-      dockerfile: ../../infra/docker/simulator.Dockerfile
+      dockerfile: infra/docker/simulator.Dockerfile
     container_name: simulator-main
     volumes:
       - simulator_main_data:/app/data
@@ -66,7 +66,7 @@ services:
   simulator-integrate:
     build:
       context: ../..
-      dockerfile: ../../infra/docker/simulator.Dockerfile
+      dockerfile: infra/docker/simulator.Dockerfile
     container_name: simulator-integrate
     volumes:
       - simulator_integrate_data:/app/data
@@ -114,7 +114,7 @@ services:
   simulator-develop:
     build:
       context: ../..
-      dockerfile: ../../infra/docker/simulator.Dockerfile
+      dockerfile: infra/docker/simulator.Dockerfile
     container_name: simulator-develop
     volumes:
       - simulator_develop_data:/app/data
