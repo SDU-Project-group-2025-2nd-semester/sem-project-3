@@ -2,9 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY src/boxSimulator/simulator ./simulator
-COPY src/boxSimulator/config ./config
-COPY src/boxSimulator/data ./data
+COPY simulator ./simulator
+COPY config ./config
+COPY data ./data
 
 ENV PYTHONUNBUFFERED=1
 

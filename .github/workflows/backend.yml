@@ -19,6 +19,8 @@ jobs:
     steps: 
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: true
       
       - name: Run dotnet test
         continue-on-error: ${{ github.ref_name == 'develop' }}
@@ -32,6 +34,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Determine branch-specific values
         id: vars
