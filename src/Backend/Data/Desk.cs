@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Backend.Data;
 
@@ -10,25 +11,35 @@ public class Desk
     /// Current desk height
     /// </summary>
     /// <remarks>
-    /// Value is in centimeters
+    /// Value is in millimeters
     /// </remarks>
-    public double Height { get; set; } // in cm
+    public int Height { get; set; } 
 
     /// <summary>
     /// Maximal desk height
     /// </summary>
     /// <remarks>
-    /// Value is in centimeters
+    /// Value is in millimeters
     /// </remarks>
-    public double MaxHeight { get; set; }
+    public int MaxHeight { get; set; }
 
     /// <summary>
     /// Minimal desk height
     /// </summary>
     /// <remarks>
-    /// Value is in centimeters
+    /// Value is in millimeters
     /// </remarks>
-    public double MinHeight { get; set; }
+    public int MinHeight { get; set; }
+
+    /// <summary>
+    /// MacAddress of the desk's BLE unit
+    /// </summary>
+    /// <remarks>
+    /// In the format XX:XX:XX:XX:XX:XX
+    /// </remarks>
+    [Required]
+    [MaxLength(17)] // TODO: Add Regex validation for MAC address format
+    public string MacAddress { get; set; }
 
     public Guid RoomId { get; set; }
 

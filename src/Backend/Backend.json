@@ -1601,6 +1601,9 @@
         "type": "integer"
       },
       "Desk": {
+        "required": [
+          "macAddress"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -1608,16 +1611,20 @@
             "format": "uuid"
           },
           "height": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "maxHeight": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "minHeight": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
+          },
+          "macAddress": {
+            "maxLength": 17,
+            "type": "string"
           },
           "roomId": {
             "type": "string",

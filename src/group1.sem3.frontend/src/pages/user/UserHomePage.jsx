@@ -12,13 +12,13 @@ export default function UserHomePage() {
     ];
 
     return (
-        <div className="relative bg-background min-h-screen px-4 mt-16">
-            <main className="max-w-3xl mx-auto flex flex-col gap-8 pb-32">
+        <div className="relative bg-background min-h-screen px-4 pt-24">
+            <main className="max-w-3xl mx-auto flex flex-col pb-32">
                 <section>
                     <h2 className="text-2xl font-semibold text-secondary mb-4">
                         Current Bookings
                     </h2>
-                    <div className="grid gap-4">
+                    <div className="flex flex-wrap gap-4">
                         {currentBookings.map((booking) => (
                             <Link
                                 to="/user/desk"
@@ -38,8 +38,9 @@ export default function UserHomePage() {
                                             {booking.date} | {booking.time}
                                         </p>
                                     </div>
-                                    <button className="mt-4 sm:mt-0 bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition">
-                                        Cancel Booking
+                                    {/* Cancel button, to be implemented */}
+                                    <button className="mt-4 sm:mt-0 ml-4 sm:ml-0 bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition">
+                                        Cancel
                                     </button>
                                 </div>
                             </Link>
@@ -48,10 +49,10 @@ export default function UserHomePage() {
                 </section>
 
                 <section>
-                    <h2 className="text-2xl font-semibold text-secondary mb-4">
+                    <h2 className="text-2xl font-semibold text-secondary mb-4 mt-4">
                         Recent Bookings
                     </h2>
-                    <div className="grid gap-4">
+                    <div className="flex flex-wrap gap-4">
                         {recentBookings.map((booking) => (
                             <Link
                                 to="/user/desk"
@@ -68,7 +69,8 @@ export default function UserHomePage() {
                                             Room: {booking.room}
                                         </p>
                                     </div>
-                                    <button className="mt-4 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
+                                    {/* Rebook button, to be implemented */}
+                                    <button className="mt-4 sm:mt-0 ml-4 sm:ml:0 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
                                         Rebook
                                     </button>
                                 </div>
