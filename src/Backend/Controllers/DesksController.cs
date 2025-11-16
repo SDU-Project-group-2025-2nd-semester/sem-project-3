@@ -1,11 +1,13 @@
 ﻿using Backend.Data;
 using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers;
 
 [Route("api/{companyId}/[controller]")]
 [ApiController]
+[Authorize]
 public class DesksController(IDeskService deskService) : ControllerBase
 {
 
@@ -39,6 +41,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     }
 
     [HttpPost]
+    [RequireRole(UserRole.Admin)]
     public async Task<ActionResult<Desk>> CreateDesk(Guid companyId, [FromBody] Desk desk)
     {
         var createdDesk = await deskService.CreateDeskAsync(companyId, desk);
@@ -46,6 +49,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     }
 
     [HttpPut("{deskId}")]
+    [RequireRole(UserRole.Admin)]
     public async Task<IActionResult> UpdateDesk(Guid companyId, Guid deskId, [FromBody] Desk updated)
     {
         var updatedSuccessfully = await deskService.UpdateDeskAsync(companyId, deskId, updated);
@@ -57,6 +61,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     }
 
     [HttpDelete("{deskId}")]
+    [RequireRole(UserRole.Admin)]
     public async Task<IActionResult> DeleteDesk(Guid companyId, Guid deskId)
     {
         var deletedSuccessfully = await deskService.DeleteDeskAsync(companyId, deskId);

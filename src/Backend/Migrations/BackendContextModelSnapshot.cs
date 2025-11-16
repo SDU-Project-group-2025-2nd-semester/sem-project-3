@@ -189,12 +189,6 @@ namespace Backend.Migrations
                     b.Property<DateTime>("AccountCreation")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("CompanyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CompanyId1")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -242,6 +236,9 @@ namespace Backend.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
@@ -265,10 +262,6 @@ namespace Backend.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("CompanyId1");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -500,17 +493,6 @@ namespace Backend.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("Backend.Data.User", b =>
-                {
-                    b.HasOne("Backend.Data.Company", null)
-                        .WithMany("Admins")
-                        .HasForeignKey("CompanyId");
-
-                    b.HasOne("Backend.Data.Company", null)
-                        .WithMany("Users")
-                        .HasForeignKey("CompanyId1");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -564,11 +546,7 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Data.Company", b =>
                 {
-                    b.Navigation("Admins");
-
                     b.Navigation("Rooms");
-
-                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Backend.Data.Desk", b =>

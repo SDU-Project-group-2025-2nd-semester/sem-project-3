@@ -1,11 +1,13 @@
 ﻿using Backend.Data;
 using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers;
 
 [Route("api/{companyId}/[controller]")]
 [ApiController]
+[Authorize]
 public class RoomsController(IRoomService roomService) : ControllerBase
 {
 
@@ -27,6 +29,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
     }
 
     [HttpPost]
+    [RequireRole(UserRole.Admin)]
     public async Task<ActionResult<Rooms>> CreateRoom(Guid companyId, [FromBody] Rooms room)
     {
         var created = await roomService.CreateRoomAsync(companyId, room);
@@ -34,6 +37,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
     }
 
     [HttpPut("{roomId}")]
+    [RequireRole(UserRole.Admin)]
     public async Task<IActionResult> UpdateRoom(Guid companyId, Guid roomId, [FromBody] Rooms updated)
     {
         var update = await roomService.UpdateRoomAsync(companyId, roomId, updated);
@@ -44,6 +48,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
     }
 
     [HttpDelete("{roomId}")]
+    [RequireRole(UserRole.Admin)]
     public async Task<IActionResult> DeleteRoom(Guid companyId, Guid roomId)
     {
         var delete = await roomService.DeleteRoomAsync(companyId, roomId);
@@ -54,4 +59,5 @@ public class RoomsController(IRoomService roomService) : ControllerBase
     }
 
 
+    
 }
