@@ -12,8 +12,8 @@ services:
 
   box-simulator:
     build:
-      context: src/boxSimulator
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: infra/docker/simulator.Dockerfile
     container_name: box-simulator
     ports:
       - "8000:8000"
