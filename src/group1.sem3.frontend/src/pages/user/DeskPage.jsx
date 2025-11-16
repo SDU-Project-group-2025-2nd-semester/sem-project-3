@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "@reacticons/bootstrap-icons";
 
 export default function DeskPage() {
@@ -30,6 +29,8 @@ export default function DeskPage() {
 
     const [isDamaged, setIsDamaged] = useState(desk.damaged);
 
+    const navigate = useNavigate();
+    
     // Check if damage was reported
     useEffect(() => {
         if (location.state?.damagedDeskId === desk.name) {
@@ -39,9 +40,7 @@ export default function DeskPage() {
             navigate(location.pathname, { replace: true, state: {} });
         }
 
-    }, [location.state]);
-
-    const navigate = useNavigate();
+    }, [location.state, navigate, desk.name]); // Should list all dependencies used inside useEffect
 
     const reportDamage = () => {
         navigate("/user/damagereport", { state: { tableId: desk.name } });
@@ -56,10 +55,10 @@ export default function DeskPage() {
                     <p className="text-primary font-semibold text-lg">Room: {desk.room}</p>
                 </div>
                 <p
-                    className={`font-semibold text-sm ${desk.damaged ? "text-red-500" : "text-green-500"
+                    className={`font-semibold text-sm ${isDamaged ? "text-red-500" : "text-green-500"
                         }`}
                 >
-                    {desk.status} {desk.damaged && " - Damaged"}
+                    {desk.status} {isDamaged && " - Damaged"}
                 </p>
             </div>
 
