@@ -4,6 +4,22 @@ services:
     build:
       context: .
       dockerfile: src/Backend/Dockerfile
+    environment:
+      - DeskApi__BaseUrl=http://box-simulator:8000/api/v2/<api-key>/
+    depends_on:
+      - postgres
+      - box-simulator
+
+  box-simulator:
+    build:
+      context: src/boxSimulator
+      dockerfile: Dockerfile
+    container_name: box-simulator
+    ports:
+      - "8000:8000"
+    volumes:
+      - simulator_data:/app/data
+    restart: unless-stopped
 
   postgres:
     image: postgres:latest
@@ -36,6 +52,7 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  simulator_data:
 
 configs:
   servers_config:
