@@ -6,9 +6,9 @@ export default function Header({ toggleSidebar }) {
     const { currentUser } = useAuth();
 
     // Profile moved to Sidebar
-    const showSidebarIcon = currentUser && (currentUser.role === "user" || currentUser.role === "staff");
+    const showSidebarIcon = currentUser; 
     const showScanner = currentUser && currentUser.role === "user";
-    const showHomepageLink = currentUser && (currentUser.role === "user" || currentUser.role === "staff");
+    const showHomepageLink = currentUser; // && (currentUser.role === "user" || currentUser.role === "staff");
 
 
     return (

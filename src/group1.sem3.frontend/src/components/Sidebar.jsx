@@ -8,7 +8,6 @@ export default function Sidebar({ isOpen, onClose }) {
     if (["/", "/signuppage"].includes(location.pathname)) return null;
 
     const role = currentUser?.role;
-    if (role === "admin") return null;
 
     const companies = ["Company A", "Company B", "Company C"];
     const [showCompanies, setShowCompanies] = useState(false);
@@ -18,6 +17,27 @@ export default function Sidebar({ isOpen, onClose }) {
         setSelectedCompany(company);
         setShowCompanies(false);
     }
+
+    // Role --> menu configuration
+    const menuByRole = {
+        user: [
+            { to: `/${role}/settings`, icon: "person", label: "Profile" },
+            { to: `/user/statistics`, icon: "bar-chart", label: "Statistics" },
+        ],
+        staff: [
+            { to: `/${role}/settings`, icon: "person", label: "Profile" },
+        ],
+        admin: [
+            { to: `/${role}/usersManager`, icon: "people", label: "Users" },
+            { to: `/${role}/profilesManager`, icon: "clock", label: "Profiles" },
+            { to: `/${role}/desksManager`, icon: "grid", label: "Desks" },
+            { to: `/${role}/healthStatsManager`, icon: "bar-chart", label: "Statistics" },
+            { to: `/${role}/damagesManager`, icon: "exclamation-triangle", label: "Damages" }, // icon: "file-earmark-text"
+            // other icons: "speedometer"  "gear"  "pencil-square"
+        ],
+    };
+
+    const menuItems = menuByRole[role] ?? [];
 
     return (
         <>
@@ -34,47 +54,42 @@ export default function Sidebar({ isOpen, onClose }) {
                     ${isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}`}
             >
                 <div className="p-4 pt-20">
-                    <Link
-                        to={`/${role}/settings`}
-                        className="group flex items-center mb-4 hover:text-blue-600"
-                        onClick={onClose}
-                    >
-                        <Icon name="person" className="mr-2" />
-                        <span>Profile</span>
-                    </Link>
 
-                    <div className="mb-4">
-                        <button
-                            onClick={() => setShowCompanies(!showCompanies)}
-                            className="group flex items-center hover:text-blue-600"
-                        >
-                            <Icon name="building" className="mr-2" />
-                            <span>{selectedCompany}</span>
-                        </button>
-                        {showCompanies && (
-                            <ul className="mt-2 ml-6 list-disc">
-                                {companies.map((company) => (
-                                    <li
-                                        key={company}
-                                        onClick={() => { handleCompanySelect(company); onClose(); }}
-                                        className="hover:text-blue-500 cursor-pointer"
-                                    >
-                                        {company}
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-
-                    {role === "user" && (
+                    {menuItems.map((item) => (
                         <Link
-                            to="/user/statistics"
-                            className="flex items-center hover:text-blue-600"
+                            key={item.to}
+                            to={item.to}
+                            className="group flex items-center mb-4 hover:text-blue-600"
                             onClick={onClose}
                         >
-                            <Icon name="bar-chart" className="mr-2" />
-                            <span>Statistics</span>
+                            <Icon name={item.icon} className="mr-2" />
+                            <span>{item.label}</span>
                         </Link>
+                    ))}
+
+                    {(role === "user" || role === "staff") && (
+                        <div className="mb-4">
+                            <button
+                                onClick={() => setShowCompanies(!showCompanies)}
+                                className="group flex items-center hover:text-blue-600"
+                            >
+                                <Icon name="building" className="mr-2" />
+                                <span>{selectedCompany}</span>
+                            </button>
+                            {showCompanies && (
+                                <ul className="mt-2 ml-6 list-disc">
+                                    {companies.map((company) => (
+                                        <li
+                                            key={company}
+                                            onClick={() => { handleCompanySelect(company); onClose(); }}
+                                            className="hover:text-blue-500 cursor-pointer"
+                                        >
+                                            {company}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                     )}
                 </div>
             </aside>
