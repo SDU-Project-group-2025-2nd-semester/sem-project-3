@@ -36,6 +36,7 @@ export default function App() {
                         <Route path="/user/settings" element={<UserSettingsPage />} />
                         <Route path="/staff/settings" element={<StaffSettingsPage />} />
                         <Route path="/user/booking" element={<BookingPage />} />
+                        <Route path="/admin/homepage" element={<UsersManagerPage />} /> {/* What should be the homepage? */}
                         <Route path="/admin/usersManager" element={<UsersManagerPage />} />
                         <Route path="/admin/damagesManager" element={<DamagesManagerPage />} />
                         <Route path="/admin/profilesManager" element={<ProfilesManagerPage />} />
