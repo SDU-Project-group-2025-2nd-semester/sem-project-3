@@ -1,15 +1,18 @@
 ﻿using Backend.Data;
 using Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers;
 
 [Route("api/{companyId}/[controller]")]
 [ApiController]
-public class ReservationController(IReservationService reservationService) : ControllerBase
+[Authorize]
+public class ReservationController(IReservationService reservationService, BackendContext dbContext) : ControllerBase
 {
-
+    
     [HttpGet]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<List<Reservation>>> GetReservations(
         Guid companyId,
         [FromQuery] string? userId = null,
@@ -43,15 +46,13 @@ public class ReservationController(IReservationService reservationService) : Con
     }
 
     [HttpPost]
+    [RequireRole(UserRole.User, UserRole.Admin)]
     public async Task<ActionResult<Reservation>> CreateReservation(CreateReservationDto createReservationDto, Guid companyId)
     {
-
         var userId = User.GetUserId();
 
-        // TODO: Check for permissions here
-
         var reservation = await reservationService.CreateReservation(createReservationDto, userId, companyId);
-
+        
         if (reservation is null)
         {
             return Conflict("Requested time is already occupied!");
@@ -61,6 +62,7 @@ public class ReservationController(IReservationService reservationService) : Con
     }
 
     [HttpDelete("{reservationId}")]
+    [RequireRole(UserRole.User, UserRole.Admin)]
     public async Task<ActionResult> DeleteReservation(Guid reservationId, Guid companyId)
     {
         var reservation = await reservationService.GetReservation(reservationId);
@@ -70,7 +72,20 @@ public class ReservationController(IReservationService reservationService) : Con
             return NotFound();
         }
 
-        // Check for permissions here
+        var currentUserId = User.GetUserId();
+        var currentUser = await dbContext.Users.FindAsync(currentUserId);
+
+        if (currentUser is null)
+        {
+            return Unauthorized();
+        }
+
+        var isAdmin = currentUser.Role == UserRole.Admin;
+        
+        if (!isAdmin && reservation.UserId != currentUserId)
+        {
+            return Forbid();
+        }
 
         await reservationService.DeleteReservation(reservation);
 

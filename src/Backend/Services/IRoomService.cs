@@ -6,6 +6,10 @@ namespace Backend.Services;
 public interface IRoomService
 {
     public Task<List<Rooms>> GetAllRoomsAsync(Guid companyId);
+    public Task<Rooms?> GetRoomAsync(Guid companyId, Guid roomId);
+    Task<Rooms> CreateRoomAsync(Guid companyId, Rooms room);
+    Task<bool> UpdateRoomAsync(Guid companyId, Guid roomId, Rooms updated);
+    Task<bool> DeleteRoomAsync(Guid companyId, Guid roomId);
 }
 
 class RoomService(ILogger<RoomService> logger, BackendContext dbContext) : IRoomService
@@ -14,4 +18,40 @@ class RoomService(ILogger<RoomService> logger, BackendContext dbContext) : IRoom
     {
         return await dbContext.Rooms.Where(r => r.CompanyId == companyId).ToListAsync();
     }
+    
+    public async Task<Rooms?> GetRoomAsync(Guid companyId, Guid roomId)
+    {
+        return await dbContext.Rooms.Include(r => r.Desks).FirstOrDefaultAsync(r => r.CompanyId == companyId && r.Id == roomId);
+    }
+
+    public async Task<Rooms> CreateRoomAsync(Guid companyId, Rooms room)
+    {
+        room.CompanyId = companyId;
+        dbContext.Rooms.Add(room);
+        await dbContext.SaveChangesAsync();
+        return room;
+    }
+
+    public async Task<bool> UpdateRoomAsync(Guid companyId, Guid roomId, Rooms updated)
+    {
+        var existing = await dbContext.Rooms.FirstOrDefaultAsync(r => r.CompanyId == companyId && r.Id == roomId);
+        if (existing is null) return false;
+        
+        existing.DeskIds = updated.DeskIds;
+        existing.OpeningHours = updated.OpeningHours;
+        
+        await dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteRoomAsync(Guid companyId, Guid roomId)
+    {
+        var room = await dbContext.Rooms.FirstOrDefaultAsync(r => r.CompanyId == companyId && r.Id == roomId);
+        if (room is null) return false;
+        
+        dbContext.Rooms.Remove(room);
+        await dbContext.SaveChangesAsync();
+        return true;
+    }
+
 }
