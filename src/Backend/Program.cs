@@ -51,6 +51,8 @@ builder.Services
     .AddTransient<IReservationService, ReservationService>()
     .AddTransient<IDeskApi, DeskApi>();
 
+builder.Services.AddHostedService<MqttHostedService>();
+
 builder.Services.AddHttpClient("DeskApi", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["DeskApi:BaseUrl"] ?? "http://box-simulator:8000/api/v2/<API-KEY>/");

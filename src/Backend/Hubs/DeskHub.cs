@@ -36,14 +36,6 @@ public class DeskHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"room-{roomId}");
     }
 
-    /// <summary>
-    /// Subscribe to all desks in a company
-    /// </summary>
-    public async Task SubscribeToCompany(string companyId)
-    {
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"company-{companyId}");
-    }
-
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         await base.OnDisconnectedAsync(exception);

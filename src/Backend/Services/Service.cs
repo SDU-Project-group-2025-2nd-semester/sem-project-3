@@ -6,15 +6,20 @@ using System.Net.Http;
 
 namespace Backend.Services;
 
+public interface IDeskControlService
+{
+    Task<bool> SetDeskHeightAsync(Guid deskId, int newHeight);
+    Task<bool> SetRoomDesksHeightAsync(Guid roomId, int newHeight);
+    Task<int?> GetCurrentDeskHeightAsync(string macAddress);
+}
 
-public class DeskControlService(BackendContext dbContext, ILogger<DeskControlService> logger, IDeskApi deskApi, IHubContext<DeskHub> hubContext)
+public class DeskControlService(BackendContext dbContext, ILogger<DeskControlService> logger, IDeskApi deskApi, IHubContext<DeskHub> hubContext) : IDeskControlService
 {
 
     public async Task<bool> SetDeskHeightAsync(Guid deskId, int newHeight)
     {
         var desk = await dbContext.Desks
             .Include(d => d.Room)
-            .Include(d => d.Company)
             .FirstOrDefaultAsync(d => d.Id == deskId);
 
         if (desk == null)
@@ -40,12 +45,12 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
 
 
             // Update database
-            //var oldHeight = desk.Height;
+            var oldHeight = desk.Height;
             desk.Height = newState.PositionMm;
             await dbContext.SaveChangesAsync();
 
             // Notify clients via SignalR
-            //await NotifyDeskHeightChanged(desk, oldHeight, newHeight);
+            await NotifyDeskHeightChanged(desk, oldHeight, newHeight);
 
             logger.LogInformation("Desk {DeskId} height changed to {Height}mm", deskId, newHeight);
             return true;
@@ -85,33 +90,28 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
         }
     }
 
-    //private async Task NotifyDeskHeightChanged(Desk desk, int oldHeight, int newHeight)
-    //{
-    //    var update = new DeskHeightUpdate
-    //    {
-    //        DeskId = desk.Id,
-    //        RoomId = desk.RoomId,
-    //        CompanyId = desk.CompanyId,
-    //        OldHeight = oldHeight,
-    //        NewHeight = newHeight,
-    //        Timestamp = DateTime.UtcNow
-    //    };
+    private async Task NotifyDeskHeightChanged(Desk desk, int oldHeight, int newHeight)
+    {
+        var update = new DeskHeightUpdate
+        {
+            DeskId = desk.Id,
+            RoomId = desk.RoomId,
+            OldHeight = oldHeight,
+            NewHeight = newHeight,
+            Timestamp = DateTime.UtcNow
+        };
 
-    //    // Send to all clients watching this specific desk
-    //    await hubContext.Clients
-    //        .Group($"desk-{desk.Id}")
-    //        .SendAsync("DeskHeightChanged", update);
+        // Send to all clients watching this specific desk
+        await hubContext.Clients
+            .Group($"desk-{desk.Id}")
+            .SendAsync("DeskHeightChanged", update);
 
-    //    // Send to all clients watching this room
-    //    await hubContext.Clients
-    //        .Group($"room-{desk.RoomId}")
-    //        .SendAsync("DeskHeightChanged", update);
+        // Send to all clients watching this room
+        await hubContext.Clients
+            .Group($"room-{desk.RoomId}")
+            .SendAsync("DeskHeightChanged", update);
 
-    //    // Send to all clients watching this company
-    //    await hubContext.Clients
-    //        .Group($"company-{desk.CompanyId}")
-    //        .SendAsync("DeskHeightChanged", update);
-    //}
+    }
 
 }
 
