@@ -1,7 +1,7 @@
 services:
   react-main:
     build:
-      context: ../src/group1.sem3.frontend
+      context: ../../src/group1.sem3.frontend
       dockerfile: Dockerfile
     container_name: react-main
     ports:
@@ -10,7 +10,7 @@ services:
 
   react-integrate:
     build:
-      context: ../src/group1.sem3.frontend
+      context: ../../src/group1.sem3.frontend
       dockerfile: Dockerfile
     container_name: react-integrate
     ports:
@@ -19,7 +19,7 @@ services:
 
   react-develop:
     build:
-      context: ../src/group1.sem3.frontend
+      context: ../../src/group1.sem3.frontend
       dockerfile: Dockerfile
     container_name: react-develop
     ports:
