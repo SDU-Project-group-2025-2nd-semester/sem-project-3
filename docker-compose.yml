@@ -12,6 +12,24 @@ services:
       box-simulator:
         condition: service_started
 
+  mosquitto:
+    container_name: mqtt
+    image: eclipse-mosquitto
+    command:
+      - "/usr/sbin/mosquitto"
+      - "-c"
+      - "/mosquitto/config/mosquitto.conf"
+      - "-v"
+    ports:
+      - "1883:1883"
+      - "9001:9001" # Secured connection isn't configured correctly
+    volumes:
+      - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/config:/mosquitto/config
+    environment:
+      - TZ=Europe/Berlin
+    restart: unless-stopped
+
   box-simulator:
     build:
       context: .
