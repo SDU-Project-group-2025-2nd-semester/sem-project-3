@@ -55,7 +55,7 @@ services:
     ports:
       - "5001:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres-integrate;Port=5432;Database=backend_integrate;Username=postgres;Password=postgres
       - DeskApi__BaseUrl=http://simulator-integrate:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
     depends_on:
@@ -103,7 +103,7 @@ services:
     ports:
       - "5002:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres-develop;Port=5432;Database=backend_develop;Username=postgres;Password=postgres
       - DeskApi__BaseUrl=http://simulator-develop:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
     depends_on:
