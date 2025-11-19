@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(BackendContext))]
-    [Migration("20251101152401_Added JSONB properties")]
-    partial class AddedJSONBproperties
+    [Migration("20251113104813_Innitial migration")]
+    partial class Innitialmigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -74,10 +74,7 @@ namespace Backend.Migrations
                     b.Property<DateTime>("SubmitTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("SubmittedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("SubmittedById1")
+                    b.Property<string>("SubmittedById")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -88,7 +85,7 @@ namespace Backend.Migrations
 
                     b.HasIndex("ResolvedById");
 
-                    b.HasIndex("SubmittedById1");
+                    b.HasIndex("SubmittedById");
 
                     b.ToTable("DamageReports");
                 });
@@ -99,21 +96,35 @@ namespace Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<double>("Height")
-                        .HasColumnType("double precision");
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
 
-                    b.Property<double>("MaxHeight")
-                        .HasColumnType("double precision");
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
 
-                    b.Property<double>("MinHeight")
-                        .HasColumnType("double precision");
+                    b.Property<string>("MacAddress")
+                        .IsRequired()
+                        .HasMaxLength(17)
+                        .HasColumnType("character varying(17)");
 
-                    b.Property<Guid?>("RoomsId")
+                    b.Property<int>("MaxHeight")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MinHeight")
+                        .HasColumnType("integer");
+
+                    b.PrimitiveCollection<List<Guid>>("ReservationIds")
+                        .IsRequired()
+                        .HasColumnType("uuid[]");
+
+                    b.Property<Guid>("RoomId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoomsId");
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("RoomId");
 
                     b.ToTable("Desks");
                 });
@@ -124,7 +135,10 @@ namespace Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("DeskId")
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DeskId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("End")
@@ -134,9 +148,12 @@ namespace Backend.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
 
                     b.HasIndex("DeskId");
 
@@ -423,7 +440,7 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Data.User", "SubmittedBy")
                         .WithMany()
-                        .HasForeignKey("SubmittedById1");
+                        .HasForeignKey("SubmittedById");
 
                     b.Navigation("Company");
 
@@ -436,31 +453,59 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Data.Desk", b =>
                 {
-                    b.HasOne("Backend.Data.Rooms", null)
+                    b.HasOne("Backend.Data.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Data.Rooms", "Room")
                         .WithMany("Desks")
-                        .HasForeignKey("RoomsId");
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Room");
                 });
 
             modelBuilder.Entity("Backend.Data.Reservation", b =>
                 {
-                    b.HasOne("Backend.Data.Desk", null)
+                    b.HasOne("Backend.Data.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Data.Desk", "Desk")
                         .WithMany("Reservations")
-                        .HasForeignKey("DeskId");
+                        .HasForeignKey("DeskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Backend.Data.User", "User")
                         .WithMany("Reservations")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Desk");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("Backend.Data.Rooms", b =>
                 {
-                    b.HasOne("Backend.Data.Company", null)
+                    b.HasOne("Backend.Data.Company", "Company")
                         .WithMany("Rooms")
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("Backend.Data.User", b =>

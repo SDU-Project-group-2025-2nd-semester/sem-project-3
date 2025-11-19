@@ -9,8 +9,19 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres-main;Port=5432;Database=backend_main;Username=postgres;Password=postgres
+      - DeskApi__BaseUrl=http://box-simulator:8000/api/v2/<api-key>/
     depends_on:
       - postgres-main
+      - simulator-main
+    restart: unless-stopped
+
+  simulator-main:
+    build:
+      context: ../..
+      dockerfile: infra/docker/simulator.Dockerfile
+    container_name: simulator-main
+    volumes:
+      - simulator_main_data:/app/data
     restart: unless-stopped
 
   postgres-main:
@@ -46,8 +57,19 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres-integrate;Port=5432;Database=backend_integrate;Username=postgres;Password=postgres
+      - DeskApi__BaseUrl=http://simulator-integrate:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
     depends_on:
       - postgres-integrate
+      - simulator-integrate
+    restart: unless-stopped
+
+  simulator-integrate:
+    build:
+      context: ../..
+      dockerfile: infra/docker/simulator.Dockerfile
+    container_name: simulator-integrate
+    volumes:
+      - simulator_integrate_data:/app/data
     restart: unless-stopped
 
   postgres-integrate:
@@ -83,8 +105,19 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres-develop;Port=5432;Database=backend_develop;Username=postgres;Password=postgres
+      - DeskApi__BaseUrl=http://simulator-develop:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
     depends_on:
       - postgres-develop
+      - simulator-develop
+    restart: unless-stopped
+
+  simulator-develop:
+    build:
+      context: ../..
+      dockerfile: infra/docker/simulator.Dockerfile
+    container_name: simulator-develop
+    volumes:
+      - simulator_develop_data:/app/data
     restart: unless-stopped
 
   postgres-develop:
@@ -117,4 +150,7 @@ volumes:
   pgadmin_main_data:
   pgadmin_integrate_data:
   pgadmin_develop_data:
+  simulator_main_data:
+  simulator_integrate_data:
+  simulator_develop_data:
 
