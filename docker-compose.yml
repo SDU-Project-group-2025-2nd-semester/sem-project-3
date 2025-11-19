@@ -7,8 +7,10 @@ services:
     environment:
       - DeskApi__BaseUrl=http://box-simulator:8000/api/v2/<api-key>/
     depends_on:
-      - postgres
-      - box-simulator
+      postgres:
+        condition: service_healthy
+      box-simulator:
+        condition: service_started
 
   box-simulator:
     build:
@@ -30,8 +32,13 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: semester_project_3
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d semester_project_3"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   pgadmin:
     environment:
