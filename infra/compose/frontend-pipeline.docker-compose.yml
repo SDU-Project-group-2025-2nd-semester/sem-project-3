@@ -1,23 +1,28 @@
-version: "3.8"
-
 services:
   react-main:
-    build: .
+    build:
+      context: ../src/group1.sem3.frontend
+      dockerfile: Dockerfile
     container_name: react-main
     ports:
       - "3000:80"
     restart: unless-stopped
 
   react-integrate:
-    build: .
+    build:
+      context: ../src/group1.sem3.frontend
+      dockerfile: Dockerfile
     container_name: react-integrate
     ports:
       - "3001:80"
     restart: unless-stopped
 
   react-develop:
-    build: .
+    build:
+      context: ../src/group1.sem3.frontend
+      dockerfile: Dockerfile
     container_name: react-develop
     ports:
       - "3002:80"
     restart: unless-stopped
+
