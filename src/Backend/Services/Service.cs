@@ -2,6 +2,7 @@
 using Backend.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using System.Net.Http;
 
 namespace Backend.Services;
@@ -11,6 +12,63 @@ public interface IDeskControlService
     Task<bool> SetDeskHeightAsync(Guid deskId, int newHeight);
     Task<bool> SetRoomDesksHeightAsync(Guid roomId, int newHeight);
     Task<int?> GetCurrentDeskHeightAsync(string macAddress);
+}
+
+public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (Bullshit.IsGeneratingOpenApiDocument())
+        {
+            return;
+        }
+
+        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // HACK: Wait a minute before starting to allow db migrations to complete
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            using var scope = serviceProvider.CreateScope();
+
+            var deskApi = scope.ServiceProvider.GetRequiredService<IDeskApi>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+
+            var desks = await dbContext.Desks.ToListAsync(stoppingToken);
+            foreach (var desk in desks)
+            {
+                try
+                {
+                    var currentState = await deskApi.GetDeskState(desk.MacAddress);
+                    if (currentState.PositionMm != desk.Height)
+                    {
+                        var oldHeight = desk.Height;
+                        desk.Height = currentState.PositionMm;
+                        await dbContext.SaveChangesAsync(stoppingToken);
+                        // Notify clients via SignalR
+                        var update = new DeskHeightUpdate
+                        {
+                            DeskId = desk.Id,
+                            RoomId = desk.RoomId,
+                            OldHeight = oldHeight,
+                            NewHeight = currentState.PositionMm,
+                            Timestamp = DateTime.UtcNow
+                        };
+                        await hubContext.Clients
+                            .Group($"desk-{desk.Id}")
+                            .SendAsync("DeskHeightChanged", update, cancellationToken: stoppingToken);
+                        await hubContext.Clients
+                            .Group($"room-{desk.RoomId}")
+                            .SendAsync("DeskHeightChanged", update, cancellationToken: stoppingToken);
+                        logger.LogInformation("Pulled and updated height for desk {DeskId} to {Height}mm", desk.Id, currentState.PositionMm);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error pulling height for desk {DeskId}", desk.Id);
+                }
+            }
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+        }
+    }
 }
 
 public class DeskControlService(BackendContext dbContext, ILogger<DeskControlService> logger, IDeskApi deskApi, IHubContext<DeskHub> hubContext) : IDeskControlService
@@ -115,6 +173,24 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
 
 }
 
+/// <summary>
+/// Provides utility methods for determining the current application environment or configuration state.
+/// </summary>
+/// <remarks>This class contains methods that assist in identifying specific runtime conditions, such as whether
+/// the application is generating an OpenAPI document. Because the FUCKING openApi document generator can't generate docs without building and running the whole app. What a stupid tool...</remarks>
+public static class Bullshit
+{
+    public static bool IsGeneratingOpenApiDocument()
+    {
+
+        // Check if running in a context that suggests OpenAPI generation
+        return Environment.GetCommandLineArgs().Any(arg =>
+            arg.Contains("swagger", StringComparison.OrdinalIgnoreCase) ||
+            arg.Contains("openapi", StringComparison.OrdinalIgnoreCase));
+
+    }
+}
+
 public interface IDeskApi
 {
     Task<List<string>> GetAllDesks();
@@ -129,10 +205,13 @@ public interface IDeskApi
     Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors);
 }
 
-public class DeskApi(HttpClient httpClient) : IDeskApi
+public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 {
+    private HttpClient httpClient = httpClientFactory.CreateClient("DeskApi");
+
     public async Task<List<string>> GetAllDesks()
     {
+
         var result = await httpClient.GetAsync("desks");
 
         result.EnsureSuccessStatusCode();

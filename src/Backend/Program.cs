@@ -1,4 +1,5 @@
 using Backend.Data;
+using Backend.Hubs;
 using Backend.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -49,13 +50,18 @@ builder.Services.AddOpenApi(options =>
 builder.Services
     .AddTransient<IDamageReportService, DamageReportService>()
     .AddTransient<IReservationService, ReservationService>()
-    .AddTransient<IDeskApi, DeskApi>();
+    .AddTransient<IDeskApi, DeskApi>()
+    .AddSingleton<IBackendMqttClient,BackendMqttClient>()
+    .AddTransient<IDeskControlService,DeskControlService>()
+    .AddTransient<IDeskService, DeskService>()
+    .AddSignalR();;
 
-builder.Services.AddHostedService<MqttHostedService>();
+builder.Services.AddHostedService<MqttHostedService>()
+    .AddHostedService<DeskHeightPullingService>();
 
 builder.Services.AddHttpClient("DeskApi", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["DeskApi:BaseUrl"] ?? "http://box-simulator:8000/api/v2/<API-KEY>/");
+    client.BaseAddress = new Uri(builder.Configuration["DeskApi:BaseUrl"] ?? "http://box-simulator:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/");
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 
@@ -93,5 +99,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<DeskHub>("/deskHub");
 
 app.Run();

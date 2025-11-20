@@ -7,7 +7,7 @@ namespace Backend.Controllers;
 
 [Route("api/{companyId}/[controller]")]
 [ApiController]
-[Authorize]
+//[Authorize]
 public class DesksController(IDeskService deskService) : ControllerBase
 {
 
@@ -70,5 +70,17 @@ public class DesksController(IDeskService deskService) : ControllerBase
             return NotFound();
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Gets a list of MAC addresses of desks that have not been adopted yet.
+    /// </summary>
+    /// <param name="companyId"></param>
+    /// <returns>A list of MAC Address of desk not yet adopted</returns>
+    [HttpGet("not-adopted")]
+    public async Task<ActionResult<List<string>>> GetNotAdoptedDesks(Guid companyId)
+    {
+        var desks = await deskService.GetNotAdoptedDesks(companyId);
+        return Ok(desks);
     }
 }
