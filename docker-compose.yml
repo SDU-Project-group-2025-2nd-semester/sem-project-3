@@ -6,6 +6,8 @@ services:
       dockerfile: src/Backend/Dockerfile
     environment:
       - DeskApi__BaseUrl=http://box-simulator:8000/api/v2/<api-key>/
+    ports: 
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
