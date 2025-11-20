@@ -14,7 +14,9 @@ services:
 
   mosquitto:
     container_name: mqtt
-    image: eclipse-mosquitto
+    build:
+      context: .
+      dockerfile: infra/docker/mosquitto.Dockerfile
     command:
       - "/usr/sbin/mosquitto"
       - "-c"
@@ -25,7 +27,7 @@ services:
       - "9001:9001" # Secured connection isn't configured correctly
     volumes:
       - ./mosquitto/log:/mosquitto/log
-      - ./mosquitto/config:/mosquitto/config
+      # - ./mosquitto/config:/mosquitto/config
     environment:
       - TZ=Europe/Berlin
     restart: unless-stopped
