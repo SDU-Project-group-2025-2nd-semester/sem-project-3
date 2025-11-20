@@ -44,6 +44,13 @@ public class BackendMqttClient(ILogger<MqttHostedService> logger) : IBackendMqtt
         {
             await Task.Delay(TimeSpan.FromMilliseconds(5), cancellationToken);
             i++;
+
+            if (i > 20)
+            {
+                logger.LogError("Wasn't able to connect to MQTT server after more than 20 tries! Continuing without it...");
+                return;
+            }
+
         } while (!_mqttClient.IsConnected);
 
         logger.LogInformation("MqttClient connected to the broker after {attempts} attempts.", i);
