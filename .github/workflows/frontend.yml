@@ -36,18 +36,15 @@ jobs:
         run: ls -la src/group1.sem3.frontend
 
       - name: Build Docker image for this branch
-        working-directory: src/group1.sem3.frontend
-        run: docker compose build --no-cache ${{ steps.vars.outputs.service }}
+        run: docker compose -f infra/compose/frontend-pipeline.docker-compose.yml build --no-cache ${{ steps.vars.outputs.service }}
 
       - name: Stop and remove old container
-        working-directory: src/group1.sem3.frontend
         run: |
-          docker compose stop ${{ steps.vars.outputs.service }} || true
-          docker compose rm -f ${{ steps.vars.outputs.service }} || true
+          docker compose -f infra/compose/frontend-pipeline.docker-compose.yml stop ${{ steps.vars.outputs.service }} || true
+          docker compose -f infra/compose/frontend-pipeline.docker-compose.yml rm -f ${{ steps.vars.outputs.service }} || true
 
       - name: Start updated container
-        working-directory: src/group1.sem3.frontend
-        run: docker compose up -d ${{ steps.vars.outputs.service }}
+        run: docker compose -f infra/compose/frontend-pipeline.docker-compose.yml up -d ${{ steps.vars.outputs.service }}
 
       - name: Show running containers (for verification)
         run: docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"

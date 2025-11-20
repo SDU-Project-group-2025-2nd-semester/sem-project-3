@@ -12,16 +12,16 @@ public class DamageReportController(IDamageReportService reportService) : Contro
 {
 
     [HttpGet]
+    [RequireRole(UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<List<DamageReport>>> GetDamageReports([FromRoute] Guid companyId)
     {
-        // TODO: Check if User has permission to view damage reports for the company
-
         var reports = await reportService.GetAllDamageReportsAsync(companyId);
 
         return Ok(reports);
     }
 
     [HttpGet("{damageReportId}")]
+    [RequireRole(UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<DamageReport>> GetDamageReport(Guid damageReportId)
     {
         var report = await reportService.GetDamageReportAsync(damageReportId);
@@ -31,12 +31,11 @@ public class DamageReportController(IDamageReportService reportService) : Contro
             return NotFound();
         }
 
-        // TODO: Check if User has permission to view damage reports for the company
-
         return Ok(report);
     }
 
     [HttpPost()]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<DamageReport>> CreateDamageReport([FromBody] CreateDamageReportDto damageReportDto, [FromRoute] Guid companyId)
     {
         var userId = User.GetUserId();
@@ -45,8 +44,9 @@ public class DamageReportController(IDamageReportService reportService) : Contro
 
         return report;
     }
-
+    
     [HttpPut("{damageReportId}")]
+    [RequireRole(UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<DamageReport>> UpdateDamageReport([FromRoute] Guid damageReportId, [FromBody] bool isResolved, [FromRoute] Guid companyId)
     {
         var userId = User.GetUserId();
@@ -64,6 +64,7 @@ public class DamageReportController(IDamageReportService reportService) : Contro
     }
 
     [HttpDelete("{damageReportId}")]
+    [RequireRole(UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult> DeleteDamageReport(Guid damageReportId)
     {
 
@@ -73,8 +74,6 @@ public class DamageReportController(IDamageReportService reportService) : Contro
         {
             return NotFound();
         }
-
-        // TODO: Check if User has permission to view damage reports for the company
 
         await reportService.DeleteDamageReport(damageReport);
 
