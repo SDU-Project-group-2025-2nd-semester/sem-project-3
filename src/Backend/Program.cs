@@ -8,6 +8,11 @@ using System.Reflection.Metadata;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080);
+});
+
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -46,7 +51,16 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-builder.Services.AddTransient<IDamageReportService, DamageReportService>();
+builder.Services
+    .AddTransient<IDamageReportService, DamageReportService>()
+    .AddTransient<IReservationService, ReservationService>()
+    .AddTransient<IDeskApi, DeskApi>();
+
+builder.Services.AddHttpClient("DeskApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["DeskApi:BaseUrl"] ?? "http://box-simulator:8000/api/v2/<API-KEY>/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
 
 builder.Services.AddControllers();
 
@@ -80,9 +94,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
-
-app.MapGroup("/api/auth")
-    .MapIdentityApi<User>();
 
 app.MapControllers();
 

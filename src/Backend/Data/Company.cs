@@ -9,10 +9,8 @@ public class Company
     [Required]
     [MaxLength(100)]
     public string Name { get; set; }
-
-    public List<User> Admins { get; set; }
-
-    public List<User> Users { get; set; }
+    
+    //List od Users and Admins deleted
 
     public List<Rooms> Rooms { get; set; }
 
