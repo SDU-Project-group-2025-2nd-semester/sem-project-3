@@ -143,6 +143,13 @@ services:
       - pgadmin_develop_data:/var/lib/pgadmin
     restart: unless-stopped
 
+  test-client:
+    image: curlimages/curl:latest
+    container_name: test-client
+    command: sleep infinity
+    restart: unless-stopped
+
+
 volumes:
   postgres_main_data:
   postgres_integrate_data:
