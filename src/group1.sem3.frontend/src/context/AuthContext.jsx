@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
         });
     }
 
-    async function signup({ firstName, lastName, email, password, role }) {
+    async function signup({ firstName, lastName, email, password }) {
 
         const payload = {
             email,
@@ -69,7 +69,7 @@ export function AuthProvider({ children }) {
 
         setCurrentUser({
             email,
-            role: data?.role ?? role ?? null,
+            role: "user",
             token: data?.accessToken ?? null,
         });
     }
