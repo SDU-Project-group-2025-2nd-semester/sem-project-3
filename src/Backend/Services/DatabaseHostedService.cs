@@ -23,7 +23,9 @@ public class DatabaseMigrationHostedService(
 
         var applicationDbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
 
-        await applicationDbContext.Database.MigrateAsync(cancellationToken);
+        await applicationDbContext.Database.EnsureDeletedAsync(cancellationToken);
+
+        await applicationDbContext.Database.EnsureCreatedAsync(cancellationToken);
 
         logger.LogInformation("Database migrations completed successfully.");
 
