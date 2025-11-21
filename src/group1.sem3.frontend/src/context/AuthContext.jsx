@@ -8,31 +8,80 @@ export function AuthProvider({ children }) {
     async function login({ email, password }) {
         const response = await fetch("/api/auth/login", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
+            headers: {
+                accept: "*/*",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email,
+                password
+            }),
         });
+
         if (!response.ok) {
             throw new Error("Login failed");
         }
-        const data = await response.json();
-        setCurrentUser({ email, role:data.role, token: data.accessToken });
+
+        let data = null;
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+            try {
+                data = await response.json();
+            } catch {
+                data = null;
+            }
+        }
+
+        setCurrentUser({
+            email,
+            role: data?.role ?? "user",
+            token: data?.accessToken ?? null,
+        });
     }
 
-    async function signup({ username, fullName, email, password, role }) {
-        if (!role) throw new Error("Role required");
+    async function signup({ firstName, lastName, email, password, role }) {
+
+        const payload = {
+            email,
+            password,
+            firstName,
+            lastName,
+        };
+
         const response = await fetch("/api/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, fullName, email, password, role }),
+            body: JSON.stringify(payload),
         });
         if (!response.ok) {
             throw new Error("Signup failed");
         }
-        const data = await response.json();
-        setCurrentUser({ email: email || username, role, token: data.accessToken });
+
+        let data = null;
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+            try {
+                data = await response.json();
+            } catch {
+                data = null;
+            }
+        }
+
+        setCurrentUser({
+            email,
+            role: data?.role ?? role ?? null,
+            token: data?.accessToken ?? null,
+        });
     }
 
-    function logout() {
+    async function logout() {
+        const response = await fetch("/api/auth/logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+        });
+        if (!response.ok) {
+            throw new Error("Logout failed");
+        }
         setCurrentUser(null);
         // optionally notify backend to clear session/cookies
     }
@@ -47,3 +96,5 @@ export function AuthProvider({ children }) {
 export function useAuth() {
     return useContext(AuthContext);
 }
+
+export default AuthProvider
