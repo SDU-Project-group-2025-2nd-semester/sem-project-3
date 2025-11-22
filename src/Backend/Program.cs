@@ -67,6 +67,23 @@ builder.Services.AddHttpClient("DeskApi", client =>
 
 builder.Services.AddControllers();
 
+// Really permissive defaults, need to restrict later on
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        // Get allowed origins from configuration (environment variables)
+        var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?
+            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? new[] { "https://s3-fe-main.michalvalko.eu", "https://s3-fe-int.michalvalko.eu", "https://s3-fe-dev.michalvalko.eu", "http://localhost:5173" };
+
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddDbContextPool<BackendContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), o =>
     {
@@ -93,6 +110,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthentication();
 
