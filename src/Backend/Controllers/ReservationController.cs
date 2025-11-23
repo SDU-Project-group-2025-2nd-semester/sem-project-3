@@ -62,7 +62,7 @@ public class ReservationController(IReservationService reservationService, Backe
     }
 
     [HttpDelete("{reservationId}")]
-    [RequireRole(UserRole.User, UserRole.Admin)]
+    [RequireRole(UserRole.User, UserRole.Admin, UserRole.Janitor)]
     public async Task<ActionResult> DeleteReservation(Guid reservationId, Guid companyId)
     {
         var reservation = await reservationService.GetReservation(reservationId);
@@ -81,6 +81,8 @@ public class ReservationController(IReservationService reservationService, Backe
         }
 
         var isAdmin = currentUser.Role == UserRole.Admin;
+        
+        var isJanitor = currentUser.Role == UserRole.Janitor;
         
         if (!isAdmin && reservation.UserId != currentUserId)
         {

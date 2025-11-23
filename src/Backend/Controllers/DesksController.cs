@@ -7,7 +7,7 @@ namespace Backend.Controllers;
 
 [Route("api/{companyId}/[controller]")]
 [ApiController]
-//[Authorize]
+[Authorize]
 public class DesksController(IDeskService deskService) : ControllerBase
 {
 
@@ -49,7 +49,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     }
 
     [HttpPut("{deskId}")]
-    [RequireRole(UserRole.Admin)]
+    [RequireRole(UserRole.Admin, UserRole.Janitor)]
     public async Task<IActionResult> UpdateDesk(Guid companyId, Guid deskId, [FromBody] Desk updated)
     {
         var updatedSuccessfully = await deskService.UpdateDeskAsync(companyId, deskId, updated);
@@ -78,6 +78,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     /// <param name="companyId"></param>
     /// <returns>A list of MAC Address of desk not yet adopted</returns>
     [HttpGet("not-adopted")]
+    [RequireRole(UserRole.Admin, UserRole.Janitor)]
     public async Task<ActionResult<List<string>>> GetNotAdoptedDesks(Guid companyId)
     {
         var desks = await deskService.GetNotAdoptedDesks(companyId);

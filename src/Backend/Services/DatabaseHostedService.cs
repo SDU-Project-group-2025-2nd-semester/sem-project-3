@@ -168,6 +168,43 @@ public class DatabaseMigrationHostedService(
         await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
 
         await context.SaveChangesAsync();
+        
+        // Create Users-Company Relations
+        
+        context.UserCompanies.AddRange(
+            new UserCompany
+            {
+                UserId = adminUser.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = adminUser.Id,
+                CompanyId = innovationHubCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = johnDoe.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = janeDoe.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = bobSmith.Id,
+                CompanyId = innovationHubCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = aliceJohnson.Id,
+                CompanyId = startupCenterCompany.Id
+            }
+        );
+
+        await context.SaveChangesAsync();
 
         // Create Rooms
         var room1Company1 = new Rooms
