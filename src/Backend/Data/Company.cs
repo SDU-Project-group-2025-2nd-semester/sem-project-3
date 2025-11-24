@@ -25,14 +25,5 @@ public class Company
     
     [JsonIgnore]
     public List<UserCompany> UserMemberships { get; set; } = [];
-    
-    [JsonIgnore]
-    public IEnumerable<User> Admins => UserMemberships.Select(uc => uc.User).Where(u => u.Role == UserRole.Admin);
-
-    [JsonIgnore]
-    public IEnumerable<User> Janitors => UserMemberships.Select(uc => uc.User).Where(u => u.Role == UserRole.Janitor);
-
-    [JsonIgnore]
-    public IEnumerable<User> Users => UserMemberships.Select(uc => uc.User).Where(u => u.Role == UserRole.User);
 
 }
