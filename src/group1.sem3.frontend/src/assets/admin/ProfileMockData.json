@@ -1,0 +1,43 @@
+{
+  "closed": [
+    {
+      "id": 1,
+      "name": "Morning Shift",
+      "schedule": "Mon-Fri 06:00-14:00",
+      "deskHeight": "90cm",
+      "autoApply": true
+    },
+    {
+      "id": 2,
+      "name": "Night Shift",
+      "schedule": "Mon-Fri 22:00-06:00",
+      "deskHeight": "95cm",
+      "autoApply": false
+    }
+  ],
+  "open": [
+    {
+      "id": 3,
+      "name": "Standard Work",
+      "schedule": "Mon-Fri 09:00-17:00",
+      "deskHeight": "100cm",
+      "autoApply": true
+    },
+    {
+      "id": 4,
+      "name": "Flex Hours",
+      "schedule": "Mon-Thu 10:00-18:00",
+      "deskHeight": "105cm",
+      "autoApply": true
+    }
+  ],
+  "maintenance": [
+    {
+      "id": 5,
+      "name": "Cleaning",
+      "schedule": "Mon-Fri 23:00-06:00",
+      "deskHeight": "105cm",
+      "autoApply": false
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+[submodule "src/boxSimulator"]
+	path = src/boxSimulator
+	url = https://source.coderefinery.org/sdm-edu/wifi2ble-box-simulator.git

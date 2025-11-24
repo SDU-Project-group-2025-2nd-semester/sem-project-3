@@ -3,7 +3,7 @@ import { useState } from "react";
 export default function BookingPage() {
     const rooms = [
         { id: 1, name: "R-1", tables: ["D-101", "D-102", "D-103", "D-104"] },
-        { id: 2, name: "R-2", tables: ["D-101", "D-102", "D-103", "D-104", "D-105", "D-106"] },
+        { id: 2, name: "R-2", tables: ["D-101", "D-102", "D-103", "D-104", "D-105", "D-106", "e", "d", "f", "k"] },
     ];
 
     const times = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00"];
@@ -19,9 +19,9 @@ export default function BookingPage() {
         : times;
 
     return (
-        <div className="relative bg-background min-h-screen px-4 mt-16 pb-32">
+        <div className="relative bg-background min-h-screen px-4 pt-24 pb-32">
 
-            <div className="max-w-3xl mx-auto mb-6 mt-8">
+            <div className="fixed top-24 left-1/2 transform -translate-x-1/2 w-11/12 max-w-3xl mx-auto mb-6">
                 <input
                     type="date"
                     value={selectedDate}
@@ -30,7 +30,7 @@ export default function BookingPage() {
                 />
             </div>
 
-            <div className="max-w-3xl mx-auto flex gap-4 mb-8 overflow-x-auto">
+            <div className="max-w-3xl mx-auto flex gap-4 mb-8 overflow-x-auto pt-16">
                 {rooms.map((room) => (
                     <button
                         key={room.id}
@@ -45,7 +45,7 @@ export default function BookingPage() {
                 ))}
             </div>
 
-            <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+            <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4 mb-16">
                 {selectedRoom.tables.map((table) => (
                     <button
                         key={table}
@@ -61,9 +61,9 @@ export default function BookingPage() {
             </div>
 
             {selectedTable && (
-                <div className="max-w-3xl mx-auto mb-8 flex flex-col gap-4">
+                <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 w-11/12 max-w-3xl mx-auto mb-8 flex flex-col gap-4">
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-row gap-4 flex-stretch">
                         <select
                             value={startTime}
                             onChange={(e) => {
@@ -72,7 +72,7 @@ export default function BookingPage() {
                             }}
                             className="px-4 py-2 rounded-lg border border-primary bg-white text-primary font-medium shadow hover:bg-primary/90"
                         >
-                            <option value="">Select Start Time</option>
+                            <option value="">From</option>
                             {times.map((time) => (
                                 <option key={time} value={time}>
                                     {time}
@@ -89,7 +89,7 @@ export default function BookingPage() {
                                 }`}
                             disabled={!startTime}
                         >
-                            <option value="">Select End Time</option>
+                            <option value="">Til</option>
                             {filteredEndTimes.map((time) => (
                                 <option key={time} value={time}>
                                     {time}
