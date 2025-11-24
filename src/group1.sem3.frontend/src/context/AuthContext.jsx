@@ -4,7 +4,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
-    const base = "http://s3-be-dev.michalvalko.eu/api";
+    const base = "https://s3-be-dev.michalvalko.eu/api";
 
     async function login({ email, password }) {
         const response = await fetch(`${base}/auth/login`, {
