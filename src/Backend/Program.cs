@@ -97,19 +97,20 @@ builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<User>()
     .AddEntityFrameworkStores<BackendContext>();
 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    // Allow identity cookie to flow in cross-site contexts (local FE vs hosted BE)
-    options.Cookie.SameSite = SameSiteMode.None;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-});
-
 builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+
+    builder.Services.ConfigureApplicationCookie(options =>
+    {
+        // Allow identity cookie to flow in cross-site contexts (local FE vs hosted BE)
+        options.Cookie.SameSite = SameSiteMode.None;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    });
+
     app.MapOpenApi();
 
     app.UseSwaggerUI(options =>
