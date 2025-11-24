@@ -97,7 +97,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<User>()
     .AddEntityFrameworkStores<BackendContext>();
 
-if (app.Environment.IsDevelopment()) { 
+if (builder.Environment.IsDevelopment())
+{
     builder.Services.ConfigureApplicationCookie(options =>
     {
         // Allow identity cookie to flow in cross-site contexts (local FE vs hosted BE)
