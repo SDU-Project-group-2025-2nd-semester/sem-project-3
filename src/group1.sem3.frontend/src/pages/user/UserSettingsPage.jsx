@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import Icon from '@reacticons/bootstrap-icons';
 
 export default function UserSettingsPage() {
     const { currentUser, logout } = useAuth();
@@ -15,6 +16,25 @@ export default function UserSettingsPage() {
 
     const inputClasses = "w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary";
     const labelClasses = "block mb-1 text-sm font-semibold text-primary";
+
+    const [userHeight, setUserHeight] = useState("");
+    const [sittingHeight, setSittingHeight] = useState("");
+    const [standingHeight, setStandingHeight] = useState("");
+
+    // Used to check if manual changes were made to the desk heights
+    const [sittingChanged, setSittingChanged] = useState(false);
+    const [standingChanged, setStandingChanged] = useState(false);
+
+    useEffect(() => {
+        const height = parseFloat(userHeight);
+        if (!isNaN(height)) {
+            // Calculations based on https://www.omnicalculator.com/everyday-life/desk-height 
+            const sitting = (height / 2 - 18.5).toFixed(1);
+            const standing = (height * 0.62).toFixed(1);
+            setSittingHeight(sitting);
+            setStandingHeight(standing);
+        }
+    }, [userHeight]);
 
     function handleLogout() {
         logout();
@@ -66,7 +86,34 @@ export default function UserSettingsPage() {
                     />
                 </div>
 
-                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 w-full">
+                    <div>
+                        <label className={labelClasses}>
+                            My Height (cm) 
+                            <div className="relative inline-block ml-2 group">
+                                <Icon name="info-circle" className="w-4 h-4 text-accent cursor-pointer" />
+                                <div className="absolute z-10 hidden group-hover:block bg-gray-100 text-secondary text-xs p-2 rounded shadow-md w-64 top-full left-1/2 transform -translate-x-1/2 mt-1">
+                                    Your height is used to calculate ergonomical standing and sitting desk positions.
+                                    Keep in mind that these are general calculations. Feel free to adjust them so it's comfortable for you.
+                                </div>
+                            </div>
+                        </label>
+                        <input
+                            type="number"
+                            min="100"
+                            max="250"
+                            value={userHeight}
+                            onChange={(e) => {
+                                setUserHeight(e.target.value);
+                                setSittingChanged(false);
+                                setStandingChanged(false);
+                            }}
+                            className={inputClasses}
+                            placeholder="e.g. 175"
+                        />
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 w-full">
                     <div>
                         <label className="block text-sm font-medium text-primary mb-1">
@@ -74,10 +121,17 @@ export default function UserSettingsPage() {
                         </label>
                         <input
                             type="number"
-                            min="50"
-                            max="250"
-                            placeholder="e.g. 175"
-                            className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
+                            // min="50"
+                            // max="250"
+                            // placeholder="e.g. 175"
+                            // className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
+                            value={standingHeight}
+                            onChange={(e) => {
+                                    setStandingHeight(e.target.value);
+                                    setStandingChanged(true);
+                                }}
+                            className={inputClasses}
+                            placeholder="Auto-filled"
                         />
                     </div>
 
@@ -87,14 +141,40 @@ export default function UserSettingsPage() {
                         </label>
                         <input
                             type="number"
-                            min="30"
-                            max="200"
-                            placeholder="e.g. 95"
-                            className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
+                            // min="30"
+                            // max="200"
+                            // placeholder="e.g. 95"
+                            // className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
+                            value={sittingHeight}
+                            onChange={(e) => {
+                                    setSittingHeight(e.target.value);
+                                    setSittingChanged(true);
+                                }}
+                            className={inputClasses}
+                            placeholder="Auto-filled"
                         />
                     </div>
-                </div>
 
+                    {(sittingChanged || standingChanged) && (
+                        <div className="col-span-2">
+                            <button
+                                onClick={() => {
+                                    const height = parseFloat(userHeight);
+                                    if (!isNaN(height)) {
+                                        setSittingHeight((height / 2 - 18.5).toFixed(1));
+                                        setStandingHeight((height * 0.62).toFixed(1));
+                                        setSittingChanged(false);
+                                        setStandingChanged(false);
+                                    }
+                                }}
+                                className="w-full mt-2 px-4 py-2 bg-accent text-white rounded hover:bg-blue-600 transition-colors text-sm font-semibold"
+                            >  
+                                Reset to Recommended
+                            </button>
+                        </div>
+                    )}
+
+                </div>
                 
                 <div className="flex items-center mt-4 space-x-3">
                     <label className="relative inline-flex items-center cursor-pointer">

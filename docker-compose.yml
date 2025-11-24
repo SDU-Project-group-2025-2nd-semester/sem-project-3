@@ -5,12 +5,35 @@ services:
       context: .
       dockerfile: src/Backend/Dockerfile
     environment:
-      - DeskApi__BaseUrl=http://box-simulator:8000/api/v2/<api-key>/
+      - DeskApi__BaseUrl=http://box-simulator:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
     depends_on:
-      - postgres
-      - box-simulator
+      postgres:
+        condition: service_healthy
+      box-simulator:
+        condition: service_started
+
+  mosquitto:
+    container_name: mqtt
+    build:
+      context: .
+      dockerfile: infra/docker/mosquitto.Dockerfile
+    command:
+      - "/usr/sbin/mosquitto"
+      - "-c"
+      - "/mosquitto/config/mosquitto.conf"
+      - "-v"
+    ports:
+      - "1883:1883"
+      - "9001:9001" # Secured connection isn't configured correctly
+    volumes:
+      - ./mosquitto/log:/mosquitto/log
+      # - ./mosquitto/config:/mosquitto/config
+    environment:
+      - TZ=Europe/Berlin
+    restart: unless-stopped
 
   box-simulator:
+    hostname: box-simulator
     build:
       context: .
       dockerfile: infra/docker/simulator.Dockerfile
@@ -30,15 +53,18 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: semester_project_3
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d semester_project_3"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   pgadmin:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: postgres
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
     image: dpage/pgadmin4
     ports:
       - "6050:80"

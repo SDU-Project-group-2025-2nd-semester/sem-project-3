@@ -10,6 +10,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres-main;Port=5432;Database=backend_main;Username=postgres;Password=postgres
       - DeskApi__BaseUrl=http://box-simulator:8000/api/v2/<api-key>/
+      - Cors__AllowedOrigins=https://s3-fe-dev.michalvalko.eu;https://s3-fe-int.michalvalko.eu;https://s3-fe-main.michalvalko.eu;http://localhost:5173
     depends_on:
       - postgres-main
       - simulator-main
@@ -55,9 +56,10 @@ services:
     ports:
       - "5001:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres-integrate;Port=5432;Database=backend_integrate;Username=postgres;Password=postgres
       - DeskApi__BaseUrl=http://simulator-integrate:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
+      - Cors__AllowedOrigins=https://s3-fe-dev.michalvalko.eu;https://s3-fe-int.michalvalko.eu;https://s3-fe-main.michalvalko.eu;http://localhost:5173
     depends_on:
       - postgres-integrate
       - simulator-integrate
@@ -103,9 +105,10 @@ services:
     ports:
       - "5002:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres-develop;Port=5432;Database=backend_develop;Username=postgres;Password=postgres
       - DeskApi__BaseUrl=http://simulator-develop:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
+      - Cors__AllowedOrigins=https://s3-fe-dev.michalvalko.eu;https://s3-fe-int.michalvalko.eu;https://s3-fe-main.michalvalko.eu;http://localhost:5173
     depends_on:
       - postgres-develop
       - simulator-develop
@@ -142,6 +145,13 @@ services:
     volumes:
       - pgadmin_develop_data:/var/lib/pgadmin
     restart: unless-stopped
+
+  test-client:
+    image: curlimages/curl:latest
+    container_name: test-client
+    command: sleep infinity
+    restart: unless-stopped
+
 
 volumes:
   postgres_main_data:
