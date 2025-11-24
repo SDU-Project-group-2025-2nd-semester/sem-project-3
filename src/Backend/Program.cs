@@ -54,6 +54,7 @@ builder.Services
     .AddSingleton<IBackendMqttClient,BackendMqttClient>()
     .AddTransient<IDeskControlService,DeskControlService>()
     .AddTransient<IDeskService, DeskService>()
+    .AddTransient<IUserService,UserService>()
     .AddSignalR();;
 
 builder.Services.AddHostedService<MqttHostedService>()
