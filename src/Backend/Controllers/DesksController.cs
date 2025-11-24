@@ -49,7 +49,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     }
 
     [HttpPut("{deskId}")]
-    [RequireRole(UserRole.Admin)]
+    [RequireRole(UserRole.Admin, UserRole.Janitor)]
     public async Task<IActionResult> UpdateDesk(Guid companyId, Guid deskId, [FromBody] Desk updated)
     {
         var updatedSuccessfully = await deskService.UpdateDeskAsync(companyId, deskId, updated);
@@ -70,5 +70,18 @@ public class DesksController(IDeskService deskService) : ControllerBase
             return NotFound();
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Gets a list of MAC addresses of desks that have not been adopted yet.
+    /// </summary>
+    /// <param name="companyId"></param>
+    /// <returns>A list of MAC Address of desk not yet adopted</returns>
+    [HttpGet("not-adopted")]
+    [RequireRole(UserRole.Admin, UserRole.Janitor)]
+    public async Task<ActionResult<List<string>>> GetNotAdoptedDesks(Guid companyId)
+    {
+        var desks = await deskService.GetNotAdoptedDesks(companyId);
+        return Ok(desks);
     }
 }

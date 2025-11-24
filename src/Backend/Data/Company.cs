@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Backend.Data;
 
@@ -21,5 +22,8 @@ public class Company
     /// Is optional. If not set, users need to have correct email address.
     /// </remarks>
     public string? SecretInviteCode { get; set; }
+    
+    [JsonIgnore]
+    public List<UserCompany> UserMemberships { get; set; } = [];
 
 }

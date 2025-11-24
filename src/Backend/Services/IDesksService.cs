@@ -11,9 +11,11 @@ public interface IDeskService
     Task<Desk> CreateDeskAsync(Guid companyId, Desk desk);
     Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, Desk updated);
     Task<bool> DeleteDeskAsync(Guid companyId, Guid deskId);
+
+    Task<List<string>> GetNotAdoptedDesks(Guid companyId);
 }
 
-class DeskService(ILogger<DeskService> logger, BackendContext dbContext) : IDeskService
+class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskApi deskApi) : IDeskService
 {
     public async Task<List<Desk>> GetAllDesksAsync(Guid companyId)
     {
@@ -68,5 +70,24 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext) : IDesk
         dbContext.Desks.Remove(desk);
         await dbContext.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<string>> GetNotAdoptedDesks(Guid companyId)
+    {
+        var desks = await deskApi.GetAllDesks();
+
+        List<string> notAdoptedDesks = [];
+
+        foreach (var macAddress in desks)
+        {
+            var deskInDb = await dbContext.Desks.AnyAsync(d => d.MacAddress == macAddress && d.CompanyId == companyId);
+
+            if (!deskInDb)
+            {
+                notAdoptedDesks.Add(macAddress);
+            }
+        }
+
+        return notAdoptedDesks;
     }
 }    

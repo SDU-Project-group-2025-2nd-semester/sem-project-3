@@ -23,7 +23,9 @@ public class DatabaseMigrationHostedService(
 
         var applicationDbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
 
-        await applicationDbContext.Database.MigrateAsync(cancellationToken);
+        await applicationDbContext.Database.EnsureDeletedAsync(cancellationToken);
+
+        await applicationDbContext.Database.EnsureCreatedAsync(cancellationToken);
 
         logger.LogInformation("Database migrations completed successfully.");
 
@@ -164,6 +166,43 @@ public class DatabaseMigrationHostedService(
             Reservations = []
         };
         await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
+
+        await context.SaveChangesAsync();
+        
+        // Create Users-Company Relations
+        
+        context.UserCompanies.AddRange(
+            new UserCompany
+            {
+                UserId = adminUser.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = adminUser.Id,
+                CompanyId = innovationHubCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = johnDoe.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = janeDoe.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = bobSmith.Id,
+                CompanyId = innovationHubCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = aliceJohnson.Id,
+                CompanyId = startupCenterCompany.Id
+            }
+        );
 
         await context.SaveChangesAsync();
 
