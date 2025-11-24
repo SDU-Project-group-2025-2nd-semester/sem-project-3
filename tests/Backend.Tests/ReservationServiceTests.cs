@@ -22,8 +22,7 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
         {
             Id = Guid.NewGuid(),
             Name = "Test Company",
-            Admins = [],
-            Users = [],
+            UserMemberships = new List<UserCompany>(),
             Rooms = []
         };
 
@@ -39,8 +38,17 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             HealthRemindersFrequency = HealthRemindersFrequency.Low,
             SittingTime = 30,
             StandingTime = 30,
-            AccountCreation = DateTime.UtcNow
+            AccountCreation = DateTime.UtcNow,
+            Role = UserRole.User,
         };
+        
+        _testCompany.UserMemberships.Add(new UserCompany
+        {
+            UserId = _testUser.Id,
+            User = _testUser,
+            CompanyId = _testCompany.Id,
+            Company = _testCompany
+        });
 
         _testRoom = new Rooms
         {

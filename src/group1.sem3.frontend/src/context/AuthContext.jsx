@@ -40,10 +40,9 @@ export function AuthProvider({ children }) {
         });
 
         if (me.ok) {
-            const meData = await me.json().catch(() => null);
             setCurrentUser({
-                email: meData?.email ?? email,
-                role: meData?.role ?? data?.role ?? "user",
+                email,
+                role: data?.role ?? "user",
                 token: data?.accessToken ?? null,
             });
         } else {

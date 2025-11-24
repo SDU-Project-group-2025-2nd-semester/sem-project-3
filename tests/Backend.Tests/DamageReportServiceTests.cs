@@ -3,6 +3,7 @@ using Backend.Services;
 
 namespace Backend.Tests;
 
+
 [Collection("Database collection")]
 public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
 {
@@ -23,8 +24,7 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
         {
             Id = Guid.NewGuid(),
             Name = "Test Company",
-            Admins = [],
-            Users = [],
+            UserMemberships = [],
             Rooms = []
         };
 
@@ -40,7 +40,8 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             HealthRemindersFrequency = HealthRemindersFrequency.Low,
             SittingTime = 30,
             StandingTime = 30,
-            AccountCreation = DateTime.UtcNow
+            AccountCreation = DateTime.UtcNow,
+            Role = UserRole.User,
         };
 
         _testResolver = new User
@@ -55,8 +56,25 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             HealthRemindersFrequency = HealthRemindersFrequency.Low,
             SittingTime = 30,
             StandingTime = 30,
-            AccountCreation = DateTime.UtcNow
+            AccountCreation = DateTime.UtcNow,
+            Role = UserRole.Admin,
         };
+        
+        _testCompany.UserMemberships.Add(new UserCompany
+        {
+            UserId = _testUser.Id,
+            User = _testUser,
+            CompanyId = _testCompany.Id,
+            Company = _testCompany,
+        });
+
+        _testCompany.UserMemberships.Add(new UserCompany
+        {
+            UserId = _testResolver.Id,
+            User = _testResolver,
+            CompanyId = _testCompany.Id,
+            Company = _testCompany,
+        });
 
         _testRoom = new Rooms
         {
@@ -211,8 +229,7 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
         {
             Id = Guid.NewGuid(),
             Name = "Other Company",
-            Admins = [],
-            Users = [],
+            UserMemberships = [],
             Rooms = []
         };
         fixture.DbContext.Companies.Add(otherCompany);
