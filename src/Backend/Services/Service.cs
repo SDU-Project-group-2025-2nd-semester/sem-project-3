@@ -15,7 +15,7 @@ public interface IDeskControlService
     Task<int?> GetCurrentDeskHeightAsync(string macAddress);
 }
 
-public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider) : BackgroundService
+public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -39,7 +39,14 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
                 try
                 {
                     var currentState = await deskApi.GetDeskState(desk.MacAddress);
-                    if (currentState.PositionMm != desk.Height)
+                    if (currentState.PositionMm == desk.Height)
+                    {
+                        // Just for sake of testing - will be more complicated later
+                        // Notify table
+
+                         await mqttClient.SendMessage("buzz", $"{desk.RpiMacAddress}/buzzer");
+                    }
+                    else
                     {
                         var oldHeight = desk.Height;
                         desk.Height = currentState.PositionMm;
@@ -59,7 +66,8 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
                         await hubContext.Clients
                             .Group($"room-{desk.RoomId}")
                             .SendAsync("DeskHeightChanged", update, cancellationToken: stoppingToken);
-                        logger.LogInformation("Pulled and updated height for desk {DeskId} to {Height}mm", desk.Id, currentState.PositionMm);
+                        logger.LogInformation("Pulled and updated height for desk {DeskId} to {Height}mm", desk.Id,
+                            currentState.PositionMm);
                     }
                 }
                 catch (Exception ex)

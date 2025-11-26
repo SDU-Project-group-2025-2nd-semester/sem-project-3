@@ -41,6 +41,10 @@ public class Desk
     [MaxLength(17)] // TODO: Add Regex validation for MAC address format
     public string MacAddress { get; set; }
 
+    [MaxLength(17)] // TODO: Add Regex validation for MAC address format
+    public string RpiMacAddress { get; set; }
+
+
     public Guid RoomId { get; set; }
 
     public Guid CompanyId { get; set; }

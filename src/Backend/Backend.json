@@ -1485,6 +1485,10 @@
             "maxLength": 17,
             "type": "string"
           },
+          "rpiMacAddress": {
+            "maxLength": 17,
+            "type": "string"
+          },
           "roomId": {
             "type": "string",
             "format": "uuid"
