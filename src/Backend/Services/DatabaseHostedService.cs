@@ -280,7 +280,7 @@ public class DatabaseMigrationHostedService(
                 Height = 700,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:01",
+                MacAddress = "cd:fb:1a:53:fb:e6",
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -292,7 +292,7 @@ public class DatabaseMigrationHostedService(
                 Height = 650,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:02",
+                MacAddress = "ee:62:5b:b8:73:1d",
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -304,7 +304,7 @@ public class DatabaseMigrationHostedService(
                 Height = 720,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:03",
+                MacAddress = "70:9e:d5:e7:8c:98",
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -317,7 +317,7 @@ public class DatabaseMigrationHostedService(
                 Height = 680,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:04",
+                MacAddress = "00:ec:eb:50:c2:c8",
                 RoomId = room2Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -329,7 +329,7 @@ public class DatabaseMigrationHostedService(
                 Height = 710,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:05",
+                MacAddress = "f1:50:c2:b8:bf:22",
                 RoomId = room2Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -342,7 +342,7 @@ public class DatabaseMigrationHostedService(
                 Height = 700,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "BB:CC:DD:EE:FF:01",
+                MacAddress = "ce:38:a6:30:af:1d",
                 RoomId = room1Company2.Id,
                 CompanyId = innovationHubCompany.Id,
                 ReservationIds = [],
@@ -354,37 +354,37 @@ public class DatabaseMigrationHostedService(
                 Height = 730,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "BB:CC:DD:EE:FF:02",
+                MacAddress = "91:17:a4:3b:f4:4d",
                 RoomId = room1Company2.Id,
                 CompanyId = innovationHubCompany.Id,
                 ReservationIds = [],
                 Reservations = []
             },
-            // Startup Center - Room 1
-            new Desk
-            {
-                Id = Guid.Parse("dc111111-1111-1111-1111-111111111111"),
-                Height = 690,
-                MinHeight = 600,
-                MaxHeight = 1200,
-                MacAddress = "CC:DD:EE:FF:AA:01",
-                RoomId = room1Company3.Id,
-                CompanyId = startupCenterCompany.Id,
-                ReservationIds = [],
-                Reservations = []
-            },
-            new Desk
-            {
-                Id = Guid.Parse("dc111111-2222-2222-2222-222222222222"),
-                Height = 705,
-                MinHeight = 600,
-                MaxHeight = 1200,
-                MacAddress = "CC:DD:EE:FF:AA:02",
-                RoomId = room1Company3.Id,
-                CompanyId = startupCenterCompany.Id,
-                ReservationIds = [],
-                Reservations = []
-            }
+            //// Startup Center - Room 1
+            //new Desk
+            //{
+            //    Id = Guid.Parse("dc111111-1111-1111-1111-111111111111"),
+            //    Height = 690,
+            //    MinHeight = 600,
+            //    MaxHeight = 1200,
+            //    MacAddress = "CC:DD:EE:FF:AA:01",
+            //    RoomId = room1Company3.Id,
+            //    CompanyId = startupCenterCompany.Id,
+            //    ReservationIds = [],
+            //    Reservations = []
+            //},
+            //new Desk
+            //{
+            //    Id = Guid.Parse("dc111111-2222-2222-2222-222222222222"),
+            //    Height = 705,
+            //    MinHeight = 600,
+            //    MaxHeight = 1200,
+            //    MacAddress = "CC:DD:EE:FF:AA:02",
+            //    RoomId = room1Company3.Id,
+            //    CompanyId = startupCenterCompany.Id,
+            //    ReservationIds = [],
+            //    Reservations = []
+            //}
         };
 
         context.Desks.AddRange(desks);
@@ -442,15 +442,15 @@ public class DatabaseMigrationHostedService(
                 DeskId = desks[5].Id,
                 CompanyId = innovationHubCompany.Id
             },
-            new Reservation
-            {
-                Id = Guid.Parse("f6666666-6666-6666-6666-666666666666"),
-                Start = now.AddDays(5).Date.AddHours(8),
-                End = now.AddDays(5).Date.AddHours(12),
-                UserId = aliceJohnson.Id,
-                DeskId = desks[7].Id,
-                CompanyId = startupCenterCompany.Id
-            }
+            //new Reservation
+            //{
+            //    Id = Guid.Parse("f6666666-6666-6666-6666-666666666666"),
+            //    Start = now.AddDays(5).Date.AddHours(8),
+            //    End = now.AddDays(5).Date.AddHours(12),
+            //    UserId = aliceJohnson.Id,
+            //    DeskId = desks[7].Id,
+            //    CompanyId = startupCenterCompany.Id
+            //}
         };
 
         context.Reservations.AddRange(reservations);
@@ -495,18 +495,18 @@ public class DatabaseMigrationHostedService(
                 CompanyId = innovationHubCompany.Id
             },
             // Resolved report
-            new DamageReport
-            {
-                Id = Guid.Parse("d1111111-1111-1111-1111-111111111111"),
-                Description = "Power outlet near desk not working.",
-                SubmitTime = now.AddDays(-15),
-                ResolveTime = now.AddDays(-14),
-                IsResolved = true,
-                SubmittedById = aliceJohnson.Id,
-                ResolvedById = adminUser.Id,
-                DeskId = desks[7].Id,
-                CompanyId = startupCenterCompany.Id
-            }
+            //new DamageReport
+            //{
+            //    Id = Guid.Parse("d1111111-1111-1111-1111-111111111111"),
+            //    Description = "Power outlet near desk not working.",
+            //    SubmitTime = now.AddDays(-15),
+            //    ResolveTime = now.AddDays(-14),
+            //    IsResolved = true,
+            //    SubmittedById = aliceJohnson.Id,
+            //    ResolvedById = adminUser.Id,
+            //    DeskId = desks[7].Id,
+            //    CompanyId = startupCenterCompany.Id
+            //}
         };
 
         context.DamageReports.AddRange(damageReports);
