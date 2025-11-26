@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json.Serialization;
 
 namespace Backend.Services;
 
@@ -205,9 +206,9 @@ public interface IDeskApi
     Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors);
 }
 
-public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
+public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
 {
-    private HttpClient httpClient = httpClientFactory.CreateClient("DeskApi");
+    private readonly HttpClient httpClient = httpClientFactory.CreateClient("DeskApi");
 
     public async Task<List<string>> GetAllDesks()
     {
@@ -223,7 +224,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<DeskJsonElement> GetDeskStatus(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/status");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/status");
 
         result.EnsureSuccessStatusCode();
 
@@ -239,7 +240,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Config> GetDeskConfig(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/config");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/config");
         result.EnsureSuccessStatusCode();
         var config = await result.Content.ReadFromJsonAsync<Config>();
         if (config == null)
@@ -252,8 +253,11 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<State> GetDeskState(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/state");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/state");
         result.EnsureSuccessStatusCode();
+
+        var content = await result.Content.ReadAsStringAsync();
+
         var state = await result.Content.ReadFromJsonAsync<State>();
         if (state == null)
         {
@@ -265,7 +269,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Usage> GetDeskUsage(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/usage");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/usage");
         result.EnsureSuccessStatusCode();
         var usage = await result.Content.ReadFromJsonAsync<Usage>();
         if (usage == null)
@@ -278,7 +282,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<List<LastError>> GetDeskLastErrors(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/lastErrors");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/lastErrors");
         result.EnsureSuccessStatusCode();
         var lastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
         if (lastErrors == null)
@@ -291,7 +295,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Config> SetConfig(string macAddress, Config config)
     {
-        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/config", config);
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/config", config);
         result.EnsureSuccessStatusCode();
         var updatedConfig = await result.Content.ReadFromJsonAsync<Config>();
         if (updatedConfig == null)
@@ -303,7 +307,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<State> SetState(string macAddress, State state)
     {
-        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/state", state);
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/state", state);
         result.EnsureSuccessStatusCode();
         var updatedState = await result.Content.ReadFromJsonAsync<State>();
         if (updatedState == null)
@@ -315,7 +319,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Usage> SetUsage(string macAddress, Usage usage)
     {
-        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/usage", usage);
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/usage", usage);
         result.EnsureSuccessStatusCode();
         var updatedUsage = await result.Content.ReadFromJsonAsync<Usage>();
         if (updatedUsage == null)
@@ -327,7 +331,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors)
     {
-        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/lastErrors", lastErrors);
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/lastErrors", lastErrors);
         result.EnsureSuccessStatusCode();
         var updatedLastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
         if (updatedLastErrors == null)
@@ -341,37 +345,65 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
 public class DeskJsonElement
 {
+    [JsonPropertyName("config")]
     public Config Config { get; set; }
+
+    [JsonPropertyName("state")]
     public State State { get; set; }
+
+    [JsonPropertyName("usage")]
     public Usage Usage { get; set; }
+
+    [JsonPropertyName("lastErrors")]
     public List<LastError> LastErrors { get; set; }
 }
 
 public class Config
 {
+    [JsonPropertyName("name")]
     public string Name { get; set; }
+
+    [JsonPropertyName("manufacturer")]
     public string Manufacturer { get; set; }
 }
 
 public class State
 {
+    [JsonPropertyName("position_mm")]
     public int PositionMm { get; set; }
+
+    [JsonPropertyName("speed_mms")]
     public int SpeedMms { get; set; }
+
+    [JsonPropertyName("status")]
     public string Status { get; set; }
+
+    [JsonPropertyName("isPositionLost")]
     public bool IsPositionLost { get; set; }
+
+    [JsonPropertyName("isOverloadProtectionUp")]
     public bool IsOverloadProtectionUp { get; set; }
+    
+    [JsonPropertyName("isOverloadProtectionDown")]
     public bool IsOverloadProtectionDown { get; set; }
+
+    [JsonPropertyName("isAntiCollision")]
     public bool IsAntiCollision { get; set; }
 }
 
 public class Usage
 {
+    [JsonPropertyName("activationsCounter")]
     public int ActivationsCounter { get; set; }
+
+    [JsonPropertyName("sitStandCounter")]
     public int SitStandCounter { get; set; }
 }
 
 public class LastError
 {
+    [JsonPropertyName("timeS")]
     public int TimeS { get; set; }
+    [JsonPropertyName("errorCode")]
     public int ErrorCode { get; set; }
 }
