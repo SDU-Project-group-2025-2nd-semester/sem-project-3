@@ -2,6 +2,7 @@ using Backend.Data;
 using Backend.Hubs;
 using Backend.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
@@ -95,6 +96,17 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddIdentityApiEndpoints<User>()
     .AddEntityFrameworkStores<BackendContext>();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    // Prevent browsers from rejecting secure cookies when developing over HTTP,
+    // while still enforcing secure cookies in deployed environments.
+#if DEBUG
+    options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+#else
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+#endif
+});
 
 builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
