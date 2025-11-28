@@ -21,7 +21,7 @@ import { useState } from "react";
 export default function App() {
 
     const [sidebarOpen, setSidebarOpen] = useState(false); // default: closed
-    
+
     return (
         <div className="min-h-screen flex flex-col">
             <Header />
@@ -39,6 +39,12 @@ export default function App() {
                     <Route path="/user/desk" element={<DeskPage />} />
                     <Route path="/staff/damagereport" element={<DamageReportPage />} />
                     <Route path="/user/damagereport" element={<DamageReportPage />} />
+                    <Route path="/admin/homepage" element={<UsersManagerPage />} />
+                    <Route path="/admin/usersManager" element={<UsersManagerPage />} />
+                    <Route path="/admin/damagesManager" element={<DamagesManagerPage />} />
+                    <Route path="/admin/profilesManager" element={<ProfilesManagerPage />} />
+                    <Route path="/admin/desksManager" element={<DesksManagerPage />} />
+                    <Route path="/admin/healthStatsManager" element={<HealthStatsManagerPage />} />
                 </Routes>
             </main>
         </div>
