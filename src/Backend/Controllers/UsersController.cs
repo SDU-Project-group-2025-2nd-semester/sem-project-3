@@ -74,7 +74,7 @@ public class UsersController(IUserService userService) : ControllerBase
     {
         var currentUserId = User.GetUserId();
 
-        var success = await userService.UpdateUserAsync(currentUserId, updated);
+        var success = await userService.UpdateMyInfoAsync(currentUserId, updated);
 
         if (!success)
             return NotFound();
