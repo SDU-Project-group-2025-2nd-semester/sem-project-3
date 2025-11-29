@@ -2,16 +2,16 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { get, post, put, del } from "../../context/apiClient";
 
-// TODO: Replace with the actual company of the logged in user
+// TODO: Replace with the actual company of the logged in user - the company, that is selected in the sidebar
 const COMPANY_ID = "11111111-1111-1111-1111-111111111111"; 
 
 export default function UserHomePage() {
     
     const [currentBookings, setCurrentBookings] = useState([]);
     const [recentBookings, setRecentBookings] = useState([]);
+    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState()
-    // NOTE: Currently gives 'Request failed: 401' error, bc auth is not implemented
 
     useEffect(() => {
         const ctrl = new AbortController();
@@ -19,8 +19,14 @@ export default function UserHomePage() {
         async function load() {
             setLoading(true);
             setErr(undefined);
-            try {
-                const myreservations = await get(`/${COMPANY_ID}/reservation/me`, { signal: ctrl.signal });
+            try {                
+                const [myreservations, myprofile] = await Promise.all([
+                    get(`/${COMPANY_ID}/reservation/me`, { signal: ctrl.signal }),
+                    get(`/Users/me`, { signal: ctrl.signal }),
+                ]);
+
+                if (ctrl.signal.aborted) return; // don’t update state if aborted
+
                 const now = new Date();
 
                 // 'Current bookings' --> the end of the booking is in the future
@@ -32,15 +38,16 @@ export default function UserHomePage() {
                     const date = start.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
                     const time = `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}-${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
                     return {
-                        id: r.id,
-                        desk: r.deskId, // TODO: replace with deskLabel (like "D-101"), once it's in the model
-                        room: undefined, // TODO: same for room (like "R-1")
+                        id: r.id,                      
+                        desk: r.deskLabel ?? r.deskId,         // shows id until label exists
+                        room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
                         time,
                     };
                 });
 
                 setCurrentBookings(currentMapped);
+                setProfile(myprofile);
 
                 // 'Recent Bookings' --> the end of the booking is in the past
                 const pastReservations = (myreservations ?? [])
@@ -61,9 +68,9 @@ export default function UserHomePage() {
                     const time = `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}-${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 
                     return {
-                        id: r.id,         // uses reservation id as key; could also use deskId
-                        desk: r.deskId,   // TODO: replace with deskLabel (like "D-101"), once it's in the model
-                        room: undefined,  // TODO: same for room (like "R-1")
+                        id: r.id, // uses reservation id as key; could also use deskId
+                        desk: r.deskLabel ?? r.deskId,         // shows id until label exists
+                        room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
                         time,
                     };
@@ -71,9 +78,10 @@ export default function UserHomePage() {
 
                 setRecentBookings(recentMapped);
             } catch (e) {
+                if (e.name === "AbortError") return; // ignore normal abort
                 setErr(e.body?.message || e.message);
             } finally {
-                setLoading(false);
+                if (!ctrl.signal.aborted) setLoading(false);
             }
         }
 
@@ -93,6 +101,9 @@ export default function UserHomePage() {
     return (
         <div className="relative bg-background min-h-screen px-4 pt-24">
             <main className="max-w-3xl mx-auto flex flex-col pb-32">
+                <h2>
+                    Welcome {profile ? profile.firstName : ""}!
+                </h2>
                 {/* CURRENT BOOKINGS */}
                 <section>
                     <h2 className="text-2xl font-semibold text-secondary mb-4">
