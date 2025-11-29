@@ -15,7 +15,8 @@ export default function SignInPage() {
         setError("");
         try {
             login({ email, password });
-            navigate(`/${currentUser.role}/homepage`);
+            navigate('/user/homepage')
+            //navigate(`/${currentUser.role}/homepage`);
         } catch (err) {
             setError(err.message || "Failed to log in");
         }
