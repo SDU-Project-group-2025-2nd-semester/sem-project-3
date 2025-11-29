@@ -15,7 +15,9 @@ class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUser
 {
     public async Task<User?> GetUserAsync(string userId)
     {
-        return await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        return await dbContext.Users
+            .Include(u => u.CompanyMemberships)
+            .FirstOrDefaultAsync(u => u.Id == userId);
     }
 
     public async Task<bool> UpdateUserAsync(string userId, User updated)
