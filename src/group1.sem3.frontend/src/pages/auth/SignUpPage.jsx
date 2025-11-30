@@ -37,25 +37,29 @@ export default function SignUpPage() {
         e.preventDefault();
         setError("");
 
-        // einfache Feldprüfung
         if (!firstName.trim() || !lastName.trim() || !email.trim()) {
             setError("First name, last name and email are required.");
             return;
         }
 
-        const { ok, failed } = validatePassword(password);
+        const { ok } = validatePassword(password);
         if (!ok) {
-            // Zeige gezielte Fehlermeldung oder generische Meldung
-            setError("Passwort erfüllt nicht alle Anforderungen. Bitte überprüfe die Liste.");
+            setError("Password does not fullfill all requirements.");
             return;
         }
 
         setLoading(true);
         try {
-            await signup({ firstName, lastName, email, password });
-            navigate(`/user/homepage`);
+            const user = await signup({ firstName, lastName, email, password });
+            if (user.role === 0) {
+                navigate(`/user/homepage`);
+            } else if (user.role === 1) {
+                navigate(`/staff/homepage`);
+            } else if (user.role === 2) {
+                navigate(`/admin/desksManager`);
+            }
         } catch (err) {
-            setError(err?.message || "Fehler bei der Registrierung.");
+            setError(err?.message || "Error on registration.");
         } finally {
             setLoading(false);
         }
@@ -89,7 +93,7 @@ export default function SignUpPage() {
                     <InputField id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
                     <InputField id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
 
-                    {/* Passwort-Anforderungen anzeigen */}
+                    {/* Password requirements */}
                     <div className="text-xs text-gray-600 space-y-1">
                         {passwordRules.map(rule => renderRule(rule, lastChecks))}
                     </div>
