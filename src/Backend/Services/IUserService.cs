@@ -11,6 +11,7 @@ public interface IUserService
     public Task<bool> UpdateUserAsync(string userId, User updated);
     public Task<bool> UpdateMyInfoAsync(string userId, User updated);
     public Task<bool> DeleteUserAsync(string userId);
+    public Task<List<object>> GetUserCompaniesAsync(string userId);
 }
 
 class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUserService
@@ -83,5 +84,20 @@ class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUser
 
         await dbContext.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<object>> GetUserCompaniesAsync(string userId)
+    {
+        var userCompanies = await dbContext.UserCompanies
+            .Include(uc => uc.Company)
+            .Where(uc => uc.UserId == userId)
+            .Select(uc => new
+            {
+                uc.CompanyId,
+                CompanyName = uc.Company.Name
+            })
+            .ToListAsync<object>();
+
+        return userCompanies;
     }
 }

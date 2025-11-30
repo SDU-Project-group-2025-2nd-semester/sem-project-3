@@ -69,6 +69,15 @@ public class UsersController(IUserService userService) : ControllerBase
         return Ok(user);
     }
 
+    [HttpGet("me/companies")]
+    public async Task<ActionResult> GetMyCompanies()
+    {
+        var currentUserId = User.GetUserId();
+        var companies = await userService.GetUserCompaniesAsync(currentUserId);
+
+        return Ok(companies);
+    }
+
     [HttpPut("me")]
     public async Task<IActionResult> UpdateMyInfo([FromBody] User updated)
     {

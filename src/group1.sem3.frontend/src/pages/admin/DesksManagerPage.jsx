@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { get, post, put, del } from "../../context/apiClient";
+
+// mock data
 import desksMockData from '../../assets/admin/DesksMockData.json'
 import profileMockData from '../../assets/admin/ProfileMockData.json'
 import userMockData from '../../assets/admin/UserMockData.json'
@@ -6,6 +9,7 @@ import userMockData from '../../assets/admin/UserMockData.json'
 export default function DesksManagerPage() {
     const DEFAULT_DESK_HEIGHT = 95;
 
+    // mock data
     const allProfiles = [
         ...profileMockData.open.map(p => ({ ...p, category: 'open' })),
         ...profileMockData.closed.map(p => ({ ...p, category: 'closed' })),
@@ -13,11 +17,15 @@ export default function DesksManagerPage() {
     ];
 
     const [activeTab, setActiveTab] = useState('open');
-    const [activeRoom, setActiveRoom] = useState('room1');
+    const [activeRoom, setActiveRoom] = useState(null);
     const [showNewDeskForm, setShowNewDeskForm] = useState(false);
     const [showNewRoomForm, setShowNewRoomForm] = useState(false);
-    const [desks, setDesks] = useState(desksMockData.desks);
-    const [rooms, setRooms] = useState(desksMockData.rooms);
+    const [desks, setDesks] = useState([]);
+    const [rooms, setRooms] = useState([]);
+    const [reservations, setReservations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [companyId, setCompanyId] = useState(null);
 
     const [newDeskName, setNewDeskName] = useState('');
     const [newDeskAvailable, setNewDeskAvailable] = useState(true);
@@ -26,6 +34,7 @@ export default function DesksManagerPage() {
     const [newRoomFloor, setNewRoomFloor] = useState('');
     const [newRoomCapacity, setNewRoomCapacity] = useState('');
 
+    // TODO: profiles backend implementation
     const [roomProfiles, setRoomProfiles] = useState(() => {
         const initial = {};
         Object.keys(desksMockData.roomProfiles).forEach(roomId => {
@@ -59,35 +68,127 @@ export default function DesksManagerPage() {
         console.log(`Applied profile ${profileId} to all rooms`);
     };
 
-    const handleDeleteDesk = (deskId) => {
-        console.log('Delete desk:', deskId);
-        // TODO: Implement delete logic
-    };
-    const handleDeskStatus = (deskId) => {
-        console.log('Toggle desk status:', deskId);
-        // TODO: Implement logic
-    };
-    const handleDeskUnBook = (deskId) => {
-        console.log('Unbook desk status:', deskId);
-        // TODO: Implement logic
+    useEffect(() => {
+        fetchInitialData();
+    }, []);
+
+    useEffect(() => {
+        if (activeRoom && companyId) {
+            fetchDesksForRoom(activeRoom);
+        }
+    }, [activeRoom, companyId]);
+
+    const fetchInitialData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const userCompanies = await get('/Users/me/companies');
+
+            if (!userCompanies || userCompanies.length === 0) {
+                throw new Error('No company associated with current user');
+            }
+
+            const userCompanyId = userCompanies[0].companyId;
+            setCompanyId(userCompanyId);
+
+            const roomsData = await get(`/${userCompanyId}/rooms`);
+            setRooms(roomsData);
+
+            if (roomsData.length > 0) {
+                setActiveRoom(roomsData[0].id);
+            }
+        } catch (error) {
+            console.error('Error fetching initial data:', error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSaveNewDesk = (e) => {
+    const fetchDesksForRoom = async (roomId) => {
+        try {
+            const [desksData, reservationsData] = await Promise.all([
+                get(`/${companyId}/desks/room/${roomId}`),
+                get(`/${companyId}/reservation`)
+            ]);
+
+            setDesks(desksData);
+            setReservations(reservationsData);
+        } catch (error) {
+            console.error('Error fetching desks:', error);
+            if (error.status === 404) {
+                setDesks([]);
+                setReservations([]);
+            } else {
+                setError(error.message);
+            }
+        }
+    };
+
+    const handleDeleteDesk = async (deskId) => {
+        if (!confirm('Are you sure you want to delete this desk?')) {
+            return;
+        }
+
+        try {
+            await del(`/${companyId}/desks/${deskId}`);
+            await fetchDesksForRoom(activeRoom);
+        } catch (error) {
+            console.error('Error deleting desk:', error);
+            alert('Failed to delete desk: ' + error.message);
+        }
+    };
+
+    const handleDeskUnBook = async (deskId) => {
+        try {
+            const now = new Date();
+            const activeReservation = reservations.find(r => {
+                if (r.deskId !== deskId) return false;
+                const start = new Date(r.start);
+                const end = new Date(r.end);
+                return start <= now && now <= end;
+            });
+
+            if (!activeReservation) {
+                alert('No active booking found for this desk');
+                return;
+            }
+            if (!activeReservation) {
+                alert('No active booking found for this desk');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to cancel this booking?')) {
+                return;
+            }
+
+            await del(`/${companyId}/reservation/${activeReservation.id}`);
+            await fetchDesksForRoom(activeRoom);
+        } catch (error) {
+            console.error('Error canceling booking:', error);
+            alert('Failed to cancel booking: ' + error.message);
+        }
+    };
+
+    const handleSaveNewDesk = async (e) => {
         e.preventDefault();
-        const newDesk = {
-            id: Date.now(),
-            name: newDeskName,
-            status: newDeskAvailable ? 'available' : 'unavailable',
-            currentHeight: `${DEFAULT_DESK_HEIGHT}cm`,
-            currentBook: null,
-        };
 
-        setDesks(prev => ({
-            ...prev,
-            [activeRoom]: [...prev[activeRoom], newDesk]
-        }));
+        try {
+            const newDesk = {
+                name: newDeskName,
+                isAvailable: newDeskAvailable,
+                roomId: activeRoom,
+                currentHeight: DEFAULT_DESK_HEIGHT,
+            };
 
-        handleCancelNewDesk();
+            await post(`/${companyId}/desks`, newDesk);
+            await fetchDesksForRoom(activeRoom);
+            handleCancelNewDesk();
+        } catch (error) {
+            console.error('Error creating desk:', error);
+            alert('Failed to create desk: ' + error.message);
+        }
     };
 
     const handleCancelNewDesk = () => {
@@ -96,28 +197,24 @@ export default function DesksManagerPage() {
         setShowNewDeskForm(false);
     };
 
-    const handleSaveNewRoom = (e) => {
+    const handleSaveNewRoom = async (e) => {
         e.preventDefault();
-        const newRoom = {
-            id: `room${rooms.length + 1}`,
-            name: newRoomName,
-            capacity: parseInt(newRoomCapacity),
-            floor: parseInt(newRoomFloor),
-            currentStatus: 'open',
-        };
 
-        setRooms(prev => [...prev, newRoom]);
-        setDesks(prev => ({
-            ...prev,
-            [newRoom.id]: []
-        }));
-        setRoomProfiles(prev => ({
-            ...prev,
-            [newRoom.id]: {}
-        }));
+        try {
+            const newRoom = {
+                name: newRoomName,
+                capacity: parseInt(newRoomCapacity),
+                floor: parseInt(newRoomFloor),
+            };
 
-        handleCancelNewRoom();
-        setActiveRoom(newRoom.id);
+            const createdRoom = await post(`/${companyId}/rooms`, newRoom);
+            await fetchInitialData();
+            handleCancelNewRoom();
+            setActiveRoom(createdRoom.id);
+        } catch (error) {
+            console.error('Error creating room:', error);
+            alert('Failed to create room: ' + error.message);
+        }
     };
 
     const handleCancelNewRoom = () => {
@@ -139,10 +236,10 @@ export default function DesksManagerPage() {
         </button>
     );
 
-    const RoomButton = ({ value, label }) => (
+    const RoomButton = ({ roomId, label }) => (
         <button
-            onClick={() => setActiveRoom(value)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeRoom === value
+            onClick={() => setActiveRoom(roomId)}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeRoom === roomId
                 ? 'bg-secondary-100 text-secondary-700 border border-secondary-300'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                 }`}
@@ -150,6 +247,19 @@ export default function DesksManagerPage() {
             {label}
         </button>
     );
+
+    const getDeskStatus = (desk) => {
+        const now = new Date();
+        const hasActiveReservation = reservations.some(r => {
+            if (r.deskId !== desk.id) return false;
+            const start = new Date(r.start);
+            const end = new Date(r.end);
+            return start <= now && now <= end;
+        });
+
+        if (hasActiveReservation) return 'booked';
+        return 'available';
+    };
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -177,15 +287,65 @@ export default function DesksManagerPage() {
         }
     };
 
-    const getUserName = (userId) => {
-        if (!userId) return null;
-        const user = userMockData.Users.find(u => u.id === userId);
-        return user ? user.Name : null;
-    };
+    // const getUserName = (userId) => {
+    //     if (!userId) return null;
+    //     const user = userMockData.Users.find(u => u.id === userId);
+    //     return user ? user.Name : null;
+    // };
 
-    const getProfileById = (profileId) => {
-        return allProfiles.find(p => p.id === profileId);
-    };
+    // const getProfileById = (profileId) => {
+    //     return allProfiles.find(p => p.id === profileId);
+    // };
+
+    if (loading) {
+        return (
+            <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-lg text-gray-600">Loading rooms and desks...</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-lg text-red-600">Error: {error}</div>
+                    <button
+                        onClick={fetchInitialData}
+                        className="mt-4 px-4 py-2 bg-accent text-white rounded-lg"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const currentRoom = rooms.find(r => r.id === activeRoom);
+
+    // Don't render if no rooms available
+    if (!currentRoom && rooms.length === 0) {
+        return (
+            <div className="relative bg-background min-h-screen px-4 mt-20">
+                <main className="w-full max-w-7xl mx-auto flex flex-col gap-8 pb-32">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-3xl font-semibold text-gray-800">Desk Management</h1>
+                    </div>
+                    <div className="text-center py-12">
+                        <p className="text-gray-600 mb-4">No rooms found for your company.</p>
+                        <button
+                            onClick={() => setShowNewRoomForm(true)}
+                            className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
+                        >
+                            Create First Room
+                        </button>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="relative bg-background min-h-screen px-4 mt-20">
@@ -194,7 +354,7 @@ export default function DesksManagerPage() {
                     <h1 className="text-3xl font-semibold text-gray-800">Desk Management</h1>
                 </div>
 
-                {/* Global Room Control */}
+                {/*TODO: Global Room Control */}
                 <section>
                     <h2 className="text-xl font-semibold text-gray-700 mb-4">Global Room Control</h2>
                     <div className="flex gap-2 flex-wrap">
@@ -203,7 +363,7 @@ export default function DesksManagerPage() {
                         <TabButton value="maintenance" label="Maintenance" />
                     </div>
 
-                    {/* Display profiles*/}
+                    {/* TODO:Display profiles*/}
                     {activeTab && (
                         <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                             <h3 className="text-sm font-semibold text-gray-700 mb-3">
@@ -251,7 +411,7 @@ export default function DesksManagerPage() {
                     <h2 className="text-xl font-semibold text-gray-700 mb-4">Room Management</h2>
                     <div className="flex gap-2 flex-wrap mb-6">
                         {rooms.map(room => (
-                            <RoomButton key={room.id} value={room.id} label={room.name} />
+                            <RoomButton key={room.id} roomId={room.id} label={room.name || 'Unknown Room'} />
                         ))}
                         <button
                             onClick={() => setShowNewRoomForm(!showNewRoomForm)}
@@ -264,11 +424,11 @@ export default function DesksManagerPage() {
                         </button>
                     </div>
 
-                    {/* Desks */}
+                    {/* Desks table*/}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
                         <div className="flex items-center justify-between p-4 border-b border-gray-100">
                             <h3 className="text-lg font-semibold text-gray-700">
-                                Desks
+                                Desks in {currentRoom?.name || 'Unknown Room'}
                             </h3>
                             <button
                                 onClick={() => setShowNewDeskForm(!showNewDeskForm)}
@@ -288,34 +448,33 @@ export default function DesksManagerPage() {
                                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
                                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
                                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Current Height</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Current Book</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">MAC Address</th>
                                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="max-lg:block divide-y divide-gray-100">
-                                    {desks[activeRoom]?.map((desk) => {
-                                        const bookedUser = getUserName(desk.currentBookId);
-                                        // const activeProfile = getProfileById(desk.activeProfile);
+                                    {desks.map((desk) => {
+                                        const status = getDeskStatus(desk);
 
                                         return (
                                             <tr key={desk.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
                                                 <td className="px-4 py-3 text-sm font-medium max-lg:w-full">
                                                     <span className="font-semibold lg:hidden">Name: </span>
-                                                    <span className="font-semibold">{desk.name}</span>
+                                                    <span className="font-semibold">{desk.name || 'Unknown Desk'}</span>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm max-lg:w-full">
                                                     <span className="font-semibold lg:hidden">Status: </span>
-                                                    <span className={`font-medium ${getStatusColor(desk.status)}`}>
-                                                        {getStatusText(desk.status)}
+                                                    <span className={`font-medium ${getStatusColor(status)}`}>
+                                                        {getStatusText(status)}
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm max-lg:w-full">
                                                     <span className="font-semibold lg:hidden">Current Height: </span>
-                                                    {desk.currentHeight}
+                                                    {desk.height} cm
                                                 </td>
                                                 <td className="px-4 py-3 text-sm max-lg:w-full">
-                                                    <span className="font-semibold lg:hidden">Current Book: </span>
-                                                    {bookedUser || '----'}
+                                                    <span className="font-semibold lg:hidden">MAC Address: </span>
+                                                    {desk.macAddress || 'Not set'}
                                                 </td>
                                                 <td className="px-4 py-3 text-sm max-lg:w-full">
                                                     <button
@@ -327,29 +486,21 @@ export default function DesksManagerPage() {
                                                         <span className="lg:hidden">Delete</span>
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDeskStatus(desk.id)}
-                                                        className="bg-accent text-white px-3 py-1.5 ml-2 rounded-lg text-xs hover:bg-accent-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        title="Change desk status"
-                                                        disabled={desk.status === 'booked'}
-                                                    >
-                                                        <span>{desk.status === 'unavailable' ? 'Activate' : 'Deactivate'}</span>
-                                                    </button>
-                                                    <button
                                                         onClick={() => handleDeskUnBook(desk.id)}
                                                         className="bg-accent text-white px-3 py-1.5 ml-2 rounded-lg text-xs hover:bg-accent-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        title="Cancel desk book"
-                                                        disabled={desk.status !== 'booked'}
+                                                        title="Cancel desk booking"
+                                                        disabled={status !== 'booked'}
                                                     >
-                                                        <span>Cancel Book</span>
+                                                        <span>Cancel Booking</span>
                                                     </button>
                                                 </td>
                                             </tr>
                                         );
                                     })}
-                                    {(!desks[activeRoom] || desks[activeRoom].length === 0) && (
+                                    {desks.length === 0 && (
                                         <tr>
                                             <td colSpan="5" className="px-4 py-6 text-center text-sm text-gray-500">
-                                                No desks found
+                                                No desks found in this room
                                             </td>
                                         </tr>
                                     )}
@@ -358,8 +509,8 @@ export default function DesksManagerPage() {
                         </div>
                     </div>
 
-                    {/* New Desk */}
-                    {showNewDeskForm && (
+                    {/* New Desk form*/}
+                    {showNewDeskForm && activeRoom && (
                         <form onSubmit={handleSaveNewDesk} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">New Desk</h3>
 
@@ -411,7 +562,7 @@ export default function DesksManagerPage() {
                         </form>
                     )}
 
-                    {/* New Room */}
+                    {/* New Room form*/}
                     {showNewRoomForm && (
                         <form onSubmit={handleSaveNewRoom} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">New Room</h3>
@@ -482,7 +633,7 @@ export default function DesksManagerPage() {
                 {/* Room Control */}
                 <section>
                     <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                        {rooms.find(r => r.id === activeRoom)?.name || activeRoom} Control
+                        {currentRoom?.name || 'Unknown Room'} Control
                     </h2>
 
                     {/* Info card */}
@@ -490,25 +641,27 @@ export default function DesksManagerPage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                                 <span className="text-gray-600">Floor:</span>
-                                <span className="ml-2 font-semibold">{rooms.find(r => r.id === activeRoom)?.floor}</span>
+                                <span className="ml-2 font-semibold">{currentRoom?.floor || 'N/A'}</span>
                             </div>
                             <div>
                                 <span className="text-gray-600">Capacity:</span>
-                                <span className="ml-2 font-semibold">{rooms.find(r => r.id === activeRoom)?.capacity}</span>
+                                <span className="ml-2 font-semibold">{currentRoom?.capacity || 0}</span>
                             </div>
                             <div>
                                 <span className="text-gray-600">Status:</span>
-                                {/* TODO: Move logic to Model */}
-                                <span className={`ml-2 font-semibold capitalize ${rooms.find(r => r.id === activeRoom)?.currentStatus === 'open' ? 'text-success-600' :
-                                    rooms.find(r => r.id === activeRoom)?.currentStatus === 'maintenance' ? 'text-warning-600' :
+                                {/* TODO: Move logic to Model or use the "OpeningHours" from Rooms.cs*/}
+                                <span className={`ml-2 font-semibold capitalize ${currentRoom?.currentStatus === 'open' ? 'text-success-600' :
+                                    currentRoom?.currentStatus === 'maintenance' ? 'text-warning-600' :
                                         'text-danger-600'
                                     }`}>
-                                    {rooms.find(r => r.id === activeRoom)?.currentStatus}
+                                    {currentRoom?.currentStatus || 'unknown'}
                                 </span>
                             </div>
                             <div>
                                 <span className="text-gray-600">Desks:</span>
-                                <span className="ml-2 font-semibold">{desks[activeRoom]?.length || 0}</span>
+                                <span className="ml-2 font-semibold">
+                                    {desks.filter(d => d.isAvailable).length}
+                                </span>
                             </div>
                         </div>
                     </div>
