@@ -11,9 +11,31 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres-main;Port=5432;Database=backend_main;Username=postgres;Password=postgres
       - DeskApi__BaseUrl=http://box-simulator:8000/api/v2/<api-key>/
       - Cors__AllowedOrigins=https://s3-fe-dev.michalvalko.eu;https://s3-fe-int.michalvalko.eu;https://s3-fe-main.michalvalko.eu;http://localhost:5173
+      - Mqtt__Host=mosquitto-main
+      - Mqtt__Port=1883
     depends_on:
       - postgres-main
       - simulator-main
+      - mosquitto-main
+    restart: unless-stopped
+
+  mosquitto-main:
+    build:
+      context: ../..
+      dockerfile: infra/docker/mosquitto.Dockerfile
+    container_name: mosquitto-main
+    command:
+      - "/usr/sbin/mosquitto"
+      - "-c"
+      - "/mosquitto/config/mosquitto.conf"
+      - "-v"
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mosquitto_main_log:/mosquitto/log
+    environment:
+      - TZ=Europe/Berlin
     restart: unless-stopped
 
   simulator-main:
@@ -60,9 +82,31 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres-integrate;Port=5432;Database=backend_integrate;Username=postgres;Password=postgres
       - DeskApi__BaseUrl=http://simulator-integrate:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
       - Cors__AllowedOrigins=https://s3-fe-dev.michalvalko.eu;https://s3-fe-int.michalvalko.eu;https://s3-fe-main.michalvalko.eu;http://localhost:5173
+      - Mqtt__Host=mosquitto-integrate
+      - Mqtt__Port=1883
     depends_on:
       - postgres-integrate
       - simulator-integrate
+      - mosquitto-integrate
+    restart: unless-stopped
+
+  mosquitto-integrate:
+    build:
+      context: ../..
+      dockerfile: infra/docker/mosquitto.Dockerfile
+    container_name: mosquitto-integrate
+    command:
+      - "/usr/sbin/mosquitto"
+      - "-c"
+      - "/mosquitto/config/mosquitto.conf"
+      - "-v"
+    ports:
+      - "1884:1883"
+      - "9002:9001"
+    volumes:
+      - mosquitto_integrate_log:/mosquitto/log
+    environment:
+      - TZ=Europe/Berlin
     restart: unless-stopped
 
   simulator-integrate:
@@ -109,9 +153,31 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres-develop;Port=5432;Database=backend_develop;Username=postgres;Password=postgres
       - DeskApi__BaseUrl=http://simulator-develop:8000/api/v2/E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7/
       - Cors__AllowedOrigins=https://s3-fe-dev.michalvalko.eu;https://s3-fe-int.michalvalko.eu;https://s3-fe-main.michalvalko.eu;http://localhost:5173
+      - Mqtt__Host=mosquitto-develop
+      - Mqtt__Port=1883
     depends_on:
       - postgres-develop
       - simulator-develop
+      - mosquitto-develop
+    restart: unless-stopped
+
+  mosquitto-develop:
+    build:
+      context: ../..
+      dockerfile: infra/docker/mosquitto.Dockerfile
+    container_name: mosquitto-develop
+    command:
+      - "/usr/sbin/mosquitto"
+      - "-c"
+      - "/mosquitto/config/mosquitto.conf"
+      - "-v"
+    ports:
+      - "1885:1883"
+      - "9003:9001"
+    volumes:
+      - mosquitto_develop_log:/mosquitto/log
+    environment:
+      - TZ=Europe/Berlin
     restart: unless-stopped
 
   simulator-develop:
@@ -163,4 +229,7 @@ volumes:
   simulator_main_data:
   simulator_integrate_data:
   simulator_develop_data:
+  mosquitto_main_log:
+  mosquitto_integrate_log:
+  mosquitto_develop_log:
 

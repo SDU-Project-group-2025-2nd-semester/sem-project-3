@@ -14,7 +14,7 @@ public interface IBackendMqttClient : IDisposable
     Task StopAsync(CancellationToken cancellationToken);
 }
 
-public class BackendMqttClient(ILogger<MqttHostedService> logger) : IBackendMqttClient
+public class BackendMqttClient(ILogger<MqttHostedService> logger, IConfiguration configuration) : IBackendMqttClient
 {
     private IManagedMqttClient _mqttClient;
 
@@ -22,12 +22,17 @@ public class BackendMqttClient(ILogger<MqttHostedService> logger) : IBackendMqtt
     {
         logger.LogInformation("Starting MqttClient and connecting to the broker...");
 
+        var mqttHost = configuration["Mqtt:Host"] ?? "mqtt";
+        var mqttPort = int.Parse(configuration["Mqtt:Port"] ?? "1883");
+
+        logger.LogInformation("Connecting to MQTT broker at {Host}:{Port}", mqttHost, mqttPort);
+
         // Setup and start a managed MQTT client.
         var options = new ManagedMqttClientOptionsBuilder()
             .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
             .WithClientOptions(new MqttClientOptionsBuilder()
                 .WithClientId("Server")
-                .WithTcpServer("mqtt", 1883)
+                .WithTcpServer(mqttHost, mqttPort)
                 .Build())
             .Build();
 
