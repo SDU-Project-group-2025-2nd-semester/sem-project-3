@@ -12,7 +12,7 @@ services:
       box-simulator:
         condition: service_started
 
-  mosquitto:
+  mqtt:
     container_name: mqtt
     build:
       context: .
