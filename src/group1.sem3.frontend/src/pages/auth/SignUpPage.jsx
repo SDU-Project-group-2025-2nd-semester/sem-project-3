@@ -1,27 +1,81 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function SignUpPage() {
-    const { signup, roles, currentUser } = useAuth();
-    const [username, setUsername] = useState("");
-    const [fullName, setFullName] = useState("");
+    const { signup } = useAuth();
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    function handleSubmit(e) {
+    // Passwort-Regeln (aus Backend)
+    const passwordRules = [
+        { code: "PasswordTooShort", desc: "Atleast six characters" },
+        { code: "PasswordRequiresDigit", desc: "Atleast one number (0–9)" },
+        { code: "PasswordRequiresNonAlphanumeric", desc: "Atleast one special character" },
+        { code: "PasswordRequiresLower", desc: "Atleast one low letter (a–z)" },
+        { code: "PasswordRequiresUpper", desc: "Atleast one big letter (A–Z)" },
+    ];
+
+    function validatePassword(pw) {
+        const checks = {
+            PasswordTooShort: pw != null && pw.length >= 6,
+            PasswordRequiresDigit: /[0-9]/.test(pw || ""),
+            PasswordRequiresNonAlphanumeric: /[^a-zA-Z0-9]/.test(pw || ""),
+            PasswordRequiresLower: /[a-z]/.test(pw || ""),
+            PasswordRequiresUpper: /[A-Z]/.test(pw || ""),
+        };
+        const failed = Object.keys(checks).filter(k => !checks[k]);
+        return { ok: failed.length === 0, failed, checks };
+    }
+
+    async function handleSubmit(e) {
         e.preventDefault();
         setError("");
+
+        if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+            setError("First name, last name and email are required.");
+            return;
+        }
+
+        const { ok } = validatePassword(password);
+        if (!ok) {
+            setError("Password does not fullfill all requirements.");
+            return;
+        }
+
+        setLoading(true);
         try {
-            signup({ username, fullName, email, password, role: selectedRole });
-            navigate(`/${currentUser.role}/homepage`);
+            const user = await signup({ firstName, lastName, email, password });
+            if (user.role === 0) {
+                navigate(`/user/homepage`);
+            } else if (user.role === 1) {
+                navigate(`/staff/homepage`);
+            } else if (user.role === 2) {
+                navigate(`/admin/desksManager`);
+            }
         } catch (err) {
-            setError(err.message || "Failed to register");
+            setError(err?.message || "Error on registration.");
+        } finally {
+            setLoading(false);
         }
     }
+
+    const renderRule = (rule, checks) => {
+        const ok = checks[rule.code];
+        return (
+            <div key={rule.code} className={`flex items-center gap-2 ${ok ? "text-success-700" : "text-gray-500"}`}>
+                <span className={`w-4 h-4 rounded-full ${ok ? "bg-success-600" : "bg-gray-300"}`} />
+                <span>{rule.desc}</span>
+            </div>
+        );
+    };
+
+    const lastChecks = validatePassword(password).checks;
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background px-4">
@@ -34,37 +88,22 @@ export default function SignUpPage() {
                 {error && <div className="text-red-500 mb-2 text-sm text-center">{error}</div>}
 
                 <form className="space-y-3 sm:space-y-5 md:space-y-6" onSubmit={handleSubmit}>
-                    <InputField id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
-                    <InputField id="fullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full Name" />
+                    <InputField id="firstname" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" />
+                    <InputField id="lastname" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" />
                     <InputField id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
                     <InputField id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
 
-                    <div>
-                        <label className={labelClasses} htmlFor="userType">
-                            User Type
-                        </label>
-                        <select
-                            id="userType"
-                            className={inputClasses}
-                            value={selectedRole}
-                            onChange={(e) => setSelectedRole(e.target.value)}
-                            required
-                        >
-                            <option value="" disabled>Select a role</option>
-                            {roles.map(role => (
-                                <option key={role} value={role}>
-                                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                                </option>
-                            ))}
-                        </select>
-
+                    {/* Password requirements */}
+                    <div className="text-xs text-gray-600 space-y-1">
+                        {passwordRules.map(rule => renderRule(rule, lastChecks))}
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full bg-accent text-white font-semibold py-2 sm:py-2.5 md:py-3 rounded hover:bg-secondary transition-colors"
+                        disabled={loading}
+                        className="w-full bg-accent text-white font-semibold py-2 sm:py-2.5 md:py-3 rounded disabled:opacity-60 transition-colors"
                     >
-                        Register
+                        {loading ? "Registering…" : "Register"}
                     </button>
                 </form>
 

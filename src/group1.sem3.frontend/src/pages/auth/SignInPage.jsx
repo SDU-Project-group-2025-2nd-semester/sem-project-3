@@ -1,25 +1,31 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { homepagePathForRole } from "../../utils/homepage";
 
 export default function SignInPage() {
-    const { login, roles, currentUser } = useAuth();
+    const { login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [selectedRole, setSelectedRole] = useState("");
     const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
         setError("");
+        setIsLoading(true);
+
         try {
-            login({ email, password, role: selectedRole });
-            const subpath = currentUser.role === "admin" ? "usersManager" : "homepage";
-            navigate(`/${currentUser.role}/${subpath}`);
+            const user = await login({ email, password });
+
+            const role = user?.role ?? 0;
+            navigate(homepagePathForRole(role));
         } catch (err) {
-            setError(err.message || "Failed to log in");
+            const msg = err?.body?.message || err?.message || "Failed to log in";
+            setError(msg);
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -37,32 +43,12 @@ export default function SignInPage() {
                     <InputField id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
                     <InputField id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
 
-                    <div>
-                        <label className={labelClasses} htmlFor="userType">
-                            User Type
-                        </label>
-                        <select
-                            id="userType"
-                            className={inputClasses}
-                            value={selectedRole}
-                            onChange={(e) => setSelectedRole(e.target.value)}
-                            required
-                        >
-                            <option value="" disabled>Select a role</option>
-                            {roles.map(role => (
-                                <option key={role} value={role}>
-                                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                                </option>
-                            ))}
-                        </select>
-
-                    </div>
-
                     <button
                         type="submit"
-                        className="w-full bg-accent text-white font-semibold py-2 sm:py-2.5 md:py-3 rounded hover:bg-secondary transition-colors"
+                        disabled={isLoading}
+                        className={`w-full bg-accent text-white font-semibold py-2 sm:py-2.5 md:py-3 rounded hover:bg-secondary transition-colors ${isLoading ? "opacity-60 cursor-wait" : ""}`}
                     >
-                        Login
+                        {isLoading ? "Logging in..." : "Login"}
                     </button>
                 </form>
 
