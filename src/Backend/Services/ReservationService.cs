@@ -13,12 +13,12 @@ public class ReservationService(BackendContext dbContext) : IReservationService
 
         if (!string.IsNullOrEmpty(userId))
         {
-            query = query.Where(r => r.User.Id == userId);
+            query = query.Where(r => r.UserId == userId);
         }
 
         if (deskId.HasValue)
         {
-            query = query.Where(r => r.Id == deskId.Value);
+            query = query.Where(r => r.DeskId == deskId.Value);
         }
 
         if (startDate.HasValue)
