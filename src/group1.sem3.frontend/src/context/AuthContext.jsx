@@ -1,91 +1,80 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { post, get } from "./apiClient";
+import { useNavigate } from "react-router-dom";
+import { homepagePathForRole } from "../utils/homepage";
 
 const AuthContext = createContext(null);
 
+function pickUser(serverUser) {
+  if (!serverUser) return null;
+  return {
+    id: serverUser.id,
+    email: serverUser.email ?? serverUser.userName,
+    userName: serverUser.userName,
+    firstName: serverUser.firstName,
+    lastName: serverUser.lastName,
+    role: serverUser.role,
+    standingHeight: serverUser.standingHeight,
+    sittingHeight: serverUser.sittingHeight,
+    healthRemindersFrequency: serverUser.healthRemindersFrequency,
+    sittingTime: serverUser.sittingTime,
+    standingTime: serverUser.standingTime,
+  };
+}
+
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
-    const base = "https://s3-be-dev.michalvalko.eu/api";
 
-    async function login({ email, password }) {
-        const response = await fetch(`${base}/auth/login`, {
-            method: "POST",
-            credentials: "include", 
-            headers: {
-                accept: "*/*",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
-        });    
+    const navigate = useNavigate();
+    // automatically move to homepage if already logged in
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const me = await get("/Users/me");
+          if (!mounted || !me) return;
+          const user = pickUser(me);  
+          setCurrentUser(user);
 
-        if (!response.ok) {
-            throw new Error("Login failed");
-        }
+          navigate(homepagePathForRole(user?.role));
+       
+      } catch {
+        // no session
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
-        let data = null;
-        const contentType = response.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
-            try {
-                data = await response.json();
-            } catch {
-                data = null;
-            }
-        }
+  async function login({ email, password }) {
+    const data = await post("/auth/login", { email, password });
 
-        const me = await fetch(`${base}/Users/me`, {
-            method: "GET",
-            headers: {
-                accept: "text/plain",
-            },
-            credentials: "include",
-        });
-
-        if (me.ok) {
-            setCurrentUser({
-                email,
-                role: data?.role ?? "user",
-                token: data?.accessToken ?? null,
-            });
-        } else {
-            setCurrentUser({
-                email,
-                role: data?.role ?? "user",
-                token: data?.accessToken ?? null,
-            });
-        }
+    let me = null;
+    try {
+      me = await get("/Users/me");
+    } catch {
+      me = null;
     }
 
-    async function signup({ firstName, lastName, email, password }) {
-        const payload = { email, password, firstName, lastName };
+    const user = pickUser(me ?? { email, userName: email });
+    setCurrentUser(user);
+    return user;
+  }
 
-        const response = await fetch("/api/auth/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-            throw new Error("Signup failed");
-        }
+  async function signup({ firstName, lastName, email, password }) {
+    await post("/auth/register", { email, password, firstName, lastName });
+    await login({ email, password });
+  }
 
-        await login({ email, password });
-    }
+  async function logout() {
+    await post("/auth/logout");
+    setCurrentUser(null);
+  }
 
-    async function logout() {
-        const response = await fetch(`${base}/auth/logout`, {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-        });
-        if (!response.ok) {
-            throw new Error("Logout failed");
-        }
-        setCurrentUser(null);
-    }
-
-    return (
-        <AuthContext.Provider value={{ currentUser, login, logout, signup }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={{ currentUser, login, logout, signup }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
