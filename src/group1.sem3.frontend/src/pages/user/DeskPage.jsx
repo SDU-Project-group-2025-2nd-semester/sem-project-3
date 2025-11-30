@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "@reacticons/bootstrap-icons";
+import { get, post, put, del } from "../../context/apiClient";
 
 export default function DeskPage() {
     const desk = {
@@ -19,10 +20,6 @@ export default function DeskPage() {
         availableTimes: ["08:00 - 10:00", "10:30 - 12:30", "16:30 - 18:30"],
     };
 
-    const [height, setHeight] = useState(desk.currentHeight);
-    const setSittingHeight = () => setHeight(desk.optimalSitting);
-    const setStandingHeight = () => setHeight(desk.optimalStanding);
-
     const hasReservation = !!desk.currentReservation;
 
     const location = useLocation();
@@ -30,6 +27,57 @@ export default function DeskPage() {
     const [isDamaged, setIsDamaged] = useState(desk.damaged);
 
     const navigate = useNavigate();
+
+    // Pull from navigation state, if it exists
+    const deskName = location.state?.desk ?? desk.name;
+    const roomName = location.state?.room ?? desk.room;
+    const reservationDate = location.state?.date ?? desk.currentReservation.date;
+    const reservationTime = location.state?.time ?? desk.currentReservation.time;
+
+    // Current height (cm)
+    const [height, setHeight] = useState(desk.currentHeight);
+
+    // User profile heights (in cm after conversion); null if not set    
+    const [userSittingCm, setUserSittingCm] = useState(null);
+    const [userStandingCm, setUserStandingCm] = useState(null);
+    const [err, setErr] = useState();
+
+    const setSittingHeight = () => {
+        setHeight(userSittingCm ?? desk.optimalSitting);
+    };
+    const setStandingHeight = () => {
+        setHeight(userStandingCm ?? desk.optimalStanding);
+    };
+    
+    // Fetch user's profile and convert mm to cm
+    useEffect(() => {
+        const ctrl = new AbortController();
+
+        (async () => {
+            try {
+                setErr(undefined);
+                const me = await get("/Users/me", { signal: ctrl.signal });
+                if (ctrl.signal.aborted) return;
+
+                const sitMm = me?.sittingHeight;
+                const standMm = me?.standingHeight;
+    
+                // Convert to cm with one decimal; ignore non-positive/undefined values
+                const sitCm =
+                    typeof sitMm === "number" && sitMm > 0 ? +(sitMm / 10).toFixed(1) : null;
+                const standCm =
+                    typeof standMm === "number" && standMm > 0 ? +(standMm / 10).toFixed(1) : null;
+
+                setUserSittingCm(sitCm);
+                setUserStandingCm(standCm);
+            } catch (e) {
+                if (e?.name === "AbortError") return;
+                setErr(e?.body?.message || e?.message);
+            }
+        })();
+   
+        return () => ctrl.abort();
+    }, []);
     
     // Check if damage was reported
     useEffect(() => {
@@ -51,13 +99,14 @@ export default function DeskPage() {
             {/* Desk Info */}
             <div className="flex justify-between items-start">
                 <div>
-                    <p className="text-primary font-semibold text-xl">Desk: {desk.name}</p>
-                    <p className="text-primary font-semibold text-lg">Room: {desk.room}</p>
+                    <p className="text-primary font-semibold text-xl">Desk: {deskName}</p>
+                    <p className="text-primary font-semibold text-lg">Room: {roomName}</p>
                 </div>
                 <p
                     className={`font-semibold text-sm ${isDamaged ? "text-red-500" : "text-green-500"
                         }`}
                 >
+                    {/* TODO: Connect 'status' with backend */}
                     {desk.status} {isDamaged && " - Damaged"}
                 </p>
             </div>
@@ -92,6 +141,7 @@ export default function DeskPage() {
             </div>
 
 
+            {/* TODO: Connect damage reporting with backend */}    
             {/* Report Damage */}
             <div className="mt-4 flex justify-center">
 
@@ -113,10 +163,11 @@ export default function DeskPage() {
             {hasReservation && (
                 <div className="mt-6 space-y-2">
                     <p className="text-primary text-sm">
-                        Your Reservations: {desk.currentReservation.date} |{" "}
-                        {desk.currentReservation.time}
+                        Your Reservation: {reservationDate} |{" "}
+                        {reservationTime}
                     </p>
 
+                    {/* TODO: Connect available times with backend */}
                     {/* Available times */}
                     <div>
                         <p className="text-primary font-semibold text-sm mb-1">
@@ -131,6 +182,7 @@ export default function DeskPage() {
                 </div>
             )}
 
+            {/* TODO: implement booking */}
             {/* Book Button */}
             <Link
                 to="/user/booking"

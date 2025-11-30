@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Icon from '@reacticons/bootstrap-icons';
+import { get, put } from "../../context/apiClient";
 
 export default function UserSettingsPage() {
     const { currentUser, logout } = useAuth();
@@ -25,6 +26,9 @@ export default function UserSettingsPage() {
     const [sittingChanged, setSittingChanged] = useState(false);
     const [standingChanged, setStandingChanged] = useState(false);
 
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveErr, setSaveErr] = useState(undefined);
+
     useEffect(() => {
         const height = parseFloat(userHeight);
         if (!isNaN(height)) {
@@ -35,6 +39,64 @@ export default function UserSettingsPage() {
             setStandingHeight(standing);
         }
     }, [userHeight]);
+
+    // Load existing profile heights (mm) from the database and show them in cm
+    useEffect(() => {
+        const ctrl = new AbortController();
+
+        (async () => {
+            try {
+                const me = await get("/Users/me", { signal: ctrl.signal });
+                if (ctrl.signal.aborted) return;
+
+                const sitMm = me?.sittingHeight;
+                const standMm = me?.standingHeight;
+
+                if (typeof sitMm === "number" && sitMm > 0) {
+                    setSittingHeight((sitMm / 10).toFixed(1)); // cm
+                }
+                if (typeof standMm === "number" && standMm > 0) {
+                    setStandingHeight((standMm / 10).toFixed(1)); // cm
+                }
+            } catch (e) {
+                console.error("Failed to load /Users/me:", e?.body?.message || e?.message || e);
+            }
+        })();
+
+        return () => ctrl.abort();
+    }, []);
+    
+    // Auto-save sitting/standing heights whenever they change
+    // NOTE: User's height should also be auto-saved, but it's not in the model currently
+    useEffect(() => {
+        const sitCm = parseFloat(sittingHeight);
+        const standCm = parseFloat(standingHeight);
+
+        // If either is NaN (Not a Number), skip saving until both are valid numbers
+        if (isNaN(sitCm) || isNaN(standCm)) return;
+
+        // Debounce: wait a bit after the last change before saving
+        const timer = setTimeout(async () => {
+            setIsSaving(true);
+            setSaveErr(undefined);
+
+            const payload = {
+            // Backend stores millimeters
+            sittingHeight: Math.round(sitCm * 10),
+            standingHeight: Math.round(standCm * 10),
+            };
+
+            try {
+                await put("/Users/me", payload);
+            } catch (e) {
+                setSaveErr(e?.body?.message || e?.message || "Failed to save preferences.");
+            } finally {
+                setIsSaving(false);
+            }
+        }, 1000); 
+
+        return () => clearTimeout(timer);
+    }, [sittingHeight, standingHeight]);
 
     function handleLogout() {
         logout();
@@ -121,10 +183,6 @@ export default function UserSettingsPage() {
                         </label>
                         <input
                             type="number"
-                            // min="50"
-                            // max="250"
-                            // placeholder="e.g. 175"
-                            // className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
                             value={standingHeight}
                             onChange={(e) => {
                                     setStandingHeight(e.target.value);
@@ -141,10 +199,6 @@ export default function UserSettingsPage() {
                         </label>
                         <input
                             type="number"
-                            // min="30"
-                            // max="200"
-                            // placeholder="e.g. 95"
-                            // className="w-full border border-secondary rounded px-3 py-2 outline-none focus:ring-2 focus:ring-accent bg-background text-primary"
                             value={sittingHeight}
                             onChange={(e) => {
                                     setSittingHeight(e.target.value);

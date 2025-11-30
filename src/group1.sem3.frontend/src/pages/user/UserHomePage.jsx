@@ -122,7 +122,15 @@ export default function UserHomePage() {
                                 className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center w-full"
                             >
 
-                            <Link to="/user/desk" className="flex-1">
+                            <Link to="/user/desk" 
+                            state={{
+                                reservationId: booking.id,
+                                desk: booking.desk,
+                                room: booking.room ?? "-",
+                                date: booking.date,
+                                time: booking.time,
+                            }}
+                            className="flex-1">
                             <div>
                                 <p className="text-primary font-semibold">
                                     Desk: {booking.desk}
