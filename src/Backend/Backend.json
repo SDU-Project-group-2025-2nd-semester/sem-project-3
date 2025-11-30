@@ -1381,6 +1381,32 @@
   },
   "components": {
     "schemas": {
+      "Company": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "maxLength": 100,
+            "type": "string"
+          },
+          "rooms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rooms"
+            }
+          },
+          "secretInviteCode": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "CreateDamageReportDto": {
         "required": [
           "description",
@@ -1468,6 +1494,9 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "readableId": {
+            "type": "string"
           },
           "height": {
             "type": "integer",
@@ -1584,6 +1613,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "readableId": {
+            "type": "string"
+          },
           "deskIds": {
             "type": "array",
             "items": {
@@ -1622,6 +1654,12 @@
           "healthRemindersFrequency": {
             "$ref": "#/components/schemas/HealthRemindersFrequency"
           },
+          "reservations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reservation"
+            }
+          },
           "sittingTime": {
             "type": "integer",
             "format": "int32"
@@ -1634,8 +1672,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "role": {
-            "$ref": "#/components/schemas/UserRole"
+          "companyMemberships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserCompany"
+            }
           },
           "id": {
             "type": "string",
@@ -1693,6 +1734,27 @@
           "accessFailedCount": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "UserCompany": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company": {
+            "$ref": "#/components/schemas/Company"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
           }
         }
       },
