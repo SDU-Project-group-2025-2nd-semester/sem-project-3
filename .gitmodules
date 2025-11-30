@@ -1,6 +1,6 @@
 [submodule "src/boxSimulator"]
 	path = src/boxSimulator
-	url = https://source.coderefinery.org/sdm-edu/wifi2ble-box-simulator.git
+	url = https://github.com/SDU-Project-group-2025-2nd-semester/WiFi2BLE-Simulator-Fork.git
 [submodule "DeskPico/externals/paho-embedded-c"]
 	path = DeskPico/externals/paho-embedded-c
 	url = https://github.com/eclipse/paho.mqtt.embedded-c.git

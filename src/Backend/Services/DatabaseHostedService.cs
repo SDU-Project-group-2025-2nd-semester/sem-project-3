@@ -23,7 +23,9 @@ public class DatabaseMigrationHostedService(
 
         var applicationDbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
 
-        await applicationDbContext.Database.MigrateAsync(cancellationToken);
+        await applicationDbContext.Database.EnsureDeletedAsync(cancellationToken);
+
+        await applicationDbContext.Database.EnsureCreatedAsync(cancellationToken);
 
         logger.LogInformation("Database migrations completed successfully.");
 
@@ -52,8 +54,6 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
             Name = "Tech Co-Working Space",
             SecretInviteCode = "TECH2024",
-            Admins = [],
-            Users = [],
             Rooms = []
         };
 
@@ -62,8 +62,6 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
             Name = "Innovation Hub",
             SecretInviteCode = "INNOVATE",
-            Admins = [],
-            Users = [],
             Rooms = []
         };
 
@@ -72,8 +70,6 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
             Name = "Startup Center",
             SecretInviteCode = null, // Email verification required
-            Admins = [],
-            Users = [],
             Rooms = []
         };
 
@@ -170,6 +166,43 @@ public class DatabaseMigrationHostedService(
             Reservations = []
         };
         await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
+
+        await context.SaveChangesAsync();
+        
+        // Create Users-Company Relations
+        
+        context.UserCompanies.AddRange(
+            new UserCompany
+            {
+                UserId = adminUser.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = adminUser.Id,
+                CompanyId = innovationHubCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = johnDoe.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = janeDoe.Id,
+                CompanyId = techCoWorkingCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = bobSmith.Id,
+                CompanyId = innovationHubCompany.Id
+            },
+            new UserCompany
+            {
+                UserId = aliceJohnson.Id,
+                CompanyId = startupCenterCompany.Id
+            }
+        );
 
         await context.SaveChangesAsync();
 

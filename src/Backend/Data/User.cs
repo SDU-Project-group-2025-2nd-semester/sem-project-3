@@ -4,10 +4,14 @@ using System.Text.Json.Serialization;
 
 namespace Backend.Data;
 
+public enum UserRole
+{
+    User,
+    Janitor,
+    Admin
+}
 public class User : IdentityUser
 {
-    // TODO: Roles
-
     [MaxLength(100)] public string FirstName { get; set; } = "Not set";
 
     [MaxLength(100)] public string LastName { get; set; } = "Not set";
@@ -26,6 +30,11 @@ public class User : IdentityUser
     public int StandingTime { get; set; }
 
     public DateTime AccountCreation { get; set; } = new();
-
+    
+    public UserRole Role { get; set; } = UserRole.User;
+    
+    [JsonIgnore] 
+    public List<UserCompany> CompanyMemberships { get; set; } = [];
+    
     // TODO: Implement time-series db for tracking user posture over time 
 }

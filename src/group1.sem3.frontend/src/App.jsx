@@ -23,7 +23,7 @@ export default function App() {
     const [sidebarOpen, setSidebarOpen] = useState(false); // default: closed
     
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className = "min-h-screen flex flex-col" >
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
             <div className="flex flex-1">
@@ -36,7 +36,6 @@ export default function App() {
                         <Route path="/user/settings" element={<UserSettingsPage />} />
                         <Route path="/staff/settings" element={<StaffSettingsPage />} />
                         <Route path="/user/booking" element={<BookingPage />} />
-                        <Route path="/admin/homepage" element={<UsersManagerPage />} /> {/* What should be the homepage? */}
                         <Route path="/admin/usersManager" element={<UsersManagerPage />} />
                         <Route path="/admin/damagesManager" element={<DamagesManagerPage />} />
                         <Route path="/admin/profilesManager" element={<ProfilesManagerPage />} />
@@ -48,6 +47,6 @@ export default function App() {
                     </Routes>
                 </main>
             </div>  
-        </div>
+        </div >
     )
 }
