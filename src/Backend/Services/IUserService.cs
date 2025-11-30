@@ -17,6 +17,7 @@ class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUser
     {
         return await dbContext.Users
             .Include(u => u.CompanyMemberships)
+            .ThenInclude(uc => uc.Company)
             .FirstOrDefaultAsync(u => u.Id == userId);
     }
 
@@ -32,7 +33,6 @@ class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUser
         existing.SittingHeight = updated.SittingHeight;
         existing.StandingHeight = updated.StandingHeight;
         existing.HealthRemindersFrequency = updated.HealthRemindersFrequency;
-        existing.Role = updated.Role;
 
         await dbContext.SaveChangesAsync();
         return true;

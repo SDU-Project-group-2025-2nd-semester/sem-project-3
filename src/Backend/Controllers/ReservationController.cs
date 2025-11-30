@@ -80,9 +80,14 @@ public class ReservationController(IReservationService reservationService, Backe
             return Unauthorized();
         }
 
-        var isAdmin = currentUser.Role == UserRole.Admin;
+        var membership = currentUser.CompanyMemberships
+            .FirstOrDefault(cm => cm.CompanyId == companyId);
+
+        if (membership == null)
+            return Forbid();
         
-        var isJanitor = currentUser.Role == UserRole.Janitor;
+        var isAdmin = membership.Role == UserRole.Admin;
+        var isJanitor = membership.Role == UserRole.Janitor;
         
         if (!isAdmin && reservation.UserId != currentUserId)
         {
