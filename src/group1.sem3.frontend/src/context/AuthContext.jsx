@@ -24,8 +24,8 @@ function pickUser(serverUser) {
 
 export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
-    const navigate = useNavigate();
 
+    const navigate = useNavigate();
     // automatically move to homepage if already logged in
   useEffect(() => {
     let mounted = true;
@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
       try {
         const me = await get("/Users/me");
           if (!mounted || !me) return;
-          const user = pickUser(me);
+          const user = pickUser(me);  
           setCurrentUser(user);
 
           navigate(homepagePathForRole(user?.role));
