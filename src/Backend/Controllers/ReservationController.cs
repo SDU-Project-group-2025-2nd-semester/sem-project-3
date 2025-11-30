@@ -2,6 +2,7 @@
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
 
@@ -10,7 +11,7 @@ namespace Backend.Controllers;
 [Authorize]
 public class ReservationController(IReservationService reservationService, BackendContext dbContext) : ControllerBase
 {
-    
+    // Return ReservationViewDto for consistency ?
     [HttpGet]
     [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<List<Reservation>>> GetReservations(
@@ -23,15 +24,39 @@ public class ReservationController(IReservationService reservationService, Backe
         return Ok(await reservationService.GetReservations(companyId, userId, deskId, startDate, endDate));
     }
 
-    [HttpGet("me")]
+    /* [HttpGet("me")]
     public async Task<ActionResult<List<Reservation>>> GetMyReservations(Guid companyId)
     {
 
         var userId = User.GetUserId();
 
         return Ok(await reservationService.GetReservations(companyId, userId));
+    } */
+ 
+    [HttpGet("me")]
+    public async Task<ActionResult<List<ReservationViewDto>>> GetMyReservations(Guid companyId)
+    {
+        var userId = User.GetUserId();
+
+        var reservations = await dbContext.Reservations
+            .Include(r => r.Desk)
+            .ThenInclude(d => d.Room)
+            .Where(r => r.CompanyId == companyId && r.UserId == userId)
+            .Select(r => new ReservationViewDto(
+                r.Id,
+                r.Start,
+                r.End,
+                r.DeskId,
+                r.Desk != null ? r.Desk.MacAddress : null, // TODO: Replace MacAddress with Label, once it exists in the Desk model
+                r.Desk != null ? r.Desk.RoomId : Guid.Empty,
+                r.Desk != null && r.Desk.Room != null ? r.Desk.Room.Id.ToString() : null // TODO: Replace Id.ToString() with Label, once it exists in the Room model
+            ))
+            .ToListAsync();
+
+        return Ok(reservations);
     }
 
+    // Return ReservationViewDto for consistency ?
     [HttpGet("{reservationId}")]
     public async Task<ActionResult<Reservation>> GetReservation(Guid reservationId)
     {

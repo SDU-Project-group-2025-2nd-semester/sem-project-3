@@ -53,6 +53,7 @@ builder.Services
     .AddTransient<IReservationService, ReservationService>()
     .AddTransient<IDeskApi, DeskApi>()
     .AddSingleton<IBackendMqttClient,BackendMqttClient>()
+    .AddTransient<IRoomService, RoomService>()
     .AddTransient<IDeskControlService,DeskControlService>()
     .AddTransient<IDeskService, DeskService>()
     .AddTransient<IUserService,UserService>()
