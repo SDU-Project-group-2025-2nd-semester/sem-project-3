@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { post, get } from "./apiClient";
+import { useNavigate } from "react-router-dom";
+import { homepagePathForRole } from "../utils/homepage";
 
 const AuthContext = createContext(null);
 
@@ -11,7 +13,7 @@ function pickUser(serverUser) {
     userName: serverUser.userName,
     firstName: serverUser.firstName,
     lastName: serverUser.lastName,
-    role: "user",
+    role: serverUser.role,
     standingHeight: serverUser.standingHeight,
     sittingHeight: serverUser.sittingHeight,
     healthRemindersFrequency: serverUser.healthRemindersFrequency,
@@ -23,15 +25,21 @@ function pickUser(serverUser) {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Rehydrate on app start (if session cookie exists)
+  const navigate = useNavigate();
+  // automatically move to homepage if already logged in
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const me = await get("/Users/me");
-        if (mounted && me) setCurrentUser(pickUser(me, null));
+        if (!mounted || !me) return;
+        const user = pickUser(me);
+        setCurrentUser(user);
+
+        navigate(homepagePathForRole(user?.role));
+
       } catch {
-        // Keine Session / nicht angemeldet
+        // no session
       }
     })();
     return () => { mounted = false; };
@@ -39,8 +47,6 @@ export function AuthProvider({ children }) {
 
   async function login({ email, password }) {
     const data = await post("/auth/login", { email, password });
-    // data may contain accessToken or server may use cookies
-    const token = data?.accessToken ?? null;
 
     let me = null;
     try {
@@ -49,7 +55,9 @@ export function AuthProvider({ children }) {
       me = null;
     }
 
-    setCurrentUser(pickUser(me ?? { email, userName: email }, token));
+    const user = pickUser(me ?? { email, userName: email });
+    setCurrentUser(user);
+    return user;
   }
 
   async function signup({ firstName, lastName, email, password }) {
