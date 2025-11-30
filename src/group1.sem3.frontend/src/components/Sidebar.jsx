@@ -20,20 +20,19 @@ export default function Sidebar({ isOpen, onClose }) {
 
     // Role --> menu configuration
     const menuByRole = {
-        user: [
-            { to: `/${role}/settings`, icon: "person", label: "Profile" },
+        0: [
+            { to: `/user/settings`, icon: "person", label: "Profile" },
             { to: `/user/statistics`, icon: "bar-chart", label: "Statistics" },
         ],
-        staff: [
-            { to: `/${role}/settings`, icon: "person", label: "Profile" },
+        1: [
+            { to: `/staff/settings`, icon: "person", label: "Profile" },
         ],
-        admin: [
-            { to: `/${role}/usersManager`, icon: "people", label: "Users" },
-            { to: `/${role}/profilesManager`, icon: "clock", label: "Profiles" },
-            { to: `/${role}/desksManager`, icon: "grid", label: "Desks" },
-            { to: `/${role}/healthStatsManager`, icon: "bar-chart", label: "Statistics" },
-            { to: `/${role}/damagesManager`, icon: "exclamation-triangle", label: "Damages" }, // icon: "file-earmark-text"
-            // other icons: "speedometer"  "gear"  "pencil-square"
+        2: [
+            { to: `/admin/usersManager`, icon: "people", label: "Users" },
+            { to: `/admin/profilesManager`, icon: "clock", label: "Profiles" },
+            { to: `/admin/desksManager`, icon: "grid", label: "Desks" },
+            { to: `/admin/healthStatsManager`, icon: "bar-chart", label: "Statistics" },
+            { to: `/admin/damagesManager`, icon: "exclamation-triangle", label: "Damages" }, 
         ],
     };
 
@@ -67,7 +66,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         </Link>
                     ))}
 
-                    {(role === "user" || role === "staff") && (
+                    {(role === "0" || role === "1") && (
                         <div className="mb-4">
                             <button
                                 onClick={() => setShowCompanies(!showCompanies)}

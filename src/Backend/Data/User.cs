@@ -22,8 +22,7 @@ public class User : IdentityUser
 
     public HealthRemindersFrequency HealthRemindersFrequency { get; set; }
 
-    [JsonIgnore]
-    public List<Reservation> Reservations { get; set; }
+    public List<Reservation> Reservations { get; set; } = new();
 
     public int SittingTime { get; set; }
 

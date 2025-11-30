@@ -23,24 +23,32 @@ export default function App() {
     const [sidebarOpen, setSidebarOpen] = useState(false); // default: closed
     
     return (
-        <div className="min-h-screen flex flex-col">
-            <Header />
-
-            <main className="flex-1">
-                <Routes>
-                    <Route path="/" element={<SignInPage />} />
-                    <Route path="/signuppage" element={<SignUpPage />} />
-                    <Route path="/user/homepage" element={<UserHomePage />} />
-                    <Route path="/staff/homepage" element={<StaffHomePage />} />
-                    <Route path="/user/settings" element={<UserSettingsPage />} />
-                    <Route path="/staff/settings" element={<StaffSettingsPage />} />
-                    <Route path="/user/booking" element={<BookingPage />} />
-                    <Route path="/user/scan" element={<Scanning />} />
-                    <Route path="/user/desk" element={<DeskPage />} />
-                    <Route path="/staff/damagereport" element={<DamageReportPage />} />
-                    <Route path="/user/damagereport" element={<DamageReportPage />} />
-                </Routes>
-            </main>
-        </div>
+        <div className = "min-h-screen flex flex-col" >
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <div className="flex flex-1">
+                <main className="flex-1">
+                    <Routes>
+                        <Route path="/" element={<SignInPage />} />
+                        <Route path="/signuppage" element={<SignUpPage />} />
+                        <Route path="/user/homepage" element={<UserHomePage />} />
+                        <Route path="/staff/homepage" element={<StaffHomePage />} />
+                        <Route path="/user/settings" element={<UserSettingsPage />} />
+                        <Route path="/staff/settings" element={<StaffSettingsPage />} />
+                        <Route path="/user/booking" element={<BookingPage />} />
+                        <Route path="/admin/homepage" element={<UsersManagerPage />} />
+                        <Route path="/admin/usersManager" element={<UsersManagerPage />} />
+                        <Route path="/admin/damagesManager" element={<DamagesManagerPage />} />
+                        <Route path="/admin/profilesManager" element={<ProfilesManagerPage />} />
+                        <Route path="/admin/desksManager" element={<DesksManagerPage />} />
+                        <Route path="/admin/healthStatsManager" element={<HealthStatsManagerPage />} />
+                        <Route path="/user/scan" element={<Scanning />} />
+                        <Route path="/user/desk" element={<DeskPage />} />
+                        <Route path="/staff/damagereport" element={<DamageReportPage />} />
+                        <Route path="/user/damagereport" element={<DamageReportPage />} />
+                    </Routes>
+                </main>
+            </div>  
+        </div >
     )
 }
