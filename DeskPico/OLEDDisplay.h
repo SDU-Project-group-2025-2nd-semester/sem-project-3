@@ -9,6 +9,7 @@
 
 #include "pico/stdlib.h"                                                     // Raspberry Pi Pico SDK
 #include "hardware/i2c.h"                                                    // I²C interface
+#include "qrcodegen.hpp"
 #include <cstdint>                                                           // Fixed-width integer types
 #include <cstring>                                                           // For memcpy / memset
 
@@ -61,7 +62,10 @@ public:
     void init();                                                             // Initialize display
     void clear();                                                            // Clear display buffer
     void writeText(int x, int y, const char* text);                          // Write text string
+    void drawQRCode(int x0, int y0, const qrcodegen::QrCode &qr, int scale);
+    void setPixel(int x, int y, bool on);
     void render();                                                           // Send buffer to OLED
+    void renderRaw();                                                        // Send full buffer in one transfer (no per-page loop)
     void invert(bool on);                                                    // Invert display colors
 
 private:

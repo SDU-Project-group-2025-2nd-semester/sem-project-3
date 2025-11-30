@@ -6,6 +6,7 @@
 
 #include "OLEDDisplay.h"
 #include "ssd1306_font.h"
+#include "qrcodegen.hpp"
 #include <cctype>                                                           // For std::toupper
 
 //-------------------------------------------------------------------------
@@ -120,9 +121,66 @@ void OLEDDisplay::writeText(int x, int y, const char* text) {
     }
 }
 
+
+void OLEDDisplay::drawQRCode(int x0, int y0, const qrcodegen::QrCode &qr, int scale) {
+    int size = qr.getSize();
+    // For every column of data there is an empty column so that the QR code renders properly
+    for (int by = 0; by < size; ++by) {
+        for (int bx = 0; bx < size; ++bx) {
+            bool bit = qr.getModule(bx, by);
+            int baseX = x0 + bx * (scale + 1); // reserve one extra column per module
+            int baseY = y0 + by * scale;
+            // draw module block
+            for (int dy = 0; dy < scale; ++dy) {
+                for (int dx = 0; dx < scale; ++dx) {
+                    setPixel(baseX + dx, baseY + dy, bit);
+                }
+                // explicit off column immediately to the right of the module
+                setPixel(baseX + scale, baseY + dy, false);
+            }
+        }
+    }
+}
+
+
 //-------------------------------------------------------------------------
 //  Toggles display inversion                                              
 //-------------------------------------------------------------------------
 void OLEDDisplay::invert(bool on) {
     sendCommand(on ? SSD1306_SET_INV_DISP : SSD1306_SET_NORM_DISP);
+}
+
+void OLEDDisplay::setPixel(int x, int y, bool on) {
+    if (x < 0 || x >= (int)_width || y < 0 || y >= (int)_height) return;
+    int page = y / 8;
+    int idx = page * _width + x;
+    uint8_t mask = 1u << (y % 8);          // bit for that row within the page
+    if (on) _buffer[idx] |= mask;
+    else    _buffer[idx] &= ~mask;
+}
+
+// Send the entire framebuffer in one I2C transfer (avoids per-page loop).
+// This arranges the pages in the same flipped order as the original `render()`
+// so visual orientation is preserved, but uses a single data transfer.
+void OLEDDisplay::renderRaw() {
+    int pages = _height / 8;
+    int len = _width * pages;
+    // Set column and page address ranges so the controller accepts the incoming stream
+    sendCommand(SSD1306_SET_COL_ADDR);
+    sendCommand(0);                      // start column
+    sendCommand((uint8_t)(_width - 1));  // end column
+    sendCommand(SSD1306_SET_PAGE_ADDR);
+    sendCommand(0);                      // start page
+    sendCommand((uint8_t)(pages - 1));   // end page
+
+    // Send pages in the same natural top->bottom order as stored in _buffer.
+    // This keeps render() behavior unchanged while providing a contiguous
+    // transfer that preserves the framebuffer layout.
+    uint8_t* tmp = new uint8_t[len];
+    for (int p = 0; p < pages; ++p) {
+        memcpy(tmp + p * _width, _buffer + p * _width, _width);
+    }
+
+    sendBuffer(tmp, len);
+    delete[] tmp;
 }

@@ -46,16 +46,47 @@ pico_set_program_version(DeskPico "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(DeskPico 1)
-pico_enable_stdio_usb(DeskPico 0)
+pico_enable_stdio_usb(DeskPico 1)
 
 # Add the standard library to the build
 target_link_libraries(DeskPico
-        pico_stdlib)
+        pico_stdlib
+        qrcodegencpp)
 
 # Add the standard include files to the build
 target_include_directories(DeskPico PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/qrcode
+        ${CMAKE_CURRENT_LIST_DIR}/src
 )
+
+# Add QR code generator library (from cpp/)
+add_library(qrcodegencpp STATIC
+        ${CMAKE_CURRENT_LIST_DIR}/qrcode/qrcodegen.cpp
+)
+target_include_directories(qrcodegencpp PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/qrcode
+)
+
+# Optional demo executable that builds the Project Nayuki demo using the QR library
+add_executable(QrCodeGeneratorDemo
+        ${CMAKE_CURRENT_LIST_DIR}/qrcode/QrCodeGeneratorDemo.cpp
+)
+target_link_libraries(QrCodeGeneratorDemo
+        qrcodegencpp
+        pico_stdlib
+)
+target_include_directories(QrCodeGeneratorDemo PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/qrcode
+)
+pico_set_program_name(QrCodeGeneratorDemo "QrCodeGeneratorDemo")
+pico_set_program_version(QrCodeGeneratorDemo "0.1")
+# Enable stdio for the demo as well
+pico_enable_stdio_uart(QrCodeGeneratorDemo 1)
+pico_enable_stdio_usb(QrCodeGeneratorDemo 1)
+
+# Produce UF2/bin outputs for the demo too
+pico_add_extra_outputs(QrCodeGeneratorDemo)
 
 # Add any user requested libraries
 target_link_libraries(DeskPico 

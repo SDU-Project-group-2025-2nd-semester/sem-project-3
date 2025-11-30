@@ -26,6 +26,9 @@ public:
     std::string getHeight();
     std::string getTableInfo();
     std::string standUp();
+    std::string updateStatus();
+    std::string receiveAdress();
+    qrcodegen::QrCode generateQRCode(std::string address);
     std::string getBarcode();
     void buzzTone(unsigned int frequency, unsigned int duration_ms);     
     void buzz();                                                         

@@ -1,6 +1,9 @@
 #include "MyApp.h"
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "qrcodegen.hpp"
+
+
 
 
 MyApp::MyApp()
@@ -24,25 +27,21 @@ MyApp::MyApp()
     const uint LED_ON = 1;
     const uint BUZZ_PIN = 20;
 
-// function that fetches the height of the table
-std::string MyApp::getHeight() {
-    std::string height = "150";
-    return height;
-}
-//function which displays the final string
-std::string MyApp::getTableInfo() {
-    std::string str_height = getHeight() + "MM";    
-    return str_height;
-}
-
-std::string MyApp::getBarcode() {
-    std::string barcode = "PLCHLDR";
-    return barcode;
-}
-
-std::string MyApp::standUp() {
-    std::string str = "Stand Up";
+std::string MyApp::updateStatus() {
+    // Logic for receiveing message from mqtt
+    std::string str = "";
     return str;
+}
+
+std::string MyApp::receiveAdress() {
+    // Logic for receiving the address of the pico from mqtt
+    std::string str = "";
+    return str;
+}
+
+qrcodegen::QrCode MyApp::generateQRCode(std::string address) {
+    const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(address.c_str(), qrcodegen::QrCode::Ecc::LOW);
+    return qr;
 }
 
 
@@ -64,7 +63,7 @@ void MyApp::buzzTone(unsigned int frequency, unsigned int duration_ms) {
 }
 
 void MyApp::buzz() {
-    buzzTone(1000, 20);
+    buzzTone(1000, 2000);
 }
 
 
@@ -85,39 +84,75 @@ void MyApp::run() {
     const uint32_t debounceMs = 50;
     bool stand = true;
     bool buzzing = true;
+    int counter = 0;
+    bool pressedEvent = false;
+    std::string status = "sitting"; //sitting, standing, buzzing, will be updated from the topic
+
+    //qr code generation
+    const qrcodegen::QrCode qr = generateQRCode("address");
+
+    display.drawQRCode(20,0, qr, 1);
+    display.renderRaw(); 
+    
     while (true) {
         
         bool rawPressed = (gpio_get(BTN_PIN) == 1);
         uint32_t now = to_ms_since_boot(get_absolute_time());
         
+        pressedEvent = false;
         if (rawPressed && !prevPressed && (now - lastDebounce) > debounceMs) {
-        ledState = !ledState;           
-        lastDebounce = now;
+            counter = (counter % 3) + 1;
+            pressedEvent = true;
+            lastDebounce = now;
         }
         
         prevPressed = rawPressed;
 
         //gpio_put(LED_PIN, ledState ? LED_ON : LED_OFF);                                
+        //display.drawQRCode(0, 0, qr, 1);
+       
+
         
-        display.clear();
 
-        if(ledState && !stand && !buzzing) {
-        display.writeText(5, 0, "TABLE HEIGHT");                          
-        display.writeText(5, 8, getTableInfo().c_str());
+        //display.writeText(5, 16, "TEST");
+        //display.render(); 
+        //display.clear();
+        
+        /* if(status == "buzzing") {
+            display.writeText(5,16, "STAND UP");
+            buzz();
         }
-        else if(ledState && stand && buzzing) {
-        gpio_put(LED_PIN, LED_ON);
-        display.writeText(5, 8, standUp().c_str());
-        buzz();
+        else if(status == "sitting") {
+            display.writeText(5,16, "SIT");
         }
-        else {
-        gpio_put(LED_PIN, LED_OFF);
-        display.writeText(5,0, getBarcode().c_str());
-        }
-        display.render(); 
-                  
-        //display.writeText(5, 16, "TEST");               
+        else if(status == "standing") {
+            gpio_put(LED_PIN, LED_OFF);
+            display.writeText(5,16, "STAND");
+        } */
 
-        sleep_ms(100);                                                    
+        if (pressedEvent) {
+            display.clear();
+            switch(counter) {
+                case 1:
+                    display.writeText(5,16, "STAND UP");
+                    display.render();
+                    gpio_put(LED_PIN, LED_ON);
+                    buzz();
+                    gpio_put(LED_PIN, LED_OFF);
+                    break;
+                case 2:
+                    display.writeText(5,16, "STANDING");
+                    display.render();
+                    break;
+                case 3:
+                    display.writeText(5,16, "SITTING");
+                    display.render();
+                    break;
+            }
+            
+        }
+
+
+        sleep_ms(50);                                                    
     }
 }
