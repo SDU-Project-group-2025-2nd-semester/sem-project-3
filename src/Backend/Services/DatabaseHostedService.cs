@@ -85,6 +85,7 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Admin",
             LastName = "User",
+            Role = UserRole.Admin,
             StandingHeight = 750.0,
             SittingHeight = 650.0,
             HealthRemindersFrequency = HealthRemindersFrequency.Medium,
@@ -167,10 +168,29 @@ public class DatabaseMigrationHostedService(
         };
         await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
 
+        var staffUser = new User
+        {
+            Id = "f1111111-1111-1111-1111-111111111111",
+            UserName = "staff@techcoworking.com",
+            Email = "staff@techcoworking.com",
+            EmailConfirmed = true,
+            FirstName = "Staff",
+            LastName = "Staffy",
+            Role = UserRole.Janitor,
+            StandingHeight = 750.0,
+            SittingHeight = 650.0,
+            HealthRemindersFrequency = HealthRemindersFrequency.Medium,
+            SittingTime = 30,
+            StandingTime = 15,
+            AccountCreation = DateTime.UtcNow.AddMonths(-6),
+            Reservations = []
+        };
+        await userManager.CreateAsync(staffUser, "Staff123!");
+
         await context.SaveChangesAsync();
-        
+
         // Create Users-Company Relations
-        
+
         context.UserCompanies.AddRange(
             new UserCompany
             {
@@ -179,8 +199,8 @@ public class DatabaseMigrationHostedService(
             },
             new UserCompany
             {
-                UserId = adminUser.Id,
-                CompanyId = innovationHubCompany.Id
+                UserId = staffUser.Id,
+                CompanyId = techCoWorkingCompany.Id
             },
             new UserCompany
             {
@@ -215,7 +235,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(8, 0),
                 ClosingTime = new TimeOnly(18, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday
             },
             DeskIds = [],
@@ -230,7 +250,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(7, 0),
                 ClosingTime = new TimeOnly(20, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday | DaysOfTheWeek.Saturday
             },
             DeskIds = [],
@@ -245,7 +265,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(9, 0),
                 ClosingTime = new TimeOnly(17, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday
             },
             DeskIds = [],
@@ -260,7 +280,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(0, 0),
                 ClosingTime = new TimeOnly(23, 59),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday | DaysOfTheWeek.Saturday | DaysOfTheWeek.Sunday
             },
             DeskIds = [],
@@ -520,7 +540,7 @@ public class DatabaseMigrationHostedService(
     private static bool IsGeneratingOpenApiDocument()
     {
         // Check if running in a context that suggests OpenAPI generation
-        return Environment.GetCommandLineArgs().Any(arg => 
+        return Environment.GetCommandLineArgs().Any(arg =>
             arg.Contains("swagger", StringComparison.OrdinalIgnoreCase) ||
             arg.Contains("openapi", StringComparison.OrdinalIgnoreCase));
     }
