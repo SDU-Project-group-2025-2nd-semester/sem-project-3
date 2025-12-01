@@ -470,7 +470,7 @@ export default function DesksManagerPage() {
                                                 </td>
                                                 <td className="px-4 py-3 text-sm max-lg:w-full">
                                                     <span className="font-semibold lg:hidden">Current Height: </span>
-                                                    {desk.height} cm
+                                                    {((desk.height ?? 0) / 10).toFixed(1)} cm
                                                 </td>
                                                 <td className="px-4 py-3 text-sm max-lg:w-full">
                                                     <span className="font-semibold lg:hidden">MAC Address: </span>
