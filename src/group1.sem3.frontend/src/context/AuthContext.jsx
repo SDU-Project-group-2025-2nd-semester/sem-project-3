@@ -32,10 +32,8 @@ export function AuthProvider({ children }) {
         let mounted = true;
         (async () => {
             try {
-                const me = await get("/Users/me");
-                if (!mounted || !me) return;
-                const user = pickUser(me);
-                setCurrentUser(user);
+                const user = await refreshCurrentUser();
+                if (!mounted || !user) return;
 
                 navigate(homepagePathForRole(user?.role));
 
