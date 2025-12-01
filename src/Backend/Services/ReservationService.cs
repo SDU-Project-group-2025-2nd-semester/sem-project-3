@@ -13,12 +13,12 @@ public class ReservationService(BackendContext dbContext) : IReservationService
 
         if (!string.IsNullOrEmpty(userId))
         {
-            query = query.Where(r => r.User.Id == userId);
+            query = query.Where(r => r.UserId == userId);
         }
 
         if (deskId.HasValue)
         {
-            query = query.Where(r => r.Id == deskId.Value);
+            query = query.Where(r => r.DeskId == deskId.Value);
         }
 
         if (startDate.HasValue)
@@ -50,7 +50,7 @@ public class ReservationService(BackendContext dbContext) : IReservationService
         Guid companyId)
     {
         var reservations = await dbContext.Reservations
-            .Where(r => r.Desk.Id == createReservationDto.DeskId)
+            .Where(r => r.DeskId == createReservationDto.DeskId)
             .Where(r => r.Start < createReservationDto.End && r.End > createReservationDto.Start)
             .ToListAsync();
 

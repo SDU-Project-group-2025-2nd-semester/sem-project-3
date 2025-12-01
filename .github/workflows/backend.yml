@@ -73,9 +73,64 @@ jobs:
       - name: List files in backend folder (debug)
         run: ls -la src/Backend
 
+      - name: Pre-pull base images with retry (to avoid MCR rate limiting)
+        run: |
+          max_retries=5
+          base_delay=10
+          
+          pull_image() {
+            local image=$1
+            # Check if image already exists locally
+            if docker image inspect "$image" >/dev/null 2>&1; then
+              echo "Image $image already exists locally, skipping pull"
+              return 0
+            fi
+            
+            local attempt=1
+            while [ $attempt -le $max_retries ]; do
+              echo "Attempting to pull $image (attempt $attempt/$max_retries)..."
+              if docker pull "$image" 2>&1; then
+                echo "Successfully pulled $image"
+                return 0
+              else
+                local exit_code=$?
+                if [ $attempt -lt $max_retries ]; then
+                  delay=$((base_delay * attempt))
+                  echo "Failed to pull $image (exit code: $exit_code). Retrying in ${delay}s..."
+                  sleep $delay
+                fi
+                attempt=$((attempt + 1))
+              fi
+            done
+            echo "Warning: Failed to pull $image after $max_retries attempts, but continuing..."
+            return 0  # Don't fail the workflow, let the build step handle it
+          }
+          
+          pull_image "mcr.microsoft.com/dotnet/sdk:9.0"
+          pull_image "mcr.microsoft.com/dotnet/aspnet:9.0"
+
       - name: Build Docker images for this branch
         run: |
-          docker compose -f infra/compose/backend-pipeline.docker-compose.yml build --no-cache ${{ steps.vars.outputs.backend_service }}
+          retry_count=0
+          max_retries=3
+          base_delay=30
+          
+          while [ $retry_count -lt $max_retries ]; do
+            if docker compose -f infra/compose/backend-pipeline.docker-compose.yml build --no-cache ${{ steps.vars.outputs.backend_service }}; then
+              echo "Build succeeded"
+              exit 0
+            else
+              retry_count=$((retry_count + 1))
+              if [ $retry_count -lt $max_retries ]; then
+                delay=$((base_delay * retry_count))
+                echo "Build failed (attempt $retry_count/$max_retries). Retrying in ${delay}s..."
+                sleep $delay
+              else
+                echo "Build failed after $max_retries attempts"
+                exit 1
+              fi
+            fi
+          done
 
       - name: Stop and remove old containers
         run: |
