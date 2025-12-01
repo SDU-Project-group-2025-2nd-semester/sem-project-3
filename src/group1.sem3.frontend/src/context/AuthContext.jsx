@@ -26,37 +26,48 @@ export function AuthProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
 
     const navigate = useNavigate();
+
     // automatically move to homepage if already logged in
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const me = await get("/Users/me");
-          if (!mounted || !me) return;
-          const user = pickUser(me);  
-          setCurrentUser(user);
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const me = await get("/Users/me");
+                if (!mounted || !me) return;
+                const user = pickUser(me);
+                setCurrentUser(user);
 
-          navigate(homepagePathForRole(user?.role));
-       
-      } catch {
-        // no session
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
+                navigate(homepagePathForRole(user?.role));
 
-  async function login({ email, password }) {
-    const data = await post("/auth/login", { email, password });
+            } catch {
+                // no session
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
 
-    let me = null;
-    try {
-      me = await get("/Users/me");
-    } catch {
-      me = null;
+    // Refresh current user from server (returns picked user or null)
+    async function refreshCurrentUser() {
+        try {
+            const me = await get("/Users/me");
+            const user = pickUser(me);
+            setCurrentUser(user);
+            return user;
+        } catch (err) {
+            // Not authenticated or error — clear local state
+            setCurrentUser(null);
+            return null;
+        }
     }
 
-    const user = pickUser(me ?? { email, userName: email });
-    setCurrentUser(user);
+  async function login({ email, password }) {
+    await post("/auth/login", { email, password });
+
+    // Refresh user state after successful login
+    const user = await refreshCurrentUser();
+
+    navigate(homepagePathForRole(user?.role));
+
     return user;
   }
 
