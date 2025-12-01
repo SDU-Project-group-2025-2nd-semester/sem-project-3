@@ -9,6 +9,7 @@ public class ReservationService(BackendContext dbContext) : IReservationService
         DateTime? startDate = null, DateTime? endDate = null)
     {
         var query = dbContext.Reservations
+            .AsNoTracking()
             .Where(r => r.CompanyId == companyId);
 
         if (!string.IsNullOrEmpty(userId))
@@ -36,7 +37,9 @@ public class ReservationService(BackendContext dbContext) : IReservationService
 
     public async Task<Reservation?> GetReservation(Guid reservationId)
     {
-        return await dbContext.Reservations.FindAsync(reservationId);
+        return await dbContext.Reservations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == reservationId);
     }
 
     public async Task DeleteReservation(Reservation reservation)
