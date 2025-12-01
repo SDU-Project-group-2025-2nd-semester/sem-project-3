@@ -23,21 +23,21 @@ function pickUser(serverUser) {
 }
 
 export function AuthProvider({ children }) {
-    const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
-    const navigate = useNavigate();
-    // automatically move to homepage if already logged in
+  const navigate = useNavigate();
+  // automatically move to homepage if already logged in
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const me = await get("/Users/me");
-          if (!mounted || !me) return;
-          const user = pickUser(me);  
-          setCurrentUser(user);
+        if (!mounted || !me) return;
+        const user = pickUser(me);
+        setCurrentUser(user);
 
-          navigate(homepagePathForRole(user?.role));
-       
+        navigate(homepagePathForRole(user?.role));
+
       } catch {
         // no session
       }
@@ -78,7 +78,7 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }
 
 export default AuthProvider;
