@@ -19,23 +19,7 @@ builder.Services.AddOpenApi(options =>
         document.Info.Version = "v1";
         document.Info.Description = "API for desk reservation system";
 
-        // Configure server URL based on the request (will be HTTPS when behind Cloudflare)
-        if (context.HttpContext != null)
-        {
-            var request = context.HttpContext.Request;
-            var scheme = request.Scheme;
-            var host = request.Host.Value;
-            var basePath = request.PathBase.Value?.TrimEnd('/') ?? "";
-            
-            document.Servers = new List<OpenApiServer>
-            {
-                new OpenApiServer
-                {
-                    Url = $"{scheme}://{host}{basePath}",
-                    Description = "API Server"
-                }
-            };
-        }
+        document.Servers?.Clear();
 
         // Add cookie authentication security scheme
         document.Components ??= new OpenApiComponents();
