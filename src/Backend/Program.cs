@@ -18,6 +18,8 @@ builder.Services.AddOpenApi(options =>
         document.Info.Version = "v1";
         document.Info.Description = "API for desk reservation system";
 
+        document.Servers?.Clear();
+
         // Add cookie authentication security scheme
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes.Add("cookieAuth", new OpenApiSecurityScheme
