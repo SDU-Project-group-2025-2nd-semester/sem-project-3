@@ -85,7 +85,6 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Admin",
             LastName = "User",
-            Role = UserRole.Admin,
             StandingHeight = 750.0,
             SittingHeight = 650.0,
             HealthRemindersFrequency = HealthRemindersFrequency.Medium,
@@ -176,7 +175,6 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Staff",
             LastName = "Staffy",
-            Role = UserRole.Janitor,
             StandingHeight = 750.0,
             SittingHeight = 650.0,
             HealthRemindersFrequency = HealthRemindersFrequency.Medium,
@@ -195,32 +193,38 @@ public class DatabaseMigrationHostedService(
             new UserCompany
             {
                 UserId = adminUser.Id,
-                CompanyId = techCoWorkingCompany.Id
+                CompanyId = techCoWorkingCompany.Id,
+                Role = UserRole.Admin
             },
             new UserCompany
             {
                 UserId = staffUser.Id,
-                CompanyId = techCoWorkingCompany.Id
+                CompanyId = techCoWorkingCompany.Id,
+                Role = UserRole.Janitor
             },
             new UserCompany
             {
                 UserId = johnDoe.Id,
-                CompanyId = techCoWorkingCompany.Id
+                CompanyId = techCoWorkingCompany.Id,
+                Role = UserRole.User
             },
             new UserCompany
             {
                 UserId = janeDoe.Id,
-                CompanyId = techCoWorkingCompany.Id
+                CompanyId = techCoWorkingCompany.Id,
+                Role = UserRole.User
             },
             new UserCompany
             {
                 UserId = bobSmith.Id,
-                CompanyId = innovationHubCompany.Id
+                CompanyId = innovationHubCompany.Id,
+                Role = UserRole.User
             },
             new UserCompany
             {
                 UserId = aliceJohnson.Id,
-                CompanyId = startupCenterCompany.Id
+                CompanyId = startupCenterCompany.Id,
+                Role = UserRole.User
             }
         );
 
@@ -239,7 +243,8 @@ public class DatabaseMigrationHostedService(
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday
             },
             DeskIds = [],
-            Desks = []
+            Desks = [],
+            ReadableId = "R-1"
         };
 
         var room2Company1 = new Rooms
@@ -254,7 +259,8 @@ public class DatabaseMigrationHostedService(
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday | DaysOfTheWeek.Saturday
             },
             DeskIds = [],
-            Desks = []
+            Desks = [],
+            ReadableId = "R-2"
         };
 
         var room1Company2 = new Rooms
@@ -269,7 +275,8 @@ public class DatabaseMigrationHostedService(
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday
             },
             DeskIds = [],
-            Desks = []
+            Desks = [],
+            ReadableId = "R-1"
         };
 
         var room1Company3 = new Rooms
@@ -284,7 +291,8 @@ public class DatabaseMigrationHostedService(
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday | DaysOfTheWeek.Saturday | DaysOfTheWeek.Sunday
             },
             DeskIds = [],
-            Desks = []
+            Desks = [],
+            ReadableId = "R-1"
         };
 
         context.Rooms.AddRange(room1Company1, room2Company1, room1Company2, room1Company3);
@@ -304,7 +312,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-101"
             },
             new Desk
             {
@@ -316,7 +325,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-102"
             },
             new Desk
             {
@@ -328,7 +338,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-103"
             },
             // Tech Co-Working Space - Room 2
             new Desk
@@ -341,7 +352,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room2Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-201"
             },
             new Desk
             {
@@ -353,7 +365,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room2Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-202"
             },
             // Innovation Hub - Room 1
             new Desk
@@ -366,7 +379,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room1Company2.Id,
                 CompanyId = innovationHubCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-101"
             },
             new Desk
             {
@@ -378,7 +392,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room1Company2.Id,
                 CompanyId = innovationHubCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-102"
             },
             // Startup Center - Room 1
             new Desk
@@ -391,7 +406,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room1Company3.Id,
                 CompanyId = startupCenterCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-101"
             },
             new Desk
             {
@@ -403,7 +419,8 @@ public class DatabaseMigrationHostedService(
                 RoomId = room1Company3.Id,
                 CompanyId = startupCenterCompany.Id,
                 ReservationIds = [],
-                Reservations = []
+                Reservations = [],
+                ReadableId = "D-102"
             }
         };
 
