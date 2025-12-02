@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Reflection.Metadata;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,7 +71,13 @@ builder.Services.AddHttpClient("DeskApi", client =>
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Handle circular references by ignoring cycles
+        // This prevents infinite loops when serializing objects with bidirectional relationships
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Really permissive defaults, need to restrict later on
 builder.Services.AddCors(options =>
