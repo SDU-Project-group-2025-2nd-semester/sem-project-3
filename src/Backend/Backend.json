@@ -901,7 +901,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               },
@@ -909,7 +909,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               },
@@ -917,7 +917,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               }
@@ -1661,6 +1661,48 @@
           "companyId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "ReservationViewDto": {
+        "required": [
+          "id",
+          "start",
+          "end",
+          "deskId",
+          "deskLabel",
+          "roomId",
+          "roomLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deskLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomLabel": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

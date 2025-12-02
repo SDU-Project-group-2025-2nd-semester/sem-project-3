@@ -85,7 +85,6 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Admin",
             LastName = "User",
-            Role = UserRole.Admin,
             StandingHeight = 750.0,
             SittingHeight = 650.0,
             HealthRemindersFrequency = HealthRemindersFrequency.Medium,
