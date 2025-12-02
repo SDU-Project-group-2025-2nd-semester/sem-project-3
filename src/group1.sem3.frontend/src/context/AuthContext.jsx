@@ -13,7 +13,7 @@ function pickUser(serverUser) {
     userName: serverUser.userName,
     firstName: serverUser.firstName,
     lastName: serverUser.lastName,
-    role: serverUser.role,
+    role: serverUser.companyMemberships?.[0]?.role ?? 0,
     standingHeight: serverUser.standingHeight,
     sittingHeight: serverUser.sittingHeight,
     healthRemindersFrequency: serverUser.healthRemindersFrequency,
@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
         if (!mounted || !me) return;
         const user = pickUser(me);
         setCurrentUser(user);
-
+        console.log("its " + user?.role);
         navigate(homepagePathForRole(user?.role));
 
       } catch {
