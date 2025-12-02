@@ -3,6 +3,7 @@ using Backend.Hubs;
 using Backend.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
@@ -17,6 +18,24 @@ builder.Services.AddOpenApi(options =>
         document.Info.Title = "Backend API";
         document.Info.Version = "v1";
         document.Info.Description = "API for desk reservation system";
+
+        // Configure server URL based on the request (will be HTTPS when behind Cloudflare)
+        if (context.HttpContext != null)
+        {
+            var request = context.HttpContext.Request;
+            var scheme = request.Scheme;
+            var host = request.Host.Value;
+            var basePath = request.PathBase.Value?.TrimEnd('/') ?? "";
+            
+            document.Servers = new List<OpenApiServer>
+            {
+                new OpenApiServer
+                {
+                    Url = $"{scheme}://{host}{basePath}",
+                    Description = "API Server"
+                }
+            };
+        }
 
         // Add cookie authentication security scheme
         document.Components ??= new OpenApiComponents();
@@ -108,9 +127,23 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
+// Trust proxy headers from Cloudflare tunnel
+// This allows the app to detect HTTPS from X-Forwarded-Proto header
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                               ForwardedHeaders.XForwardedProto |
+                               ForwardedHeaders.XForwardedHost;
+    // Trust all proxies (Cloudflare tunnel)
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
