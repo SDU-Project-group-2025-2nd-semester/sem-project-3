@@ -487,6 +487,15 @@ public class DatabaseMigrationHostedService(
                 UserId = aliceJohnson.Id,
                 DeskId = desks[7].Id,
                 CompanyId = startupCenterCompany.Id
+            },
+            new Reservation
+            {
+                Id = Guid.Parse("g7777777-7777-7777-7777-777777777777"),
+                Start = now.AddDays(2).Date.AddHours(8),
+                End = now.AddDays(2).Date.AddHours(12),
+                UserId = johnDoe.Id,
+                DeskId = desks[1].Id,
+                CompanyId = techCoWorkingCompany.Id
             }
         };
 

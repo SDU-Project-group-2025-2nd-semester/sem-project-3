@@ -154,10 +154,10 @@ export default function DesksManagerPage() {
                 alert('No active booking found for this desk');
                 return;
             }
-            if (!activeReservation) {
-                alert('No active booking found for this desk');
-                return;
-            }
+            // if (!activeReservation) {
+            //     alert('No active booking found for this desk');
+            //     return;
+            // }
 
             if (!confirm('Are you sure you want to cancel this booking?')) {
                 return;
@@ -287,6 +287,21 @@ export default function DesksManagerPage() {
         }
     };
 
+    function isRoomOpen(room) {
+        if (!room || !room.openinghours) return false;
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const todayHours = room.openingHours.find(h => h.dayOfWeek === dayOfWeek);
+        if (!todayHours) return false;
+        const [startHour, startMinute] = todayHours.start.split(':').map(Number);
+        const [endHour, endMinute] = todayHours.end.split(':').map(Number);
+        const start = new Date(now);
+        start.setHours(startHour, startMinute, 0, 0);
+        const end = new Date(now);
+        end.setHours(endHour, endMinute, 0, 0);
+        return now >= start && now <= end;
+    }
+
     // const getUserName = (userId) => {
     //     if (!userId) return null;
     //     const user = userMockData.Users.find(u => u.id === userId);
@@ -411,7 +426,7 @@ export default function DesksManagerPage() {
                     <h2 className="text-xl font-semibold text-gray-700 mb-4">Room Management</h2>
                     <div className="flex gap-2 flex-wrap mb-6">
                         {rooms.map(room => (
-                            <RoomButton key={room.id} roomId={room.id} label={room.name || 'Unknown Room'} />
+                            <RoomButton key={room.id} roomId={room.id} label={room.readableId || 'Unknown Room'} />
                         ))}
                         <button
                             onClick={() => setShowNewRoomForm(!showNewRoomForm)}
@@ -428,7 +443,7 @@ export default function DesksManagerPage() {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
                         <div className="flex items-center justify-between p-4 border-b border-gray-100">
                             <h3 className="text-lg font-semibold text-gray-700">
-                                Desks in {currentRoom?.name || 'Unknown Room'}
+                                Desks in {currentRoom?.readableId || 'Unknown Room'}
                             </h3>
                             <button
                                 onClick={() => setShowNewDeskForm(!showNewDeskForm)}
@@ -460,7 +475,7 @@ export default function DesksManagerPage() {
                                             <tr key={desk.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
                                                 <td className="px-4 py-3 text-sm font-medium max-lg:w-full">
                                                     <span className="font-semibold lg:hidden">Name: </span>
-                                                    <span className="font-semibold">{desk.name || 'Unknown Desk'}</span>
+                                                    <span className="font-semibold">{desk.readableId || 'Unknown Desk'}</span>
                                                 </td>
                                                 <td className="px-4 py-3 text-sm max-lg:w-full">
                                                     <span className="font-semibold lg:hidden">Status: </span>
@@ -633,7 +648,7 @@ export default function DesksManagerPage() {
                 {/* Room Control */}
                 <section>
                     <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                        {currentRoom?.name || 'Unknown Room'} Control
+                        {currentRoom?.readableId || 'Unknown Room'} Control
                     </h2>
 
                     {/* Info card */}
@@ -645,22 +660,23 @@ export default function DesksManagerPage() {
                             </div>
                             <div>
                                 <span className="text-gray-600">Capacity:</span>
-                                <span className="ml-2 font-semibold">{currentRoom?.capacity || 0}</span>
+                                <span className="ml-2 font-semibold">{currentRoom?.capacity || 'N/A'}</span>
                             </div>
                             <div>
                                 <span className="text-gray-600">Status:</span>
-                                {/* TODO: Move logic to Model or use the "OpeningHours" from Rooms.cs*/}
-                                <span className={`ml-2 font-semibold capitalize ${currentRoom?.currentStatus === 'open' ? 'text-success-600' :
-                                    currentRoom?.currentStatus === 'maintenance' ? 'text-warning-600' :
-                                        'text-danger-600'
+                                <span className={`ml-2 font-semibold capitalize ${isRoomOpen(currentRoom) ? 'text-success-600'
+                                    : currentRoom?.currentStatus === 'maintenance' ? 'text-warning-600'
+                                        : 'text-danger-600'
                                     }`}>
-                                    {currentRoom?.currentStatus || 'unknown'}
+                                    {isRoomOpen(currentRoom) ? 'open'
+                                        : currentRoom?.currentStatus === 'maintenance' ? 'maintenance'
+                                            : 'closed'}
                                 </span>
                             </div>
                             <div>
                                 <span className="text-gray-600">Desks:</span>
                                 <span className="ml-2 font-semibold">
-                                    {desks.filter(d => d.isAvailable).length}
+                                    {desks.filter(d => d.roomId === currentRoom?.id).length}
                                 </span>
                             </div>
                         </div>
