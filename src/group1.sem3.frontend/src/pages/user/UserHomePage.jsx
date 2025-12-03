@@ -90,6 +90,9 @@ export default function UserHomePage() {
     }, []);
 
     async function cancelBooking(id) {
+        if (!confirm('Are you sure you want to cancel this reservation?')) {
+            return;
+        }
         try {
             await del(`/${COMPANY_ID}/reservation/${id}`);
             setCurrentBookings(prev => prev.filter(b => b.id !== id));
