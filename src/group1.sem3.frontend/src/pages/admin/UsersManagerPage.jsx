@@ -27,7 +27,6 @@ export default function UsersManagerPage() {
       const userCompanyId = userCompanies[0].companyId;
       setCompanyId(userCompanyId);
 
-      // TODO: api missing
       const allUsers = await get(`/Users?companyId=${userCompanyId}`);
 
       const basicUsers = allUsers.filter(u => u.role == 0);
@@ -102,17 +101,17 @@ export default function UsersManagerPage() {
     const end = new Date(latestReservation.end);
     const isActive = start <= now && now <= end;
 
-    if (!isActive) {
-      alert('No active reservation to cancel');
-      return;
-    }
+    // if (!isActive) {
+    //   alert('No active reservation to cancel');
+    //   return;
+    // }
 
     if (!confirm('Are you sure you want to cancel this reservation?')) {
       return;
     }
 
     try {
-      await del(`${companyId}/Reservation/${latestReservation.id}`);
+      await del(`/${companyId}/Reservation/${latestReservation.id}`);
 
       await fetchUserAndStaff();
     } catch (error) {
