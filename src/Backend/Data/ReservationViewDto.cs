@@ -5,7 +5,7 @@ public record ReservationViewDto(
     DateTime Start,
     DateTime End,
     Guid DeskId,
-    string? DeskLabel, // not in the model yet
+    string? DeskLabel,
     Guid RoomId,
-    string? RoomLabel // not in the model yet
+    string? RoomLabel
 );
