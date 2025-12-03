@@ -250,14 +250,15 @@ export default function DesksManagerPage() {
 
     const getDeskStatus = (desk) => {
         const now = new Date();
-        const hasActiveReservation = reservations.some(r => {
+        const hasReservation = reservations.some(r => {
             if (r.deskId !== desk.id) return false;
             const start = new Date(r.start);
             const end = new Date(r.end);
-            return start <= now && now <= end;
+            return start <= now;
+            // return start <= now && now <= end;
         });
 
-        if (hasActiveReservation) return 'booked';
+        if (hasReservation) return 'booked';
         return 'available';
     };
 

@@ -490,7 +490,7 @@ public class DatabaseMigrationHostedService(
             },
             new Reservation
             {
-                Id = Guid.Parse("g7777777-7777-7777-7777-777777777777"),
+                Id = Guid.Parse("a6666666-6666-6666-6666-666666666666"),
                 Start = now.AddDays(2).Date.AddHours(8),
                 End = now.AddDays(2).Date.AddHours(12),
                 UserId = johnDoe.Id,
