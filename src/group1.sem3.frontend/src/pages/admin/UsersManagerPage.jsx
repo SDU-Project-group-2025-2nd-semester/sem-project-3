@@ -50,8 +50,23 @@ export default function UsersManagerPage() {
 
       const allReservations = await get(`/${companyId}/Reservation`);
 
+      const DeskIds = [...new Set(allReservations.map(r => r.deskId).filter(Boolean))];
+      const deskPromises = DeskIds.map(deskId =>
+        get(`/${companyId}/Desks/${deskId}`).catch(err => {
+          console.error(`Error fetching desk ${deskId}:`, err);
+          return { id: deskId, readableId: deskId };
+        })``
+      );
+      const desks = await Promise.all(deskPromises);
+      const deskMap = Object.fromEntries(desks.map(d => [d.id, d]));
+
+      const reservationsWithDesks = allReservations.map(reservation => ({
+        ...reservation,
+        desk: deskMap[reservation.deskId]
+      }));
+
       const reservationsByUser = {};
-      allReservations.forEach(reservation => {
+      reservationsWithDesks.forEach(reservation => {
         if (!reservationsByUser[reservation.userId]) {
           reservationsByUser[reservation.userId] = [];
         }
@@ -190,7 +205,7 @@ export default function UsersManagerPage() {
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
           <MobileLabel>Desk</MobileLabel>
-          {latestReservation ? `${latestReservation.deskId}` : '-'}
+          {latestReservation?.desk?.readableId || latestReservation?.deskId || 'Unknown'}
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
           <MobileLabel>Desk Time</MobileLabel>
