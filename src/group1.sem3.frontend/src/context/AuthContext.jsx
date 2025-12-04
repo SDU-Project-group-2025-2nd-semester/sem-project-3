@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { post, get } from "./apiClient";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { homepagePathForRole } from "../utils/homepage";
 
 const AuthContext = createContext(null);
@@ -26,7 +26,9 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
 
   const navigate = useNavigate();
-  // automatically move to homepage if already logged in
+  const location = useLocation();
+
+  // automatically move to homepage if already logged in (but only from login page)
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -35,28 +37,32 @@ export function AuthProvider({ children }) {
         if (!mounted || !me) return;
         const user = pickUser(me);
         setCurrentUser(user);
-        navigate(homepagePathForRole(user?.role));
 
-        } catch {
-                // no session
+        // navigate to homepage only from login/signup pages
+        if (location.pathname === '/' || location.pathname === '/signuppage') {
+          navigate(homepagePathForRole(user?.role));
         }
+
+      } catch {
+        // no session
+      }
     })();
-        return () => { mounted = false; };
-    }, []);
+    return () => { mounted = false; };
+  }, []);
 
-    // Refresh current user from server (returns picked user or null)
-    async function refreshCurrentUser() {
-        try {
-            const me = await get("/Users/me");
-            const user = pickUser(me);
-            setCurrentUser(user);
-            return user;
-        } catch (err) {
-            // Not authenticated or error � clear local state
-            setCurrentUser(null);
-            return null;
-        }
+  // Refresh current user from server (returns picked user or null)
+  async function refreshCurrentUser() {
+    try {
+      const me = await get("/Users/me");
+      const user = pickUser(me);
+      setCurrentUser(user);
+      return user;
+    } catch (err) {
+      // Not authenticated or error � clear local state
+      setCurrentUser(null);
+      return null;
     }
+  }
 
   async function login({ email, password }) {
     await post("/auth/login", { email, password });
