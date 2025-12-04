@@ -49,8 +49,9 @@ export default function UserSettingsPage() {
         setEmail(u.email ?? u.userName ?? "");
         setSittingTime(u.sittingTime ?? "");
         setStandingTime(u.standingTime ?? "");
-        setSittingHeight(u.sittingHeight !== undefined && u.sittingHeight !== null ? String(u.sittingHeight) : "");
-        setStandingHeight(u.standingHeight !== undefined && u.standingHeight !== null ? String(u.standingHeight) : "");
+        // Database stores mm values, while UI shows cm
+        setSittingHeight(u.sittingHeight !== undefined && u.sittingHeight !== null ? String((u.sittingHeight)/10) : "");
+        setStandingHeight(u.standingHeight !== undefined && u.standingHeight !== null ? String((u.standingHeight)/10) : "");
         setPillOption(numberToOption(u.healthRemindersFrequency ?? 1));
         setHealthReminder((u.healthRemindersFrequency ?? 0) > 0);
         setShowUserHeight(!(u.sittingHeight || u.standingHeight));
@@ -108,8 +109,8 @@ export default function UserSettingsPage() {
                 userName: email || (me?.userName ?? null),
                 normalizedEmail: email ? email.toUpperCase() : me?.normalizedEmail,
                 normalizedUserName: email ? (email.toUpperCase()) : me?.normalizedUserName,
-                sittingHeight: sittingHeight ? Number(sittingHeight) : null,
-                standingHeight: standingHeight ? Number(standingHeight) : null,
+                sittingHeight: sittingHeight ? Number(sittingHeight) * 10 : null,
+                standingHeight: standingHeight ? Number(standingHeight) * 10 : null,
                 sittingTime: sittingTime ? Number(sittingTime) : null,
                 standingTime: standingTime ? Number(standingTime) : null,
                 healthRemindersFrequency: healthReminder ? optionToNumber(pillOption) : 0,
