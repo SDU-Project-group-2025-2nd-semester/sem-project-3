@@ -4,17 +4,18 @@ import { useAuth } from "../context/AuthContext";
 import Icon from "@reacticons/bootstrap-icons";
 export default function Sidebar({ isOpen, onClose }) {
     const { currentUser } = useAuth();
+    const { companies, currentCompany, setCurrentCompany } = useAuth();
     const location = useLocation();
     if (["/", "/signuppage"].includes(location.pathname)) return null;
 
     const role = currentUser?.role;
 
-    const companies = ["Company A", "Company B", "Company C"];
     const [showCompanies, setShowCompanies] = useState(false);
-    const [selectedCompany, setSelectedCompany] = useState(companies[0]);
+    const selectedCompany = currentCompany?.name ?? (companies?.[0]?.name ?? "No company");
 
     function handleCompanySelect(company) {
-        setSelectedCompany(company);
+        setCurrentCompany(company);
+        localStorage.setItem("currentCompanyId", company.id);
         setShowCompanies(false);
     }
 
@@ -66,7 +67,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         </Link>
                     ))}
 
-                    {(role === "0" || role === "1") && (
+                    {(role === 0 || role === 1) && (
                         <div className="mb-4">
                             <button
                                 onClick={() => setShowCompanies(!showCompanies)}
@@ -79,11 +80,11 @@ export default function Sidebar({ isOpen, onClose }) {
                                 <ul className="mt-2 ml-6 list-disc">
                                     {companies.map((company) => (
                                         <li
-                                            key={company}
+                                            key={company.id}
                                             onClick={() => { handleCompanySelect(company); onClose(); }}
                                             className="hover:text-blue-500 cursor-pointer"
                                         >
-                                            {company}
+                                            {company.name}
                                         </li>
                                     ))}
                                 </ul>

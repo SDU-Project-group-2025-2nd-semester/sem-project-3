@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { get, post, put, del } from "../../context/apiClient";
-
-// TODO: Replace with the actual company of the logged in user - the company, that is selected in the sidebar
-const COMPANY_ID = "11111111-1111-1111-1111-111111111111"; 
+import { useAuth } from "../../context/AuthContext";
 
 export default function UserHomePage() {
     
+    const { currentCompany } = useAuth();
+    const COMPANY_ID = currentCompany?.id;
     const [currentBookings, setCurrentBookings] = useState([]);
     const [recentBookings, setRecentBookings] = useState([]);
     const [profile, setProfile] = useState(null);
@@ -17,6 +17,11 @@ export default function UserHomePage() {
         const ctrl = new AbortController();
 
         async function load() {
+            if (!COMPANY_ID) {
+                setErr("No company selected");
+                setLoading(false);
+                return;
+            }
             setLoading(true);
             setErr(undefined);
             try {                

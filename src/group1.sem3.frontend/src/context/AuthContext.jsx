@@ -24,8 +24,32 @@ function pickUser(serverUser) {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [currentCompany, setCurrentCompany] = useState(null);
 
   const navigate = useNavigate();
+
+  function initializeCompanies(me) {
+    // build companies list from server payload (companyMemberships)
+    const mapped = (me.companyMemberships ?? []).map(cm => ({
+      id: cm.company.id,
+      name: cm.company.name ?? "Unnamed",
+      role: cm.role
+    }));
+    setCompanies(mapped);
+
+    // restore selected company from localStorage or pick first
+    const savedId = localStorage.getItem("currentCompanyId");
+    const initial = mapped.find(c => c.id === savedId) ?? mapped[0] ?? null;
+    if (initial) {
+      setCurrentCompany(initial);
+      localStorage.setItem("currentCompanyId", initial.id);
+    } else {
+      setCurrentCompany(null);
+      localStorage.removeItem("currentCompanyId");
+    }
+  }
+
   // automatically move to homepage if already logged in
   useEffect(() => {
     let mounted = true;
@@ -35,6 +59,7 @@ export function AuthProvider({ children }) {
         if (!mounted || !me) return;
         const user = pickUser(me);
         setCurrentUser(user);
+        initializeCompanies(me);
         navigate(homepagePathForRole(user?.role));
 
       } catch {
@@ -56,6 +81,7 @@ export function AuthProvider({ children }) {
 
     const user = pickUser(me ?? { email, userName: email });
     setCurrentUser(user);
+    initializeCompanies(me);
     return user;
   }
 
@@ -67,10 +93,13 @@ export function AuthProvider({ children }) {
   async function logout() {
     await post("/auth/logout");
     setCurrentUser(null);
+    setCompanies([]);
+    setCurrentCompany(null);
+    localStorage.removeItem("currentCompanyId");
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, signup }}>
+    <AuthContext.Provider value={{ currentUser, companies, currentCompany, setCurrentCompany, login, logout, signup }}>
       {children}
     </AuthContext.Provider>
   );
