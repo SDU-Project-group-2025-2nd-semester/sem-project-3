@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { get, del } from "../../context/apiClient";
 
 export default function UsersManagerPage() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userReservations, setUserReservations] = useState({});
   const [companyId, setCompanyId] = useState(null);
+  const [me, setMe] = useState(null);
 
   useEffect(() => {
     fetchUserAndStaff();
@@ -18,19 +21,20 @@ export default function UsersManagerPage() {
       setLoading(true);
       setError(null);
 
-      const me = await get('/Users/me');
+      const currentUser = await get('/Users/me');
+      setMe(currentUser);
 
-      if (!me?.companyMemberships || me.companyMemberships.length === 0) {
+      if (!currentUser?.companyMemberships || currentUser.companyMemberships.length === 0) {
         throw new Error('No company associated with current user');
       }
 
-      const userCompanyId = me.companyMemberships[0].companyId;
+      const userCompanyId = currentUser.companyMemberships[0].companyId;
       setCompanyId(userCompanyId);
 
       const allUsers = await get(`/Users?companyId=${userCompanyId}`);
 
       const basicUsers = allUsers.filter(u => u.role === 0);
-      const staffUsers = allUsers.filter(u => u.role === 1 || u.role === 2);
+      const staffUsers = allUsers.filter(u => (u.role === 1 || u.role === 2) && u.id !== currentUser.id);
 
       setUsers(basicUsers);
       setStaff(staffUsers);
@@ -39,6 +43,9 @@ export default function UsersManagerPage() {
     } catch (error) {
       console.error('Error fetching users: ', error);
       setError(error.message);
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
+        setTimeout(() => navigate('/'), 2000);
+      }
     } finally {
       setLoading(false);
     }
@@ -275,9 +282,10 @@ export default function UsersManagerPage() {
       </td> */}
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:mt-2">
         <button
-          className="bg-danger-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1"
+          className="bg-danger-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handleRemoveUser(staffMember.id, 'staff')}
           title="Remove staff account"
+          disabled={staffMember?.id === me?.id}
         >
           <span className="material-symbols-outlined text-sm leading-none">delete</span>
           <span className="inline">Remove</span>
