@@ -18,19 +18,19 @@ export default function UsersManagerPage() {
       setLoading(true);
       setError(null);
 
-      const userCompanies = await get('/Users/me/companies');
+      const me = await get('/Users/me');
 
-      if (!userCompanies || userCompanies.length === 0) {
+      if (!me?.companyMemberships || me.companyMemberships.length === 0) {
         throw new Error('No company associated with current user');
       }
 
-      const userCompanyId = userCompanies[0].companyId;
+      const userCompanyId = me.companyMemberships[0].companyId;
       setCompanyId(userCompanyId);
 
       const allUsers = await get(`/Users?companyId=${userCompanyId}`);
 
-      const basicUsers = allUsers.filter(u => u.role == 0);
-      const staffUsers = allUsers.filter(u => u.role == 1);
+      const basicUsers = allUsers.filter(u => u.role === 0);
+      const staffUsers = allUsers.filter(u => u.role === 1 || u.role === 2);
 
       setUsers(basicUsers);
       setStaff(staffUsers);
@@ -55,7 +55,7 @@ export default function UsersManagerPage() {
         get(`/${companyId}/Desks/${deskId}`).catch(err => {
           console.error(`Error fetching desk ${deskId}:`, err);
           return { id: deskId, readableId: deskId };
-        })``
+        })
       );
       const desks = await Promise.all(deskPromises);
       const deskMap = Object.fromEntries(desks.map(d => [d.id, d]));
@@ -114,7 +114,7 @@ export default function UsersManagerPage() {
     const now = new Date();
     const start = new Date(latestReservation.start);
     const end = new Date(latestReservation.end);
-    const isActive = start <= now && now <= end;
+    // const isActive = start <= now && now <= end;
 
     // if (!isActive) {
     //   alert('No active reservation to cancel');
@@ -205,7 +205,7 @@ export default function UsersManagerPage() {
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
           <MobileLabel>Desk</MobileLabel>
-          {latestReservation?.desk?.readableId || latestReservation?.deskId || 'Unknown'}
+          {latestReservation?.desk?.readableId || latestReservation?.deskId || '-'}
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
           <MobileLabel>Desk Time</MobileLabel>
