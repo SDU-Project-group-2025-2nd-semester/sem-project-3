@@ -13,7 +13,7 @@ function pickUser(serverUser) {
     userName: serverUser.userName,
     firstName: serverUser.firstName,
     lastName: serverUser.lastName,
-    role: serverUser.role,
+    role: serverUser.companyMemberships?.[0]?.role ?? 0,
     standingHeight: serverUser.standingHeight,
     sittingHeight: serverUser.sittingHeight,
     healthRemindersFrequency: serverUser.healthRemindersFrequency,
@@ -23,24 +23,24 @@ function pickUser(serverUser) {
 }
 
 export function AuthProvider({ children }) {
-    const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  // automatically move to homepage if already logged in
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const me = await get("/Users/me");
+        if (!mounted || !me) return;
+        const user = pickUser(me);
+        setCurrentUser(user);
+        navigate(homepagePathForRole(user?.role));
 
-    // automatically move to homepage if already logged in
-    useEffect(() => {
-        let mounted = true;
-        (async () => {
-            try {
-                const user = await refreshCurrentUser();
-                if (!mounted || !user) return;
-
-                navigate(homepagePathForRole(user?.role));
-
-            } catch {
+        } catch {
                 // no session
-            }
-        })();
+        }
+    })();
         return () => { mounted = false; };
     }, []);
 
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
             setCurrentUser(user);
             return user;
         } catch (err) {
-            // Not authenticated or error — clear local state
+            // Not authenticated or error ï¿½ clear local state
             setCurrentUser(null);
             return null;
         }
@@ -87,7 +87,7 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }
 
 export default AuthProvider;

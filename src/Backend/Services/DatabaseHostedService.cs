@@ -168,9 +168,9 @@ public class DatabaseMigrationHostedService(
         await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
 
         await context.SaveChangesAsync();
-        
+
         // Create Users-Company Relations
-        
+
         context.UserCompanies.AddRange(
             new UserCompany
             {
@@ -221,7 +221,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(8, 0),
                 ClosingTime = new TimeOnly(18, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday
             },
             DeskIds = [],
@@ -237,7 +237,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(7, 0),
                 ClosingTime = new TimeOnly(20, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday | DaysOfTheWeek.Saturday
             },
             DeskIds = [],
@@ -253,7 +253,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(9, 0),
                 ClosingTime = new TimeOnly(17, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday
             },
             DeskIds = [],
@@ -269,7 +269,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(0, 0),
                 ClosingTime = new TimeOnly(23, 59),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday | DaysOfTheWeek.Saturday | DaysOfTheWeek.Sunday
             },
             DeskIds = [],
@@ -539,7 +539,7 @@ public class DatabaseMigrationHostedService(
     private static bool IsGeneratingOpenApiDocument()
     {
         // Check if running in a context that suggests OpenAPI generation
-        return Environment.GetCommandLineArgs().Any(arg => 
+        return Environment.GetCommandLineArgs().Any(arg =>
             arg.Contains("swagger", StringComparison.OrdinalIgnoreCase) ||
             arg.Contains("openapi", StringComparison.OrdinalIgnoreCase));
     }

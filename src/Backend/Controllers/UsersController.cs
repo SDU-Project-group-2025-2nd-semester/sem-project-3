@@ -2,6 +2,8 @@
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 
 namespace Backend.Controllers;
 
@@ -23,6 +25,25 @@ public class UsersController(IUserService userService) : ControllerBase
         return Ok(user);
     }
 
+    [HttpGet]
+    [RequireRole(UserRole.Admin)]
+    public async Task<ActionResult<List<User>>> GetAllUsers()
+    {
+        var users = await userService.GetAllUsersAsync();
+        return Ok(users);
+    }
+
+    [HttpDelete("{userId}")]
+    [RequireRole(UserRole.Admin)]
+    public async Task<IActionResult> DeleteUser(string userId)
+    {
+        var deleted = await userService.DeleteUserAsync(userId);
+        if (!deleted)
+            return NotFound();
+
+        return NoContent();
+    }
+
 
     [HttpPut("{userId}")]
     [RequireRole(UserRole.Admin)]
@@ -35,7 +56,7 @@ public class UsersController(IUserService userService) : ControllerBase
 
         return NoContent();
     }
-    
+
     [HttpGet("me")]
     public async Task<ActionResult<User>> GetMyInfo()
     {
@@ -44,10 +65,10 @@ public class UsersController(IUserService userService) : ControllerBase
 
         if (user is null)
             return NotFound();
-        
+
         return Ok(user);
     }
-    
+
     [HttpPut("me")]
     public async Task<IActionResult> UpdateMyInfo([FromBody] User updated)
     {

@@ -7,8 +7,10 @@ namespace Backend.Services;
 public interface IUserService
 {
     public Task<User?> GetUserAsync(string userId);
+    public Task<List<User>> GetAllUsersAsync();
     public Task<bool> UpdateUserAsync(string userId, User updated);
     public Task<bool> UpdateMyInfoAsync(string userId, User updated);
+    public Task<bool> DeleteUserAsync(string userId);
 }
 
 class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUserService
@@ -21,13 +23,30 @@ class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUser
             .FirstOrDefaultAsync(u => u.Id == userId);
     }
 
+    public async Task<List<User>> GetAllUsersAsync()
+    {
+        return await dbContext.Users.ToListAsync();
+    }
+
+    public async Task<bool> DeleteUserAsync(string userId)
+    {
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user is null)
+            return false;
+
+        dbContext.Users.Remove(user);
+        await dbContext.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> UpdateUserAsync(string userId, User updated)
     {
         var existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         if (existing is null)
             return false;
-        
+
         existing.FirstName = updated.FirstName;
         existing.LastName = updated.LastName;
         existing.SittingHeight = updated.SittingHeight;
@@ -43,19 +62,19 @@ class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUser
 
         if (existing is null)
             return false;
-        
+
         existing.FirstName = updated.FirstName;
         existing.LastName = updated.LastName;
         existing.SittingHeight = updated.SittingHeight;
         existing.StandingHeight = updated.StandingHeight;
         existing.HealthRemindersFrequency = updated.HealthRemindersFrequency;
-        
+
         if (!string.IsNullOrWhiteSpace(updated.Email) && updated.Email != existing.Email)
         {
             existing.Email = updated.Email;
             existing.NormalizedEmail = updated.Email.ToUpperInvariant();
         }
-        
+
         if (!string.IsNullOrWhiteSpace(updated.PasswordHash))
         {
             var hasher = new PasswordHasher<User>();

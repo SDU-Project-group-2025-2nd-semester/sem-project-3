@@ -21,9 +21,9 @@ import { useState } from "react";
 export default function App() {
 
     const [sidebarOpen, setSidebarOpen] = useState(false); // default: closed
-    
+
     return (
-        <div className = "min-h-screen flex flex-col" >
+        <div className="min-h-screen flex flex-col" >
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
             <div className="flex flex-1">
@@ -48,7 +48,7 @@ export default function App() {
                         <Route path="/user/damagereport" element={<DamageReportPage />} />
                     </Routes>
                 </main>
-            </div>  
+            </div>
         </div >
     )
 }
