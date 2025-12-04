@@ -37,25 +37,35 @@ export function AuthProvider({ children }) {
         setCurrentUser(user);
         navigate(homepagePathForRole(user?.role));
 
-      } catch {
-        // no session
-      }
+        } catch {
+                // no session
+        }
     })();
-    return () => { mounted = false; };
-  }, []);
+        return () => { mounted = false; };
+    }, []);
 
-  async function login({ email, password }) {
-    const data = await post("/auth/login", { email, password });
-
-    let me = null;
-    try {
-      me = await get("/Users/me");
-    } catch {
-      me = null;
+    // Refresh current user from server (returns picked user or null)
+    async function refreshCurrentUser() {
+        try {
+            const me = await get("/Users/me");
+            const user = pickUser(me);
+            setCurrentUser(user);
+            return user;
+        } catch (err) {
+            // Not authenticated or error � clear local state
+            setCurrentUser(null);
+            return null;
+        }
     }
 
-    const user = pickUser(me ?? { email, userName: email });
-    setCurrentUser(user);
+  async function login({ email, password }) {
+    await post("/auth/login", { email, password });
+
+    // Refresh user state after successful login
+    const user = await refreshCurrentUser();
+
+    navigate(homepagePathForRole(user?.role));
+
     return user;
   }
 
