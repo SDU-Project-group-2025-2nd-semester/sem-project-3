@@ -9,7 +9,7 @@ public interface IDeskService
     public Task<List<Desk>> GetDesksByRoomAsync(Guid companyId, Guid roomId);
     public Task<Desk?> GetDeskAsync(Guid companyId, Guid deskId);
     Task<Desk> CreateDeskAsync(Guid companyId, Desk desk);
-    Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, Desk updated);
+    Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, UpdateDeskDto updated);
     Task<bool> DeleteDeskAsync(Guid companyId, Guid deskId);
 
     Task<List<string>> GetNotAdoptedDesks(Guid companyId);
@@ -64,7 +64,7 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         return desk;
     }
     
-    public async Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, Desk updated)
+    public async Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, UpdateDeskDto updated)
     {
         var existing = await dbContext.Desks.FirstOrDefaultAsync(d => d.CompanyId == companyId && d.Id == deskId);
 
