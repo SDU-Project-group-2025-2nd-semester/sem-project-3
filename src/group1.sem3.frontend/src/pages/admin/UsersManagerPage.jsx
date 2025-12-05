@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { get, del } from "../../context/apiClient";
 
 export default function UsersManagerPage() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userReservations, setUserReservations] = useState({});
+  const [companyId, setCompanyId] = useState(null);
+  const [me, setMe] = useState(null);
 
   useEffect(() => {
     fetchUserAndStaff();
@@ -17,33 +21,59 @@ export default function UsersManagerPage() {
       setLoading(true);
       setError(null);
 
-      const allUsers = await get('/users');
+      const currentUser = await get('/Users/me');
+      setMe(currentUser);
 
-      const basicUsers = allUsers.filter(u => u.role == 0);
-      const staffUsers = allUsers.filter(u => u.role == 1);
+      if (!currentUser?.companyMemberships || currentUser.companyMemberships.length === 0) {
+        throw new Error('No company associated with current user');
+      }
+
+      const userCompanyId = currentUser.companyMemberships[0].companyId;
+      setCompanyId(userCompanyId);
+
+      const allUsers = await get(`/Users?companyId=${userCompanyId}`);
+
+      const basicUsers = allUsers.filter(u => u.role === 0);
+      const staffUsers = allUsers.filter(u => (u.role === 1 || u.role === 2) && u.id !== currentUser.id);
 
       setUsers(basicUsers);
       setStaff(staffUsers);
 
-      await fetchReservationsForUsers(basicUsers);
+      await fetchReservationsForUsers(userCompanyId);
     } catch (error) {
       console.error('Error fetching users: ', error);
       setError(error.message);
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
+        setTimeout(() => navigate('/'), 2000);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchReservationsForUsers = async (users) => {
+  const fetchReservationsForUsers = async (companyId) => {
     try {
-      if (users.length === 0) return;
+      if (!companyId) return;
 
-      const companyId = users[0].companyId;
+      const allReservations = await get(`/${companyId}/Reservation`);
 
-      const allReservations = await get(`/${companyId}/reservation`);
+      const DeskIds = [...new Set(allReservations.map(r => r.deskId).filter(Boolean))];
+      const deskPromises = DeskIds.map(deskId =>
+        get(`/${companyId}/Desks/${deskId}`).catch(err => {
+          console.error(`Error fetching desk ${deskId}:`, err);
+          return { id: deskId, readableId: deskId };
+        })
+      );
+      const desks = await Promise.all(deskPromises);
+      const deskMap = Object.fromEntries(desks.map(d => [d.id, d]));
+
+      const reservationsWithDesks = allReservations.map(reservation => ({
+        ...reservation,
+        desk: deskMap[reservation.deskId]
+      }));
 
       const reservationsByUser = {};
-      allReservations.forEach(reservation => {
+      reservationsWithDesks.forEach(reservation => {
         if (!reservationsByUser[reservation.userId]) {
           reservationsByUser[reservation.userId] = [];
         }
@@ -56,25 +86,12 @@ export default function UsersManagerPage() {
     }
   };
 
-  const getCurrentReservation = (userId) => {
+  const getLatestReservation = (userId) => {
     const reservations = userReservations[userId] || [];
-    const now = new Date();
+    if (reservations.length === 0) return null;
 
-    return reservations.find(r => {
-      const start = new Date(r.startTime);
-      const end = new Date(r.endTime);
-      return start <= now && now <= end;
-    });
-  };
-
-  const getLastReservation = (userId) => {
-    const reservations = userReservations[userId] || [];
-    const past = reservations.filter(r => new Date(r.endTime) < new Date());
-
-    if (past.length === 0) return null;
-
-    return past.sort((a, b) =>
-      new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
+    return reservations.sort((a, b) =>
+      new Date(b.start).getTime() - new Date(a.start).getTime()
     )[0];
   };
 
@@ -94,20 +111,29 @@ export default function UsersManagerPage() {
   }
 
   const handleCancelReservation = async (userId) => {
-    const currentReservation = getCurrentReservation(userId);
+    const latestReservation = getLatestReservation(userId);
 
-    if (!currentReservation) {
-      alert('No active reservation to cancel');
+    if (!latestReservation) {
+      alert('No reservation to cancel');
       return;
     }
+
+    const now = new Date();
+    const start = new Date(latestReservation.start);
+    const end = new Date(latestReservation.end);
+    // const isActive = start <= now && now <= end;
+
+    // if (!isActive) {
+    //   alert('No active reservation to cancel');
+    //   return;
+    // }
 
     if (!confirm('Are you sure you want to cancel this reservation?')) {
       return;
     }
 
     try {
-      const companyId = users.find(u => u.id === userId)?.companyId;
-      await del(`/${companyId}/reservation/${currentReservation.id}`);
+      await del(`/${companyId}/Reservation/${latestReservation.id}`);
 
       await fetchUserAndStaff();
     } catch (error) {
@@ -118,11 +144,11 @@ export default function UsersManagerPage() {
 
   const handleRemoveUser = async (userId) => {
     const user = [...users, ...staff].find(u => u.id === userId);
-    if (!confirm(`Are you sure you want to remove: ${user?.Name || `this user`}?`)) {
+    if (!confirm(`Are you sure you want to remove ${user?.firstName + " " + user?.lastName || `this user`}?`)) {
       return;
     }
     try {
-      await del(`/users/${userId}`);
+      await del(`/Users/${userId}`);
       await fetchUserAndStaff();
     } catch (error) {
       console.error(`Error removing user: `, error);
@@ -155,8 +181,17 @@ export default function UsersManagerPage() {
   );
 
   const UserRow = ({ user }) => {
-    const currentReservation = getCurrentReservation(user.id);
-    const lastReservation = getLastReservation(user.id);
+    const latestReservation = getLatestReservation(user.id);
+
+    const getDuration = (reservation) => {
+      if (!reservation) return null;
+      const start = new Date(reservation.start);
+      const end = new Date(reservation.end);
+      const durationMs = end - start;
+      const hours = Math.floor(durationMs / (1000 * 60 * 60));
+      const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+      return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+    };
 
     return (
       <tr key={user.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
@@ -167,17 +202,17 @@ export default function UsersManagerPage() {
           {user.email}
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-          <MobileLabel>Current Reservation</MobileLabel>
-          <span className={currentReservation ? "text-gray-600 font-medium" : "text-gray-400"}>
-            {currentReservation
-              ? `Desk ${currentReservation.deskId} until ${formatDate(currentReservation.endTime)}`
+          <MobileLabel>Latest Reservation</MobileLabel>
+          <span className={latestReservation ? "text-gray-600 font-medium" : "text-gray-400"}>
+            {latestReservation
+              ? `${formatDate(latestReservation.start)} (${getDuration(latestReservation)})`
               : '-'
             }
           </span>
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-          <MobileLabel>Last Reservation</MobileLabel>
-          {lastReservation ? formatDate(lastReservation.endTime) : '-'}
+          <MobileLabel>Desk</MobileLabel>
+          {latestReservation?.desk?.readableId || latestReservation?.deskId || '-'}
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
           <MobileLabel>Desk Time</MobileLabel>
@@ -190,9 +225,9 @@ export default function UsersManagerPage() {
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:flex max-lg:flex-row max-lg:gap-2 max-lg:mt-2">
           <button
             className="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
-            disabled={!currentReservation}
+            disabled={!latestReservation || new Date(latestReservation.end) < new Date()}
             onClick={() => handleCancelReservation(user.id)}
-            title={currentReservation ? "Cancel reservation" : "No active reservation"}
+            title={latestReservation && new Date(latestReservation.end) >= new Date() ? "Cancel reservation" : "No active reservation"}
           >
             Cancel Reservation
           </button>
@@ -208,7 +243,6 @@ export default function UsersManagerPage() {
       </tr>
     );
   };
-
   const StaffRow = ({ staffMember }) => (
     <tr key={staffMember.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
       <td className="px-4 py-2 text-sm font-medium max-lg:w-7/8 max-lg:pl-2 max-lg:text-lg">
@@ -219,7 +253,7 @@ export default function UsersManagerPage() {
       </td>
       <td className="px-4 py-3 text-sm text-gray-600 max-lg:w-full max-lg:py-1">
         <MobileLabel>Job Description</MobileLabel>
-        {staffMember.Role}
+        {staffMember.role === 1 ? 'Janitor' : staffMember.role === 2 ? 'Admin' : 'Staff'}
       </td>
       {/* Working  schedule?*/}
       {/* <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
@@ -248,9 +282,10 @@ export default function UsersManagerPage() {
       </td> */}
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:mt-2">
         <button
-          className="bg-danger-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1"
+          className="bg-danger-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handleRemoveUser(staffMember.id, 'staff')}
           title="Remove staff account"
+          disabled={staffMember?.id === me?.id}
         >
           <span className="material-symbols-outlined text-sm leading-none">delete</span>
           <span className="inline">Remove</span>
@@ -301,8 +336,8 @@ export default function UsersManagerPage() {
                   columns={[
                     'Name',
                     'Email',
-                    'Current Reservation',
-                    'Last Reservation',
+                    'Latest Reservation',
+                    'Desk',
                     'Desk Time',
                     'Sitting Time',
                     'Actions'

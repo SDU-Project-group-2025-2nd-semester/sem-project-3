@@ -1,8 +1,71 @@
-import { useState } from "react";
-import mockData from '../../assets/admin/DamagesMockData.json'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { get, put, del } from "../../context/apiClient";
 
 export default function DamagesManagerPage() {
-  const damages = mockData?.Damages || []
+  const navigate = useNavigate();
+  const [damages, setDamages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [companyId, setCompanyId] = useState(null);
+
+  useEffect(() => {
+    fetchDamageReports();
+  }, []);
+
+  const fetchDamageReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const me = await get('/Users/me');
+
+      if (!me?.companyMemberships || me.companyMemberships.length === 0) {
+        throw new Error('No company associated with current user');
+      }
+
+      const userCompanyId = me.companyMemberships[0].companyId;
+      setCompanyId(userCompanyId);
+
+      const reports = await get(`/${userCompanyId}/DamageReport`);
+
+
+      const reportsWithDesks = await Promise.all(
+        (reports || []).map(async (report) => {
+          let desk = null;
+          let resolvedByUser = null;
+
+          if (report.deskId) {
+            try {
+              desk = await get(`/${userCompanyId}/Desks/${report.deskId}`);
+            } catch (error) {
+              console.error(`Error fetching desk ${report.deskId}:`, error);
+            }
+          }
+
+          if (report.resolvedById) {
+            try {
+              resolvedByUser = await get(`/Users/${report.resolvedById}`);
+            } catch (error) {
+              console.error(`Error fetching user ${report.resolvedById}:`, error);
+            }
+          }
+
+          return { ...report, desk, resolvedByUser };
+        })
+      );
+
+      setDamages(reportsWithDesks);
+    } catch (error) {
+      console.error('Error fetching damage reports:', error);
+      setError(error.message);
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        setTimeout(() => navigate('/'), 2000);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDate = (iso) => {
     if (!iso) return '_'
@@ -19,40 +82,40 @@ export default function DamagesManagerPage() {
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'in_progress':
-        return 'text-warning-600';
-      case 'resolved':
-        return 'text-success-600';
-      case 'pending':
-        return 'text-danger-600';
-      default:
-        return 'text-gray-600';
-    }
+  const getStatusColor = (isResolved) => {
+    return isResolved ? 'text-success-600' : 'text-warning-600';
   }
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'in_progress':
-        return 'In progress';
-      case 'resolved':
-        return 'Resolved';
-      case 'pending':
-        return 'Pending';
-      default:
-        return status;
+  const getStatusText = (isResolved) => {
+    return isResolved ? 'Resolved' : 'Open';
+  };
+
+  const handleResolveIssue = async (damageId) => {
+    if (!confirm('Mark this damage report as resolved?')) {
+      return;
+    }
+
+    try {
+      await put(`/${companyId}/DamageReport/${damageId}`, true);
+      await fetchDamageReports();
+    } catch (error) {
+      console.error('Error resolving damage report:', error);
+      alert('Failed to resolve damage report: ' + error.message);
     }
   };
 
-  const handleIssue = (damageId) => {
-    console.log('Handling issue ', damageId);
-    // TODO: Implement API call
-  };
+  const handleRemoveDamage = async (damageId) => {
+    if (!confirm('Are you sure you want to remove this damage report?')) {
+      return;
+    }
 
-  const handleRemoveDamage = (damageId) => {
-    console.log('Remove damage for', damageId);
-    // TODO: Implement API call
+    try {
+      await del(`/${companyId}/DamageReport/${damageId}`);
+      await fetchDamageReports();
+    } catch (error) {
+      console.error('Error removing damage report:', error);
+      alert('Failed to remove damage report: ' + error.message);
+    }
   };
 
   const TableHeader = ({ columns }) => (
@@ -80,74 +143,45 @@ export default function DamagesManagerPage() {
   );
 
   const DamageRow = ({ damage }) => (
-    <tr key={damage.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
-      <td className="px-4 py-2 text-sm font-medium max-lg:w-7/8 max-lg:pl-2 max-lg:text-lg">
-        {damage.deskName}
-      </td>
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <MobileLabel>Room</MobileLabel>
-        {damage.roomName}
-      </td>
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <MobileLabel>Issue</MobileLabel>
-        {damage.issue}
+    < tr key={damage.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2" >
+      <td className="pl-4 pr-2 py-2 text-sm font-medium max-lg:w-3/4 max-lg:pl-2 max-lg:text-lg">
+        {damage.desk?.readableId || damage.deskId || 'Unknown'}
       </td>
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
         <MobileLabel>Description</MobileLabel>
-        {damage.description}
-      </td>
-      {/* <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <details className="cursor-pointer group">
-          <summary className="text-sm font-medium text-gray-600 hover:text-gray-700 list-none max-lg:font-semibold">
-            <span className="inline-flex items-center gap-1">
-              View description
-              <span className="material-symbols-outlined text-base group-open:rotate-180 transition-transform">
-                expand_more
-              </span>
-            </span>
-          </summary>
-          <div className="mt-2 text-xs space-y-1 pl-4 border-l-2 border-gray-200">
-            {damage.description ? damage.description : (
-              <div className="text-gray-400">No description available</div>
-            )}
-          </div>
-        </details>
-      </td> */}
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <MobileLabel>Reported by</MobileLabel>
-        {damage.reportedBy}
+        {damage.description || 'No description'}
       </td>
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <MobileLabel>Date</MobileLabel>
-        {formatDate(damage.date)}
+        <MobileLabel>Submitted</MobileLabel>
+        {formatDate(damage.submitTime)}
+      </td>
+      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+        <MobileLabel>Resolved</MobileLabel>
+        {damage.resolveTime ? formatDate(damage.resolveTime) : '-'}
+      </td>
+      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+        <MobileLabel>Resolved By</MobileLabel>
+        {damage.resolvedByUser ? `${damage.resolvedByUser.firstName} ${damage.resolvedByUser.lastName}` : '-'}
       </td>
       <td className="px-4 py-3 text-sm max-lg:w-full">
         <span className="font-semibold lg:hidden">Status: </span>
-        <span className={`font-medium ${getStatusColor(damage.status)}`}>
-          {getStatusText(damage.status)}
+        <span className={`font-medium ${getStatusColor(damage.isResolved)}`}>
+          {getStatusText(damage.isResolved)}
         </span>
       </td>
       <td className="px-4 py-3 text-sm w-full flex flex-row gap-2 mt-2">
         <button
           className="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
-          disabled={damage.status !== "pending"}
-          onClick={() => handleIssue(damage.id)}
-          title={"Open issue"}
+          disabled={damage.isResolved}
+          onClick={() => handleResolveIssue(damage.id)}
+          title="Mark as resolved"
         >
-          Open
-        </button>
-        <button
-          className="bg-accent text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
-          disabled={damage.status !== "in_progress"}
-          onClick={() => handleIssue(damage.id)}
-          title={"Close issue"}
-        >
-          Close
+          Resolve
         </button>
         <button
           className="bg-danger-500 text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center justify-center gap-1 max-lg:flex-1"
           onClick={() => handleRemoveDamage(damage.id)}
-          title="Remove issue"
+          title="Remove damage report"
         >
           <span className="material-symbols-outlined text-sm leading-none">delete</span>
           <span>Remove</span>
@@ -155,6 +189,32 @@ export default function DamagesManagerPage() {
       </td>
     </tr >
   );
+
+  if (loading) {
+    return (
+      <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg text-gray-600">Loading damage reports...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg text-red-600">Error: {error}</div>
+          <button
+            onClick={fetchDamageReports}
+            className="mt-4 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative bg-background min-h-screen px-4 mt-20">
@@ -171,11 +231,10 @@ export default function DamagesManagerPage() {
                 <TableHeader
                   columns={[
                     'Desk',
-                    'Room',
-                    'Issue',
                     'Description',
-                    'Reported by',
-                    'Date',
+                    'Submitted',
+                    'Resolved',
+                    'Resolved By',
                     'Status',
                     'Actions'
                   ]}
@@ -184,7 +243,7 @@ export default function DamagesManagerPage() {
                   {damages.length > 0 ? (
                     damages.map((damage) => <DamageRow key={damage.id} damage={damage} />)
                   ) : (
-                    <EmptyState colSpan="8" message="No damages found" />
+                    <EmptyState colSpan="7" message="No damage reports found" />
                   )}
                 </tbody>
               </table>

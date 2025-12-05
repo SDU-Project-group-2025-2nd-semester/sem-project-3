@@ -33,6 +33,28 @@ public class BackendContext(DbContextOptions<BackendContext> options) : Identity
             .HasOne(uc => uc.Company)
             .WithMany(c => c.UserMemberships)
             .HasForeignKey(uc => uc.CompanyId);
+
+        // when user deleted - reservations cascade
+        builder.Entity<Reservation>()
+            .HasOne(r => r.User)
+            .WithMany(u => u.Reservations)
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // when user deleted - DamageReport SubmittedBy and ResolvedBy set to null
+        builder.Entity<DamageReport>()
+            .HasOne(dr => dr.SubmittedBy)
+            .WithMany()
+            .HasForeignKey(dr => dr.SubmittedById)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<DamageReport>()
+            .HasOne(dr => dr.ResolvedBy)
+            .WithMany()
+            .HasForeignKey(dr => dr.ResolvedById)
+            .OnDelete(DeleteBehavior.SetNull);
+
+
     }
 
 }

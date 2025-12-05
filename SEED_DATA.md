@@ -13,6 +13,7 @@ All users have **email confirmed** and can log in immediately.
 | jane.doe@techcoworking.com | `JaneDoe123!` | Jane | Doe | c1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
 | bob.smith@innovationhub.com | `BobSmith123!` | Bob | Smith | d1111111-1111-1111-1111-111111111111 | Innovation Hub |
 | alice.johnson@startupcenter.com | `AliceJohnson123!` | Alice | Johnson | e1111111-1111-1111-1111-111111111111 | Startup Center |
+| staff@techcoworking.com | `Staff123!` | Staff | Staffy | f1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
 
 ### User Details
 
@@ -54,6 +55,14 @@ All users have **email confirmed** and can log in immediately.
 - **Sitting Time**: 20 min
 - **Standing Time**: 10 min
 - **Has Reservations**: Yes (future)
+
+#### Staff Staffy
+- **Standing Height**: 750mm
+- **Sitting Height**: 650mm
+- **Health Reminders**: Medium
+- **Sitting Time**: 30 min
+- **Standing Time**: 15 min
+- **Has Reservations**: No
 
 ---
 
