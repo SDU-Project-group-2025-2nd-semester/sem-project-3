@@ -19,7 +19,6 @@ public class AuthController(UserManager<User> userManager, SignInManager<User> s
             Email = dto.Email,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
-            Role = UserRole.User
         };
 
         var result = await userManager.CreateAsync(user, dto.Password);

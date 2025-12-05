@@ -13,6 +13,8 @@ public class Desk
     /// <remarks>
     /// Value is in millimeters
     /// </remarks>
+    
+    public string ReadableId { get; set; } = default!;
     public int Height { get; set; } 
 
     /// <summary>

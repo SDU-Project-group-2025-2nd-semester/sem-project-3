@@ -35,9 +35,30 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
     public async Task<Desk> CreateDeskAsync(Guid companyId, Desk desk)
     {
         if (desk.RoomId == Guid.Empty)
-            throw new ArgumentException("Desk must have a valid room assigned."); //I think it's necessary.
+            throw new ArgumentException("Desk must have a valid room assigned.");
 
         desk.CompanyId = companyId;
+        
+        var room = await dbContext.Rooms
+            .FirstOrDefaultAsync(r => r.Id == desk.RoomId && r.CompanyId == companyId);
+
+        if (room is null)
+            throw new ArgumentException("Room not found.");
+        
+        var roomNumber = 1;
+
+        if (room.ReadableId != null && room.ReadableId.StartsWith("R-") && int.TryParse(room.ReadableId.AsSpan(2), out var parsedNum))
+        {
+            roomNumber = parsedNum;
+        }
+        
+        var desksCount = await dbContext.Desks
+            .CountAsync(d => d.CompanyId == companyId && d.RoomId == desk.RoomId);
+
+        var deskIndex = desksCount + 1;
+        
+        desk.ReadableId = $"D-{roomNumber}{deskIndex:00}";
+        
         dbContext.Desks.Add(desk);
         await dbContext.SaveChangesAsync();
         return desk;

@@ -6,6 +6,8 @@ namespace Backend.Data;
 public class Rooms
 {
     public Guid Id { get; set; }
+    
+    public string ReadableId { get; set; } = default!;
 
     public List<Guid> DeskIds { get; set; }
 

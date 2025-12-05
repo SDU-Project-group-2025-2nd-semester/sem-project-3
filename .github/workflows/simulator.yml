@@ -1,0 +1,34 @@
+name: Deploy Simulators
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: List files in simulator folder (debug)
+        run: ls -la src/boxSimulator
+
+      - name: Build Docker images for all simulators
+        run: |
+          docker compose -f infra/compose/deploy-simulators.docker-compose.yml build --no-cache
+
+      - name: Stop and remove old containers
+        run: |
+          docker compose -f infra/compose/deploy-simulators.docker-compose.yml stop || true
+          docker compose -f infra/compose/deploy-simulators.docker-compose.yml rm -f || true
+
+      - name: Start updated containers
+        run: |
+          docker compose -f infra/compose/deploy-simulators.docker-compose.yml up -d
+
+      - name: Show running containers (for verification)
+        run: docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}" | grep simulator
+

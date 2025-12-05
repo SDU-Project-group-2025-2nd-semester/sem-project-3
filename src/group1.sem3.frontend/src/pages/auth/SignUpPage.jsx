@@ -50,14 +50,8 @@ export default function SignUpPage() {
 
         setLoading(true);
         try {
-            const user = await signup({ firstName, lastName, email, password });
-            if (user.role === 0) {
-                navigate(`/user/homepage`);
-            } else if (user.role === 1) {
-                navigate(`/staff/homepage`);
-            } else if (user.role === 2) {
-                navigate(`/admin/desksManager`);
-            }
+            setLoading(true);
+            await signup({ firstName, lastName, email, password });
         } catch (err) {
             setError(err?.message || "Error on registration.");
         } finally {

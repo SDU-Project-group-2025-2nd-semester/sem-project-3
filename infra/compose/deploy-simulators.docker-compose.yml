@@ -1,0 +1,48 @@
+services:
+  simulator-1:
+    hostname: simulator-1
+    build:
+      context: ../..
+      dockerfile: infra/docker/simulator.new.Dockerfile
+    container_name: simulator-1
+    ports:
+      - "8001:8000"
+    environment:
+      - API_KEY=E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7
+    volumes:
+      - simulator_1_data:/app/data
+    restart: unless-stopped
+
+  simulator-2:
+    hostname: simulator-2
+    build:
+      context: ../..
+      dockerfile: infra/docker/simulator.new.Dockerfile
+    container_name: simulator-2
+    ports:
+      - "8002:8000"
+    environment:
+      - API_KEY=F7H1vM3kQ5rW8zT9xG2pJ6nY4dL0aZ3K
+    volumes:
+      - simulator_2_data:/app/data
+    restart: unless-stopped
+
+  simulator-3:
+    hostname: simulator-3
+    build:
+      context: ../..
+      dockerfile: infra/docker/simulator.new.Dockerfile
+    container_name: simulator-3
+    ports:
+      - "8003:8000"
+    environment:
+      - API_KEY=A3B5C7D9E1F2G4H6I8J0K2L4M6N8O0P2
+    volumes:
+      - simulator_3_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  simulator_1_data:
+  simulator_2_data:
+  simulator_3_data:
+

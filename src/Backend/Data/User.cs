@@ -30,9 +30,6 @@ public class User : IdentityUser
 
     public DateTime AccountCreation { get; set; } = new();
     
-    public UserRole Role { get; set; } = UserRole.User;
-    
-    [JsonIgnore] 
     public List<UserCompany> CompanyMemberships { get; set; } = [];
     
     // TODO: Implement time-series db for tracking user posture over time 

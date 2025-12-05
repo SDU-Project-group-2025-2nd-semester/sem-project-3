@@ -1,9 +1,82 @@
 import { useState } from "react";
-import mockData from '../../assets/admin/UserMockData.json'
+import { get, del } from "../../context/apiClient";
 
 export default function UsersManagerPage() {
-  const users = mockData?.Users || []
-  const staff = mockData?.Staff || []
+  const [users, setUsers] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userReservations, setUserReservations] = useState({});
+
+  useEffect(() => {
+    fetchUserAndStaff();
+  }, []);
+
+  const fetchUserAndStaff = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const allUsers = await get('/users');
+
+      const basicUsers = allUsers.filter(u => u.role == 0);
+      const staffUsers = allUsers.filter(u => u.role == 1);
+
+      setUsers(basicUsers);
+      setStaff(staffUsers);
+
+      await fetchReservationsForUsers(basicUsers);
+    } catch (error) {
+      console.error('Error fetching users: ', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchReservationsForUsers = async (users) => {
+    try {
+      if (users.length === 0) return;
+
+      const companyId = users[0].companyId;
+
+      const allReservations = await get(`/${companyId}/reservation`);
+
+      const reservationsByUser = {};
+      allReservations.forEach(reservation => {
+        if (!reservationsByUser[reservation.userId]) {
+          reservationsByUser[reservation.userId] = [];
+        }
+        reservationsByUser[reservation.userId].push(reservation);
+      });
+
+      setUserReservations(reservationsByUser);
+    } catch (error) {
+      console.error('Error fetching reservations:', error);
+    }
+  };
+
+  const getCurrentReservation = (userId) => {
+    const reservations = userReservations[userId] || [];
+    const now = new Date();
+
+    return reservations.find(r => {
+      const start = new Date(r.startTime);
+      const end = new Date(r.endTime);
+      return start <= now && now <= end;
+    });
+  };
+
+  const getLastReservation = (userId) => {
+    const reservations = userReservations[userId] || [];
+    const past = reservations.filter(r => new Date(r.endTime) < new Date());
+
+    if (past.length === 0) return null;
+
+    return past.sort((a, b) =>
+      new Date(b.endTime).getTime() - new Date(a.endTime).getTime()
+    )[0];
+  };
 
   const formatDate = (iso) => {
     if (!iso) return '_'
@@ -20,14 +93,41 @@ export default function UsersManagerPage() {
     }
   }
 
-  const handleCancelBooking = (userId) => {
-    console.log('Cancel booking for', userId);
-    // TODO: Implement API call
+  const handleCancelReservation = async (userId) => {
+    const currentReservation = getCurrentReservation(userId);
+
+    if (!currentReservation) {
+      alert('No active reservation to cancel');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to cancel this reservation?')) {
+      return;
+    }
+
+    try {
+      const companyId = users.find(u => u.id === userId)?.companyId;
+      await del(`/${companyId}/reservation/${currentReservation.id}`);
+
+      await fetchUserAndStaff();
+    } catch (error) {
+      console.error('Error canceling reservation:', error);
+      alert('Failed to cancel reservation: ' + error.message);
+    }
   };
 
-  const handleRemoveUser = (userId) => {
-    console.log('Remove User for', userId);
-    // TODO: Implement API call
+  const handleRemoveUser = async (userId) => {
+    const user = [...users, ...staff].find(u => u.id === userId);
+    if (!confirm(`Are you sure you want to remove: ${user?.Name || `this user`}?`)) {
+      return;
+    }
+    try {
+      await del(`/users/${userId}`);
+      await fetchUserAndStaff();
+    } catch (error) {
+      console.error(`Error removing user: `, error);
+      alert('Failed to remove user: ' + error.message);
+    }
   };
 
   const TableHeader = ({ columns }) => (
@@ -54,66 +154,75 @@ export default function UsersManagerPage() {
     <span className="font-semibold lg:hidden">{children}: </span>
   );
 
-  const UserRow = ({ user }) => (
-    <tr key={user.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
-      <td className="px-4 py-2 text-sm font-medium max-lg:w-7/8 max-lg:pl-2 max-lg:text-lg">
-        {user.Name}
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600 max-lg:w-full max-lg:py-1">
-        {user.Email}
-      </td>
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <MobileLabel>Current Booked</MobileLabel>
-        <span className={user.CurrentBooked ? "text-gray-600 font-medium" : "text-gray-400"}>
-          {user.CurrentBooked ?? '-'}
-        </span>
-      </td>
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <MobileLabel>Last Booked</MobileLabel>
-        {formatDate(user.LastBook)}
-      </td>
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <MobileLabel>Desk Time</MobileLabel>
-        {user.DeskTime ?? '-'}
-      </td>
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <MobileLabel>Sitting Time</MobileLabel>
-        {user.SittingTime ?? '-'}
-      </td>
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:flex max-lg:flex-row max-lg:gap-2 max-lg:mt-2">
-        <button
-          className="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
-          disabled={!user.CurrentBooked}
-          onClick={() => handleCancelBooking(user.id)}
-          title={!user.CurrentBooked ? "No active booking" : "Cancel booking"}
-        >
-          Cancel Booking
-        </button>
-        <button
-          className="bg-danger-500 text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center justify-center gap-1 max-lg:flex-1"
-          onClick={() => handleRemoveUser(user.id, 'user')}
-          title="Remove user account"
-        >
-          <span className="material-symbols-outlined text-sm leading-none">delete</span>
-          <span>Remove</span>
-        </button>
-      </td>
-    </tr>
-  );
+  const UserRow = ({ user }) => {
+    const currentReservation = getCurrentReservation(user.id);
+    const lastReservation = getLastReservation(user.id);
+
+    return (
+      <tr key={user.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
+        <td className="px-4 py-2 text-sm font-medium max-lg:w-7/8 max-lg:pl-2 max-lg:text-lg">
+          {user.firstName} {user.lastName}
+        </td>
+        <td className="px-4 py-3 text-sm text-gray-600 max-lg:w-full max-lg:py-1">
+          {user.email}
+        </td>
+        <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+          <MobileLabel>Current Reservation</MobileLabel>
+          <span className={currentReservation ? "text-gray-600 font-medium" : "text-gray-400"}>
+            {currentReservation
+              ? `Desk ${currentReservation.deskId} until ${formatDate(currentReservation.endTime)}`
+              : '-'
+            }
+          </span>
+        </td>
+        <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+          <MobileLabel>Last Reservation</MobileLabel>
+          {lastReservation ? formatDate(lastReservation.endTime) : '-'}
+        </td>
+        <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+          <MobileLabel>Desk Time</MobileLabel>
+          {user.sittingTime + user.standingTime} min
+        </td>
+        <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+          <MobileLabel>Sitting Time</MobileLabel>
+          {user.sittingTime ?? 'no time available'} min
+        </td>
+        <td className="px-4 py-3 text-sm max-lg:w-full max-lg:flex max-lg:flex-row max-lg:gap-2 max-lg:mt-2">
+          <button
+            className="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
+            disabled={!currentReservation}
+            onClick={() => handleCancelReservation(user.id)}
+            title={currentReservation ? "Cancel reservation" : "No active reservation"}
+          >
+            Cancel Reservation
+          </button>
+          <button
+            className="bg-danger-500 text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center justify-center gap-1 max-lg:flex-1"
+            onClick={() => handleRemoveUser(user.id)}
+            title="Remove user account"
+          >
+            <span className="material-symbols-outlined text-sm leading-none">delete</span>
+            <span>Remove</span>
+          </button>
+        </td>
+      </tr>
+    );
+  };
 
   const StaffRow = ({ staffMember }) => (
     <tr key={staffMember.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
       <td className="px-4 py-2 text-sm font-medium max-lg:w-7/8 max-lg:pl-2 max-lg:text-lg">
-        {staffMember.Name}
+        {staffMember.firstName} {staffMember.lastName}
       </td>
       <td className="px-4 py-3 text-sm text-gray-600 max-lg:w-full max-lg:py-1">
-        {staffMember.Email}
+        {staffMember.email}
       </td>
       <td className="px-4 py-3 text-sm text-gray-600 max-lg:w-full max-lg:py-1">
         <MobileLabel>Job Description</MobileLabel>
-        {staffMember.JobDescription}
+        {staffMember.Role}
       </td>
-      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+      {/* Working  schedule?*/}
+      {/* <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
         <details className="cursor-pointer group">
           <summary className="text-sm font-medium text-gray-600 hover:text-gray-700 list-none max-lg:font-semibold">
             <span className="inline-flex items-center gap-1">
@@ -136,7 +245,7 @@ export default function UsersManagerPage() {
             )}
           </div>
         </details>
-      </td>
+      </td> */}
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:mt-2">
         <button
           className="bg-danger-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1"
@@ -150,6 +259,31 @@ export default function UsersManagerPage() {
     </tr>
   );
 
+  if (loading) {
+    return (
+      <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg text-gray-600">Loading users...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg text-red-600">Error: {error}</div>
+          <button
+            onClick={fetchUserAndStaff}
+            className="mt-4 px-4 py-2 bg-accent text-white rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative bg-background min-h-screen px-4 mt-20">
@@ -167,8 +301,8 @@ export default function UsersManagerPage() {
                   columns={[
                     'Name',
                     'Email',
-                    'Current Booked',
-                    'Last Book',
+                    'Current Reservation',
+                    'Last Reservation',
                     'Desk Time',
                     'Sitting Time',
                     'Actions'
@@ -199,7 +333,7 @@ export default function UsersManagerPage() {
                     'Name',
                     'Email',
                     'Job Description',
-                    'Working Schedule',
+                    // 'Working Schedule',
                     'Action'
                   ]}
                 />

@@ -27,6 +27,26 @@ class RoomService(ILogger<RoomService> logger, BackendContext dbContext) : IRoom
     public async Task<Rooms> CreateRoomAsync(Guid companyId, Rooms room)
     {
         room.CompanyId = companyId;
+        
+        var existingIds = await dbContext.Rooms
+            .Where(r => r.CompanyId == companyId && r.ReadableId != null)
+            .Select(r => r.ReadableId)
+            .ToListAsync();
+
+        var nextNumber = 1;
+
+        foreach (var rid in existingIds)
+        {
+            if (rid != null && rid.StartsWith("R-") &&
+                int.TryParse(rid.AsSpan(2), out var num) &&
+                num >= nextNumber)
+            {
+                nextNumber = num + 1;
+            }
+        }
+
+        room.ReadableId = $"R-{nextNumber}";
+        
         dbContext.Rooms.Add(room);
         await dbContext.SaveChangesAsync();
         return room;
