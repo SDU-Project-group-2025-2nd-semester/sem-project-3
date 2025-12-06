@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function UserHomePage() {
     
-    const { currentCompany } = useAuth();
+    const { currentCompany, isHydrating } = useAuth();
     const COMPANY_ID = currentCompany?.id;
     const [currentBookings, setCurrentBookings] = useState([]);
     const [recentBookings, setRecentBookings] = useState([]);
@@ -16,12 +16,18 @@ export default function UserHomePage() {
     useEffect(() => {
         const ctrl = new AbortController();
 
-        async function load() {
+        async function load() {            
             if (!COMPANY_ID) {
-                setErr("No company selected");
-                setLoading(false);
+                if (isHydrating) {
+                    setLoading(true);
+                    setErr(undefined);
+                } else {
+                    setErr("No company selected");
+                    setLoading(false);
+                }
                 return;
             }
+
             setLoading(true);
             setErr(undefined);
             try {                
@@ -92,7 +98,7 @@ export default function UserHomePage() {
 
         load();
         return () => ctrl.abort();
-    }, []);
+    }, [COMPANY_ID, isHydrating]);
 
     async function cancelBooking(id) {
         if (!confirm('Are you sure you want to cancel this reservation?')) {
