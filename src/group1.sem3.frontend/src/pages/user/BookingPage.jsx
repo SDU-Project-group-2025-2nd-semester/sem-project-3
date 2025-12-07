@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { get, post, put, del } from "../../context/apiClient";
 
 export default function BookingPage() {   
     const { currentCompany, isHydrating } = useAuth();
@@ -11,11 +12,7 @@ export default function BookingPage() {
         0: 64, 1: 1, 2: 2, 3: 4, 4: 8, 5: 16, 6: 32,
     };
 
-    const rooms = [
-        { id: 1, name: "R-1", tables: ["D-101", "D-102", "D-103", "D-104"], daysOfTheWeek: DayFlag[1] | DayFlag[2] | DayFlag[3] | DayFlag[4] | DayFlag[5] },
-        { id: 2, name: "R-2", tables: ["D-101", "D-102", "D-103", "D-104", "D-105", "D-106", "e", "d", "f", "k"], daysOfTheWeek: DayFlag[6] | DayFlag[0] },
-    ];
-
+    // to be deleted:
     const times = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00"];
     
     function toYmd(d) {
@@ -32,16 +29,18 @@ export default function BookingPage() {
         return str < todayYmd;
     }
 
-    function coerceValidDateStr(str, todayStr) {
-        // If past or invalid, return todayStr; else return str
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return todayStr;
-        return isPastDateStr(str) ? todayStr : str;
-    }
-
     // Today's date (YYYY-MM-DD) for min attribute
     const todayStr = useMemo(() => toYmd(new Date()), []);
-    const [selectedDate, setSelectedDate] = useState(""); // YYYY-MM-DD
+    const [selectedDate, setSelectedDate] = useState("");
     
+    // Raw input the user is typing
+    const [dateInput, setDateInput] = useState("");
+    
+    // Keep input in sync when selectedDate changes programmatically
+    useEffect(() => {
+        setDateInput(selectedDate || "");
+    }, [selectedDate]);
+
     const selectedDateObj = useMemo(
         () => (selectedDate ? new Date(`${selectedDate}T00:00:00`) : null), // as local midnight
         [selectedDate]
@@ -51,65 +50,136 @@ export default function BookingPage() {
         // Prefer valueAsDate when available (avoids timezone pitfalls)
         const v = e.target.value;
         const d = e.target.valueAsDate; // Date | null
+        setDateInput(v);
 
-        // Reset any previous custom error
+        // Don't show errors while typing
         e.target.setCustomValidity("");
 
-        if (!v) {
-            setSelectedDate("");
-            return;
-        }
+        // Only update selectedDate when a full ISO date is present and valid
+        const fullDate = /^\d{4}-\d{2}-\d{2}$/.test(v);
+        if (!fullDate) return;
 
         // Enforce min for both typed and picked values
         if (d) {
             const typedYmd = toYmd(d);
             if (typedYmd < todayStr) {
-                // Change to today
-                setSelectedDate(todayStr);
                 e.target.setCustomValidity("Past dates cannot be chosen.");
                 return;
             }
             setSelectedDate(typedYmd);
             return;
         }
-
-        // Fallback if valueAsDate is null (some browsers/input states)
-        const coerced = coerceValidDateStr(v, todayStr);
-        if (coerced !== v) {
-            // Change to today
-            setSelectedDate(todayStr);
+        
+        // Fallback (no valueAsDate)
+        if (!isPastDateStr(v)) {
+            setSelectedDate(v);
+        } else {
             e.target.setCustomValidity("Past dates cannot be chosen.");
-            return;
         }
-        setSelectedDate(v);
     }
 
     function handleDateBlur(e) {
         // Validate on blur to catch manual edits
         const v = e.target.value;
-        if (!v) return;
-        if (isPastDateStr(v)) {
+        // On blur, finalize the value (invalid/past to today)
+        if (!v) {
+            setSelectedDate("");
+            setDateInput("");
+            e.target.setCustomValidity("");
+            return;
+        }
+        const fullDate = /^\d{4}-\d{2}-\d{2}$/.test(v);
+        if (!fullDate || isPastDateStr(v)) {
             setSelectedDate(todayStr);
+            setDateInput(todayStr);
             e.target.setCustomValidity("Past dates cannot be chosen.");
-            // e.target.reportValidity();
         } else {
             e.target.setCustomValidity("");
+            setSelectedDate(v);
+            setDateInput(v);
         }
     }
     //#endregion
 
+    //#region Room Selection
+    function useRooms(companyId) {
+        const [rooms, setRooms] = useState([]);
+        const [loadingRooms, setLoadingRooms] = useState(false);
+        const [roomsError, setRoomsError] = useState(null);
+
+        useEffect(() => {
+            if (!companyId) {
+                setRooms([]);
+                setLoadingRooms(false);
+                setRoomsError(null);
+                return;
+            }
+
+            let abort = false;
+            setLoadingRooms(true);
+            setRoomsError(null);
+
+            (async () => {
+                try {                    
+                    const data = await get(`/${companyId}/rooms`);
+                    if (!abort) setRooms(Array.isArray(data) ? data : []);
+
+                } catch (err) {
+                    if (!abort) {
+                        setRoomsError(err?.message || String(err));
+                        setRooms([]);
+                    }
+                } finally {
+                    if (!abort) setLoadingRooms(false);
+                }
+            })();
+
+            return () => { abort = true; };
+        }, [companyId]);
+
+        return { rooms, loadingRooms, roomsError };
+    }
+
+    const { rooms, loadingRooms, roomsError } = useRooms(COMPANY_ID);
+
     // Filter rooms that are open on the selected date
     const openRooms = useMemo(() => {
-        if (!selectedDateObj) return [];
-        const jsDow = selectedDateObj.getDay(); // 0..6, Sun..Sat
+        if (!selectedDateObj || !rooms.length) return [];
+        const jsDow = selectedDateObj.getDay(); // 0...6, Sun...Sat
         const dayFlag = DayFlag[jsDow];
-        return rooms.filter((r) => (r.daysOfTheWeek & dayFlag) !== 0);
+        return rooms.filter((r) => {
+            const mask = r?.openingHours?.daysOfTheWeek ?? 0;
+            return (mask & dayFlag) !== 0;
+        });
     }, [rooms, selectedDateObj]);
 
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [selectedTable, setSelectedTable] = useState(null);
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
+  
+    // Auto-select the first open room after date selection
+    useEffect(() => {
+        if (!selectedDateObj || loadingRooms) return;
+
+        if (openRooms.length > 0) {
+            if (!selectedRoom || !openRooms.some(r => r.id === selectedRoom.id)) {
+                setSelectedRoom(openRooms[0]);
+                // Clear further selections when the room changes
+                setSelectedTable(null);
+                setStartTime("");
+                setEndTime("");
+            }
+        } else {
+            // No rooms open for the selected date --> clear the selection
+            if (selectedRoom) {
+                setSelectedRoom(null);
+                setSelectedTable(null);
+                setStartTime("");
+                setEndTime("");
+            }
+        }
+    }, [selectedDateObj, loadingRooms, openRooms, selectedRoom]);
 
     const filteredEndTimes = startTime
         ? times.filter((time) => time > startTime)
@@ -119,6 +189,7 @@ export default function BookingPage() {
 
     function handleSelectDate(value) {
         setSelectedDate(value);
+        setDateInput(value);
         // When date changes, reset downstream selections
         setSelectedRoom(null);
         setSelectedTable(null);
@@ -133,15 +204,60 @@ export default function BookingPage() {
         setStartTime("");
         setEndTime("");
     }
+    //#endregion
+
+    //#region Desk Selection
+    const [desks, setDesks] = useState([]);
+    const [desksLoading, setDesksLoading] = useState(false);
+    const [desksError, setDesksError] = useState(null);
+
+    useEffect(() => {
+        // Clear desks when room changes
+        setDesks([]);
+        setDesksError(null);
+
+        if (!selectedRoom || !COMPANY_ID) {
+            setDesksLoading(false);
+            return;
+        }
+
+        let aborted = false;
+        setDesksLoading(true);
+
+        (async () => {
+            try {
+                const data = await get(`/${COMPANY_ID}/desks/room/${selectedRoom.id}`);
+
+                if (!aborted) setDesks(Array.isArray(data) ? data : []);
+            } catch (err) {
+                if (!aborted) {            
+                    if (err.status === 404) {
+                        // No desks found for this room
+                        setDesks([]);
+                        setDesksError(null);
+                    } else {
+                        setDesksError(err?.message || String(err));
+                        setDesks([]);
+                    }
+                }
+            } finally {
+                if (!aborted) setDesksLoading(false);
+            }
+        })();
+
+        return () => { aborted = true; };
+    }, [selectedRoom, COMPANY_ID]);
+
+    //#endregion
 
     //#region JSX Block
     return (
         <div className="relative bg-background min-h-screen px-4 pt-24 pb-32">
-            {/* First step: Choose a date -- Show the rooms which are open on that day. Before choosing a date, only show disabled Book button*/}
+            {/* First step: Choose a date -- Before choosing a date, only show disabled Book button. */}
             <div className="fixed top-24 left-1/2 transform -translate-x-1/2 w-11/12 max-w-3xl mx-auto mb-6">
                 <input
                     type="date"
-                    value={selectedDate}
+                    value={dateInput}
                     min={todayStr} 
                     onChange={handleDateChange}
                     onBlur={handleDateBlur}
@@ -151,11 +267,15 @@ export default function BookingPage() {
                 />
             </div>
 
-            {/* Show rooms only after date selection */}
+            {/* Second step: Choose a room -- Display rooms that are open on the selected day. */}
             {selectedDate && (
                 <div className="max-w-3xl mx-auto flex gap-4 mb-8 overflow-x-auto pt-16">
-                    {openRooms.length === 0 ? (
-                        <div className="text-gray-600">No rooms are open on this day.</div>
+                    {loadingRooms ? (
+                    <div className="text-gray-600">Loading rooms…</div>
+                    ) : roomsError ? (
+                    <div className="text-red-600">Error loading rooms: {roomsError}</div>
+                    ) : openRooms.length === 0 ? (
+                    <div className="text-gray-600">No rooms are open on this day.</div>
                     ) : (
                         openRooms.map((room) => (
                             <button
@@ -166,28 +286,50 @@ export default function BookingPage() {
                                         : "bg-white text-primary shadow hover:bg-primary/10"
                                     }`}
                             >
-                                {room.name}
+                                {room.readableId}
                             </button>
                         ))
                     )}
                 </div>
             )}
 
-            {/* Show desks only after date and room selection */}
+            {/* Third step: Show the desks for the selected room. Desks that are unavailable for the whole day have a different colour. */}
             {selectedDate && selectedRoom && (
-                <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-3 gap-4 mb-16">
-                    {selectedRoom.tables.map((table) => (
-                        <button
-                            key={table}
-                            onClick={() => setSelectedTable(table)}
-                            className={`p-6 rounded-2xl font-semibold shadow text-center ${selectedTable === table
+                <div className="max-w-3xl mx-auto mb-16">
+                    {desksLoading ? (
+                        <div className="text-gray-600">Loading desks…</div>
+                    ) : desksError ? (
+                        <div className="text-red-600">Error loading desks: {desksError}</div>
+                    ) : !Array.isArray(desks) || desks.length === 0 ? (
+                        <div className="text-gray-600">No desks found for this room.</div>
+                    ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {desks.map((desk) => {
+                        const deskId = desk?.id ?? desk;
+                        const label = desk?.readableId ?? String(deskId);
+
+                        // TODO: Replace with actual availability check
+                        const isUnavailableWholeDay = false;
+
+                        return (
+                            <button
+                                key={deskId}
+                                onClick={() => setSelectedTable(deskId)}
+                                className={`p-6 rounded-2xl font-semibold shadow text-center ${isUnavailableWholeDay
+                                    ? "bg-gray-200 text-gray-600 cursor-not-allowed"
+                                    : selectedTable === deskId
                                     ? "bg-accent text-white"
                                     : "bg-white text-primary hover:bg-accent/10"
                                 }`}
-                        >
-                            {table}
-                        </button>
-                    ))}
+                                disabled={isUnavailableWholeDay}
+                                title={label}
+                                >
+                                {label}
+                            </button>
+                        );
+                        })}
+                    </div>
+                    )}
                 </div>
             )}
 
