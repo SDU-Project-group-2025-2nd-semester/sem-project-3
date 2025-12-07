@@ -141,6 +141,49 @@
         }
       }
     },
+    "/api/Company/{companyId}/simulator": {
+      "put": {
+        "tags": [
+          "Company"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/{companyId}/DamageReport": {
       "get": {
         "tags": [
@@ -1381,6 +1424,19 @@
   },
   "components": {
     "schemas": {
+      "CompanySimulatorSettingsDto": {
+        "type": "object",
+        "properties": {
+          "simulatorLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "simulatorApiKey": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "CreateDamageReportDto": {
         "required": [
           "description",
@@ -1621,6 +1677,12 @@
           },
           "healthRemindersFrequency": {
             "$ref": "#/components/schemas/HealthRemindersFrequency"
+          },
+          "reservations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reservation"
+            }
           },
           "sittingTime": {
             "type": "integer",

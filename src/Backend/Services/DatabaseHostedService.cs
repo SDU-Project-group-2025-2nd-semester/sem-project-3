@@ -54,7 +54,9 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
             Name = "Tech Co-Working Space",
             SecretInviteCode = "TECH2024",
-            Rooms = []
+            Rooms = [],
+            SimulatorLink = null,
+            SimulatorApiKey = null
         };
 
         var innovationHubCompany = new Company
@@ -62,7 +64,9 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
             Name = "Innovation Hub",
             SecretInviteCode = "INNOVATE",
-            Rooms = []
+            Rooms = [],
+            SimulatorLink = null,
+            SimulatorApiKey = null
         };
 
         var startupCenterCompany = new Company
@@ -70,7 +74,9 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
             Name = "Startup Center",
             SecretInviteCode = null, // Email verification required
-            Rooms = []
+            Rooms = [],
+            SimulatorLink = null,
+            SimulatorApiKey = null
         };
 
         context.Companies.AddRange(techCoWorkingCompany, innovationHubCompany, startupCenterCompany);
