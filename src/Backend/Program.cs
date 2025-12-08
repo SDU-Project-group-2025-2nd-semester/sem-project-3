@@ -1,8 +1,10 @@
 using Backend.Data;
 using Backend.Hubs;
 using Backend.Services;
-using Microsoft.AspNetCore.Identity;
+using Hangfire;
+using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
@@ -47,6 +49,27 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
+
+// Add Hangfire services
+
+if (!Bullshit.IsGeneratingOpenApiDocument())
+{
+
+
+    builder.Services.AddHangfire(config => config
+        .UseSimpleAssemblyNameTypeSerializer()
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseRecommendedSerializerSettings()
+        .UseInMemoryStorage()
+
+    );
+
+builder.Services.AddHangfireServer();
+
+}
+//builder.Services.AddScoped<IReservationScheduler, ReservationScheduler>();
+//builder.Services.AddScoped<DeskAdjustmentJob>();
+
 
 builder.Services
     .AddTransient<IDamageReportService, DamageReportService>()
@@ -112,6 +135,21 @@ builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
 var app = builder.Build();
 
+if (!Bullshit.IsGeneratingOpenApiDocument())
+{
+    
+
+// Add Hangfire dashboard (optional, for monitoring)
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new MyAuthorizationFilter() }
+});
+
+
+BackgroundJob.Enqueue(() => Console.WriteLine("Simple!"));
+
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -121,6 +159,8 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/openapi/v1.json", "v1");
     });
 }
+
+
 
 app.UseHttpsRedirection();
 
@@ -135,3 +175,16 @@ app.MapControllers();
 app.MapHub<DeskHub>("/deskHub");
 
 app.Run();
+
+
+
+public class MyAuthorizationFilter : IDashboardAuthorizationFilter
+{
+    public bool Authorize(DashboardContext context)
+    {
+        var httpContext = context.GetHttpContext();
+
+        // Allow all authenticated users to see the Dashboard (potentially dangerous).
+        return true;
+    }
+}
