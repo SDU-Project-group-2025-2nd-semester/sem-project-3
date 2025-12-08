@@ -11,6 +11,8 @@ public interface IUserService
     public Task<bool> UpdateUserAsync(string userId, User updated);
     public Task<bool> UpdateMyInfoAsync(string userId, User updated);
     public Task<bool> DeleteUserAsync(string userId);
+    public Task<List<object>> GetUserCompaniesAsync(string userId);
+    public Task<IEnumerable<object>> GetUsersByCompanyAsync(string adminUserId, Guid? companyId = null);
 }
 
 class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUserService
@@ -83,5 +85,65 @@ class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUser
 
         await dbContext.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<object>> GetUserCompaniesAsync(string userId)
+    {
+        var userCompanies = await dbContext.UserCompanies
+            .Include(uc => uc.Company)
+            .Where(uc => uc.UserId == userId)
+            .Select(uc => new
+            {
+                uc.CompanyId,
+                CompanyName = uc.Company.Name
+            })
+            .ToListAsync<object>();
+
+        return userCompanies;
+    }
+
+    public async Task<IEnumerable<object>> GetUsersByCompanyAsync(string adminUserId, Guid? companyId = null)
+    {
+        if (companyId == null)
+        {
+            var adminUser = await dbContext.Users
+                .Include(u => u.CompanyMemberships)
+                .FirstOrDefaultAsync(u => u.Id == adminUserId);
+
+            if (adminUser?.CompanyMemberships.FirstOrDefault() == null)
+                throw new InvalidOperationException("Admin has no company association");
+
+            companyId = adminUser.CompanyMemberships.First().CompanyId;
+        }
+
+        var hasAccess = await dbContext.UserCompanies
+            .AnyAsync(uc => uc.UserId == adminUserId &&
+                           uc.CompanyId == companyId &&
+                           uc.Role == UserRole.Admin);
+
+        if (!hasAccess)
+            throw new UnauthorizedAccessException("Admin does not have access to this company");
+
+        var users = await dbContext.UserCompanies
+            .Where(uc => uc.CompanyId == companyId)
+            .Include(uc => uc.User)
+            .Select(uc => new
+            {
+                uc.User.Id,
+                uc.User.Email,
+                uc.User.UserName,
+                uc.User.FirstName,
+                uc.User.LastName,
+                uc.User.StandingHeight,
+                uc.User.SittingHeight,
+                uc.User.HealthRemindersFrequency,
+                uc.User.SittingTime,
+                uc.User.StandingTime,
+                uc.User.AccountCreation,
+                Role = (int)uc.Role
+            })
+            .ToListAsync();
+
+        return users;
     }
 }

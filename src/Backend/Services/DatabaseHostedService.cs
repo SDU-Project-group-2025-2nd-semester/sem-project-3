@@ -173,6 +173,24 @@ public class DatabaseMigrationHostedService(
         };
         await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
 
+        var staffUser = new User
+        {
+            Id = "f1111111-1111-1111-1111-111111111111",
+            UserName = "staff@techcoworking.com",
+            Email = "staff@techcoworking.com",
+            EmailConfirmed = true,
+            FirstName = "Staff",
+            LastName = "Staffy",
+            StandingHeight = 750.0,
+            SittingHeight = 650.0,
+            HealthRemindersFrequency = HealthRemindersFrequency.Medium,
+            SittingTime = 30,
+            StandingTime = 15,
+            AccountCreation = DateTime.UtcNow.AddMonths(-6),
+            Reservations = []
+        };
+        await userManager.CreateAsync(staffUser, "Staff123!");
+
         await context.SaveChangesAsync();
 
         // Create Users-Company Relations
@@ -186,9 +204,9 @@ public class DatabaseMigrationHostedService(
             },
             new UserCompany
             {
-                UserId = adminUser.Id,
-                CompanyId = innovationHubCompany.Id,
-                Role = UserRole.Admin
+                UserId = staffUser.Id,
+                CompanyId = techCoWorkingCompany.Id,
+                Role = UserRole.Janitor
             },
             new UserCompany
             {
@@ -475,6 +493,15 @@ public class DatabaseMigrationHostedService(
                 UserId = aliceJohnson.Id,
                 DeskId = desks[7].Id,
                 CompanyId = startupCenterCompany.Id
+            },
+            new Reservation
+            {
+                Id = Guid.Parse("a6666666-6666-6666-6666-666666666666"),
+                Start = now.AddDays(2).Date.AddHours(8),
+                End = now.AddDays(2).Date.AddHours(12),
+                UserId = johnDoe.Id,
+                DeskId = desks[1].Id,
+                CompanyId = techCoWorkingCompany.Id
             }
         };
 
