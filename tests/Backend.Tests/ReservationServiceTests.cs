@@ -41,7 +41,6 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             SittingTime = 30,
             StandingTime = 30,
             AccountCreation = DateTime.UtcNow,
-            Role = UserRole.User,
         };
         
         _testCompany.UserMemberships.Add(new UserCompany
@@ -49,7 +48,8 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             UserId = _testUser.Id,
             User = _testUser,
             CompanyId = _testCompany.Id,
-            Company = _testCompany
+            Company = _testCompany,
+            Role = UserRole.User
         });
 
         _testRoom = new Rooms
@@ -59,7 +59,8 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             CompanyId = _testCompany.Id,
             Company = _testCompany,
             Desks = [],
-            OpeningHours = new OpeningHours()
+            OpeningHours = new OpeningHours(),
+            ReadableId = "R-1"
         };
 
         _testDesk = new Desk
@@ -74,7 +75,8 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             ReservationIds = [],
             Reservations = [],
             Room = _testRoom,
-            Company = _testCompany
+            Company = _testCompany,
+            ReadableId = "D-101"
         };
 
         fixture.DbContext.Companies.Add(_testCompany);
@@ -279,6 +281,15 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             AccountCreation = DateTime.UtcNow
         };
         fixture.DbContext.Users.Add(otherUser);
+        
+        _testCompany.UserMemberships.Add(new UserCompany
+        {
+            UserId = otherUser.Id,
+            User = otherUser,
+            CompanyId = _testCompany.Id,
+            Company = _testCompany,
+            Role = UserRole.User
+        });
 
         var reservation1 = new Reservation
         {

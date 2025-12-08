@@ -2,6 +2,7 @@
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
 
@@ -10,7 +11,7 @@ namespace Backend.Controllers;
 [Authorize]
 public class ReservationController(IReservationService reservationService, BackendContext dbContext) : ControllerBase
 {
-    
+    // Return ReservationViewDto for consistency ?
     [HttpGet]
     [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<List<Reservation>>> GetReservations(
@@ -23,15 +24,39 @@ public class ReservationController(IReservationService reservationService, Backe
         return Ok(await reservationService.GetReservations(companyId, userId, deskId, startDate, endDate));
     }
 
-    [HttpGet("me")]
+    /* [HttpGet("me")]
     public async Task<ActionResult<List<Reservation>>> GetMyReservations(Guid companyId)
     {
 
         var userId = User.GetUserId();
 
         return Ok(await reservationService.GetReservations(companyId, userId));
+    } */
+ 
+    [HttpGet("me")]
+    public async Task<ActionResult<List<ReservationViewDto>>> GetMyReservations(Guid companyId)
+    {
+        var userId = User.GetUserId();
+
+        var reservations = await dbContext.Reservations
+            .Include(r => r.Desk)
+            .ThenInclude(d => d.Room)
+            .Where(r => r.CompanyId == companyId && r.UserId == userId)
+            .Select(r => new ReservationViewDto(
+                r.Id,
+                r.Start,
+                r.End,
+                r.DeskId,
+                r.Desk != null ? r.Desk.ReadableId : null,
+                r.Desk != null ? r.Desk.RoomId : Guid.Empty,
+                r.Desk != null && r.Desk.Room != null ? r.Desk.Room.ReadableId : null
+            ))
+            .ToListAsync();
+
+        return Ok(reservations);
     }
 
+    // Return ReservationViewDto for consistency ?
     [HttpGet("{reservationId}")]
     public async Task<ActionResult<Reservation>> GetReservation(Guid reservationId)
     {
@@ -80,9 +105,14 @@ public class ReservationController(IReservationService reservationService, Backe
             return Unauthorized();
         }
 
-        var isAdmin = currentUser.Role == UserRole.Admin;
+        var membership = currentUser.CompanyMemberships
+            .FirstOrDefault(cm => cm.CompanyId == companyId);
+
+        if (membership == null)
+            return Forbid();
         
-        var isJanitor = currentUser.Role == UserRole.Janitor;
+        var isAdmin = membership.Role == UserRole.Admin;
+        var isJanitor = membership.Role == UserRole.Janitor;
         
         if (!isAdmin && reservation.UserId != currentUserId)
         {

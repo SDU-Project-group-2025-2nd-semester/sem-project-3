@@ -1,95 +1,130 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { post, get } from "./apiClient";
+import { useNavigate, useLocation } from "react-router-dom";
+import { homepagePathForRole } from "../utils/homepage";
 
 const AuthContext = createContext(null);
 
+function pickUser(serverUser) {
+  if (!serverUser) return null;
+  return {
+    id: serverUser.id,
+    email: serverUser.email ?? serverUser.userName,
+    userName: serverUser.userName,
+    firstName: serverUser.firstName,
+    lastName: serverUser.lastName,
+    role: serverUser.companyMemberships?.[0]?.role ?? 0,
+    standingHeight: serverUser.standingHeight,
+    sittingHeight: serverUser.sittingHeight,
+    healthRemindersFrequency: serverUser.healthRemindersFrequency,
+    sittingTime: serverUser.sittingTime,
+    standingTime: serverUser.standingTime,
+  };
+}
+
 export function AuthProvider({ children }) {
-    const [currentUser, setCurrentUser] = useState(null);
-    const base = "https://s3-be-dev.michalvalko.eu/api";
+  const [currentUser, setCurrentUser] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [currentCompany, setCurrentCompany] = useState(null);
 
-    async function login({ email, password }) {
-        const response = await fetch(`${base}/auth/login`, {
-            method: "POST",
-            credentials: "include", 
-            headers: {
-                accept: "*/*",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
-        });    
+  const navigate = useNavigate();
 
-        if (!response.ok) {
-            throw new Error("Login failed");
-        }
+  function initializeCompanies(me) {
+    // build companies list from server payload (companyMemberships)
+    const mapped = (me.companyMemberships ?? []).map(cm => ({
+      id: cm.company.id,
+      name: cm.company.name ?? "Unnamed",
+      role: cm.role
+    }));
+    setCompanies(mapped);
 
-        let data = null;
-        const contentType = response.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
-            try {
-                data = await response.json();
-            } catch {
-                data = null;
-            }
-        }
-
-        const me = await fetch(`${base}/Users/me`, {
-            method: "GET",
-            headers: {
-                accept: "text/plain",
-            },
-            credentials: "include",
-        });
-
-        if (me.ok) {
-            setCurrentUser({
-                email,
-                role: data?.role ?? "user",
-                token: data?.accessToken ?? null,
-            });
-        } else {
-            setCurrentUser({
-                email,
-                role: data?.role ?? "user",
-                token: data?.accessToken ?? null,
-            });
-        }
+    // restore selected company from localStorage or pick first
+    const savedId = localStorage.getItem("currentCompanyId");
+    const initial = mapped.find(c => c.id === savedId) ?? mapped[0] ?? null;
+    if (initial) {
+      setCurrentCompany(initial);
+      localStorage.setItem("currentCompanyId", initial.id);
+    } else {
+      setCurrentCompany(null);
+      localStorage.removeItem("currentCompanyId");
     }
+  }
+  
+  const location = useLocation();
 
-    async function signup({ firstName, lastName, email, password }) {
-        const payload = { email, password, firstName, lastName };
+  // automatically move to homepage if already logged in (but only from login page)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const me = await get("/Users/me");
+        if (!mounted || !me) return;
+        const user = pickUser(me);
+        setCurrentUser(user);
 
-        const response = await fetch("/api/auth/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-            throw new Error("Signup failed");
+        initializeCompanies(me);
+
+        // navigate to homepage only from login/signup pages
+        if (location.pathname === '/' || location.pathname === '/signuppage') {
+          navigate(homepagePathForRole(user?.role));
         }
 
-        await login({ email, password });
-    }
+      } catch {
+        // no session
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
-    async function logout() {
-        const response = await fetch(`${base}/auth/logout`, {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-        });
-        if (!response.ok) {
-            throw new Error("Logout failed");
-        }
-        setCurrentUser(null);
+  // Refresh current user from server (returns picked user or null)
+  async function refreshCurrentUser() {
+    try {
+      const me = await get("/Users/me");
+      const user = pickUser(me);
+      setCurrentUser(user);
+      return user;
+    } catch (err) {
+      // Not authenticated or error � clear local state
+      setCurrentUser(null);
+      return null;
     }
+  }
 
-    return (
-        <AuthContext.Provider value={{ currentUser, login, logout, signup }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  async function login({ email, password }) {
+    await post("/auth/login", { email, password });
+
+    // Refresh user state after successful login
+    const user = await refreshCurrentUser();
+
+    navigate(homepagePathForRole(user?.role));
+
+    initializeCompanies(me);
+
+    return user;
+  }
+
+  async function signup({ firstName, lastName, email, password }) {
+    await post("/auth/register", { email, password, firstName, lastName });
+    await login({ email, password });
+  }
+
+  async function logout() {
+    await post("/auth/logout");
+    setCurrentUser(null);
+    setCompanies([]);
+    setCurrentCompany(null);
+    localStorage.removeItem("currentCompanyId");
+  }
+
+  return (
+    <AuthContext.Provider value={{ currentUser, companies, currentCompany, setCurrentCompany, login, logout, signup }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }
 
 export default AuthProvider;

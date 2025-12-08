@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Reflection.Metadata;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,8 @@ builder.Services.AddOpenApi(options =>
         document.Info.Title = "Backend API";
         document.Info.Version = "v1";
         document.Info.Description = "API for desk reservation system";
+
+        document.Servers?.Clear();
 
         // Add cookie authentication security scheme
         document.Components ??= new OpenApiComponents();
@@ -53,6 +56,7 @@ builder.Services
     .AddTransient<IReservationService, ReservationService>()
     .AddTransient<IDeskApi, DeskApi>()
     .AddSingleton<IBackendMqttClient,BackendMqttClient>()
+    .AddTransient<IRoomService, RoomService>()
     .AddTransient<IDeskControlService,DeskControlService>()
     .AddTransient<IDeskService, DeskService>()
     .AddTransient<IUserService,UserService>()
@@ -67,7 +71,13 @@ builder.Services.AddHttpClient("DeskApi", client =>
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Handle circular references by ignoring cycles
+        // This prevents infinite loops when serializing objects with bidirectional relationships
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Really permissive defaults, need to restrict later on
 builder.Services.AddCors(options =>

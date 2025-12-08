@@ -43,7 +43,6 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             SittingTime = 30,
             StandingTime = 30,
             AccountCreation = DateTime.UtcNow,
-            Role = UserRole.User,
         };
 
         _testResolver = new User
@@ -59,7 +58,6 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             SittingTime = 30,
             StandingTime = 30,
             AccountCreation = DateTime.UtcNow,
-            Role = UserRole.Admin,
         };
         
         _testCompany.UserMemberships.Add(new UserCompany
@@ -68,6 +66,7 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             User = _testUser,
             CompanyId = _testCompany.Id,
             Company = _testCompany,
+            Role = UserRole.User
         });
 
         _testCompany.UserMemberships.Add(new UserCompany
@@ -76,6 +75,7 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             User = _testResolver,
             CompanyId = _testCompany.Id,
             Company = _testCompany,
+            Role = UserRole.Admin
         });
 
         _testRoom = new Rooms
@@ -85,7 +85,8 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             CompanyId = _testCompany.Id,
             Company = _testCompany,
             Desks = [],
-            OpeningHours = new OpeningHours()
+            OpeningHours = new OpeningHours(),
+            ReadableId = "R-1"
         };
 
         _testDesk = new Desk
@@ -100,7 +101,8 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             ReservationIds = [],
             Reservations = [],
             Room = _testRoom,
-            Company = _testCompany
+            Company = _testCompany,
+            ReadableId = "D-101"
         };
 
         fixture.DbContext.Companies.Add(_testCompany);

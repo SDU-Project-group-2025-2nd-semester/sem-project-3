@@ -50,7 +50,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
 
     [HttpPut("{deskId}")]
     [RequireRole(UserRole.Admin, UserRole.Janitor)]
-    public async Task<IActionResult> UpdateDesk(Guid companyId, Guid deskId, [FromBody] Desk updated)
+    public async Task<IActionResult> UpdateDesk(Guid companyId, Guid deskId, [FromBody] UpdateDeskDto updated)
     {
         var updatedSuccessfully = await deskService.UpdateDeskAsync(companyId, deskId, updated);
 

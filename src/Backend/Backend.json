@@ -944,7 +944,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               },
@@ -952,7 +952,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               },
@@ -960,7 +960,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               }
@@ -1321,6 +1321,26 @@
           }
         }
       },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "put": {
         "tags": [
           "Users"
@@ -1358,6 +1378,44 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1525,6 +1583,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "readableId": {
+            "type": "string"
+          },
           "height": {
             "type": "integer",
             "format": "int32"
@@ -1633,12 +1694,57 @@
           }
         }
       },
+      "ReservationViewDto": {
+        "required": [
+          "id",
+          "start",
+          "end",
+          "deskId",
+          "deskLabel",
+          "roomId",
+          "roomLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deskLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomLabel": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "Rooms": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "readableId": {
+            "type": "string"
           },
           "deskIds": {
             "type": "array",
@@ -1696,8 +1802,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "role": {
-            "$ref": "#/components/schemas/UserRole"
+          "companyMemberships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserCompany"
+            }
           },
           "id": {
             "type": "string",
@@ -1755,6 +1864,27 @@
           "accessFailedCount": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "UserCompany": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company": {
+            "$ref": "#/components/schemas/Company"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
           }
         }
       },
