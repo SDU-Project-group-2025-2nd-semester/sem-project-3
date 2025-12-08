@@ -142,7 +142,7 @@ export default function UserHomePage() {
                     <div className="flex flex-wrap gap-4">
                         {currentBookings.map((booking) => (
                             <div key={booking.id}
-                                className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center w-full"
+                                className="bg-white rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4"
                             >
 
                             <Link to="/user/desk" 
@@ -169,7 +169,7 @@ export default function UserHomePage() {
                             </Link>
 
                             <button
-                            className="mt-4 sm:mt-0 ml-4 sm:ml-0 bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition"
+                            className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition shrink-0"
                             onClick={(e) => cancelBooking(booking.id)}>
                             Cancel
                             </button>
@@ -192,24 +192,25 @@ export default function UserHomePage() {
 
                     <div className="flex flex-wrap gap-4">
                         {recentBookings.map((booking) => (
-                            <Link to="/user/desk" key={booking.id}>
-                                <div
-                                    className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
-                                >
-                                    <div>
-                                        <p className="text-primary font-semibold">
-                                            Desk: {booking.desk}
-                                        </p>
-                                        <p className="text-primary font-semibold">
-                                            Room: {booking.room ?? "-"}
-                                        </p>
-                                    </div>
-                                    {/* Rebook button, to be implemented */}
-                                    <button className="mt-4 sm:mt-0 ml-4 sm:ml-0 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
-                                        Rebook
-                                    </button>
+                            <div
+                                className="bg-white rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4"
+                            >
+                                <div>
+                                    <p className="text-primary font-semibold">
+                                        Desk: {booking.desk}
+                                    </p>
+                                    <p className="text-primary font-semibold">
+                                        Room: {booking.room ?? "-"}
+                                    </p>
                                 </div>
-                            </Link>
+                                {/* Rebook button, to be implemented */}
+                                <Link
+                                    to="/user/booking"
+                                    className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition shrink-0"
+                                >
+                                    Rebook
+                                </Link>
+                            </div>
                         ))}   
                     </div>
                 </section>
