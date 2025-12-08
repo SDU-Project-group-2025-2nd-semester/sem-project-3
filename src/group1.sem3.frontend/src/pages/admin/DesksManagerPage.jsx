@@ -7,7 +7,6 @@ export default function DesksManagerPage() {
 
     const [activeTab, setActiveTab] = useState('open');
     const [activeRoom, setActiveRoom] = useState(null);
-    const [showNewDeskForm, setShowNewDeskForm] = useState(false);
     const [showNewRoomForm, setShowNewRoomForm] = useState(false);
     const [desks, setDesks] = useState([]);
     const [rooms, setRooms] = useState([]);
@@ -15,9 +14,6 @@ export default function DesksManagerPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [companyId, setCompanyId] = useState(null);
-
-    const [newDeskName, setNewDeskName] = useState('');
-    const [newDeskAvailable, setNewDeskAvailable] = useState(true);
 
     const [newRoomName, setNewRoomName] = useState('');
     const [newRoomFloor, setNewRoomFloor] = useState('');
@@ -170,32 +166,6 @@ export default function DesksManagerPage() {
             console.error('Error saving simulator:', error);
             alert('Failed to save simulator: ' + error.message);
         }
-    };
-
-    const handleSaveNewDesk = async (e) => {
-        e.preventDefault();
-
-        try {
-            const newDesk = {
-                name: newDeskName,
-                isAvailable: newDeskAvailable,
-                roomId: activeRoom,
-                currentHeight: DEFAULT_DESK_HEIGHT,
-            };
-
-            await post(`/${companyId}/desks`, newDesk);
-            await fetchDesksForRoom(activeRoom);
-            handleCancelNewDesk();
-        } catch (error) {
-            console.error('Error creating desk:', error);
-            alert('Failed to create desk: ' + error.message);
-        }
-    };
-
-    const handleCancelNewDesk = () => {
-        setNewDeskName('');
-        setNewDeskAvailable(true);
-        setShowNewDeskForm(false);
     };
 
     const handleSaveNewRoom = async (e) => {
