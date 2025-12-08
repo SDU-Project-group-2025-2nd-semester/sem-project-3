@@ -9,7 +9,6 @@ import AdminSettingsPage from "./pages/staff/StaffSettingsPage";
 import BookingPage from "./pages/user/BookingPage";
 import UsersManagerPage from "./pages/admin/UsersManagerPage";
 import DamagesManagerPage from "./pages/admin/DamagesManagerPage";
-import ProfilesManagerPage from "./pages/admin/ProfilesManagerPage";
 import DesksManagerPage from "./pages/admin/DesksManagerPage";
 import HealthStatsManagerPage from "./pages/admin/HealthStatsManagerPage";
 import Header from "./components/Header";
@@ -41,7 +40,6 @@ export default function App() {
                         <Route path="/admin/homepage" element={<UsersManagerPage />} />
                         <Route path="/admin/usersManager" element={<UsersManagerPage />} />
                         <Route path="/admin/damagesManager" element={<DamagesManagerPage />} />
-                        <Route path="/admin/profilesManager" element={<ProfilesManagerPage />} />
                         <Route path="/admin/desksManager" element={<DesksManagerPage />} />
                         <Route path="/admin/healthStatsManager" element={<HealthStatsManagerPage />} />
                         <Route path="/user/scan" element={<Scanning />} />
