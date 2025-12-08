@@ -15,6 +15,55 @@ public interface IDeskControlService
     Task<int?> GetCurrentDeskHeightAsync(string macAddress);
 }
 
+public class DeskLedService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (Bullshit.IsGeneratingOpenApiDocument())
+        {
+            return;
+        }
+
+        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // HACK: Wait a minute before starting to allow db migrations to complete
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            using var scope = serviceProvider.CreateScope();
+
+            var deskApi = scope.ServiceProvider.GetRequiredService<IDeskApi>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+
+            var desks = await dbContext.Desks.ToListAsync(stoppingToken);
+            foreach (var desk in desks)
+            {
+                try
+                {
+                    bool isOccupied = await dbContext.Reservations
+                        .AnyAsync(r => r.DeskId == desk.Id &&
+                                       r.Start <= DateTime.UtcNow &&
+                                       r.End >= DateTime.UtcNow, stoppingToken);
+
+                    if (isOccupied)
+                    {
+                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/red");
+                    }
+                    else
+                    {
+                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/green");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error setting LED for desk {DeskId}", desk.Id);
+                }
+            }
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+        }
+    }
+}
+
+
 public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -33,7 +82,7 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
             var deskApi = scope.ServiceProvider.GetRequiredService<IDeskApi>();
             var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
 
-            var desks = await dbContext.Desks.Include(desk => desk.Metadata).ToListAsync(stoppingToken);
+            var desks = await dbContext.Desks.ToListAsync(stoppingToken);
             foreach (var desk in desks)
             {
                 try

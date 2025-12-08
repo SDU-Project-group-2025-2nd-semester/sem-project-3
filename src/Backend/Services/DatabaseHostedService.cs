@@ -405,8 +405,8 @@ public class DatabaseMigrationHostedService(
             new Reservation
             {
                 Id = Guid.Parse("a1111111-1111-1111-1111-111111111111"),
-                Start = now.AddDays(-7).Date.AddHours(9),
-                End = now.AddDays(-7).Date.AddHours(17),
+                Start = now.AddHours(-3),
+                End = now.AddHours(3),
                 UserId = johnDoe.Id,
                 DeskId = desks[0].Id,
                 CompanyId = techCoWorkingCompany.Id

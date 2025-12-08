@@ -59,7 +59,8 @@ builder.Services
     .AddSignalR();;
 
 builder.Services.AddHostedService<MqttHostedService>()
-    .AddHostedService<DeskHeightPullingService>();
+    .AddHostedService<DeskHeightPullingService>()
+    .AddHostedService<DeskLedService>();
 
 builder.Services.AddHttpClient("DeskApi", client =>
 {
