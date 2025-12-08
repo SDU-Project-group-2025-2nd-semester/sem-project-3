@@ -349,16 +349,21 @@ export default function BookingPage() {
         return slots;
     }
 
-    // True if reservations fully cover the opening window (no gaps).
-    function isFullyBooked(reservations, openStart, openEnd) {
+    // Compute merged busy intervals for a set of reservations within opening window
+    function getMergedBusyIntervals(reservations, openStart, openEnd) {
         const clipped = reservations
             .map(r => clipInterval(r.start, r.end, openStart, openEnd))
             .filter(Boolean)
             .sort((a, b) => a.start - b.start);
+        return mergeIntervals(clipped);
+    }
 
-        if (clipped.length === 0) return false;
+    // True if reservations fully cover the opening window (no gaps).
+    function isFullyBooked(reservations, openStart, openEnd) {
+        const merged = getMergedBusyIntervals(reservations, openStart, openEnd);
 
-        const merged = mergeIntervals(clipped);
+        if (merged.length === 0) return false;
+
         const first = merged[0];
         const last = merged[merged.length - 1];
 
@@ -368,28 +373,27 @@ export default function BookingPage() {
     // Is the selected date today? 
     const isToday = useMemo(() => {
         if (!selectedDate) return false;
-        const localTodayStr = String(new Date().getFullYear()).padStart(4, "0")
-            + "-" + String(new Date().getMonth() + 1).padStart(2, "0")
-            + "-" + String(new Date().getDate()).padStart(2, "0");
-        return selectedDate === localTodayStr;
+        return selectedDate === toYmd(new Date());
     }, [selectedDate]);
+
+    const openingWindow = useMemo(() => {
+        if (!selectedRoom || !selectedDate) return null;
+        const openHHMM  = toHHMMFromBackendTimeString(selectedRoom?.openingHours?.openingTime);
+        const closeHHMM = toHHMMFromBackendTimeString(selectedRoom?.openingHours?.closingTime);
+        return {
+            openStart: dateAtHHMM(selectedDate, openHHMM),
+            openEnd: dateAtHHMM(selectedDate, closeHHMM),
+        };
+    }, [selectedRoom, selectedDate]);
 
     // Available intervals for the selected desk on the selected day
     const availableIntervals = useMemo(() => {
-        if (!selectedRoom || !selectedTable || !selectedDate) return [];
+        if (!selectedRoom || !selectedTable || !selectedDate || !openingWindow) return [];
 
-        const openHHMM  = toHHMMFromBackendTimeString(selectedRoom?.openingHours?.openingTime);
-        const closeHHMM = toHHMMFromBackendTimeString(selectedRoom?.openingHours?.closingTime);
-        const openStart = dateAtHHMM(selectedDate, openHHMM);   // local
-        const openEnd   = dateAtHHMM(selectedDate, closeHHMM);  // local
+        const { openStart, openEnd} = openingWindow;
 
         const res = (selectedTable?.id && reservationsByDesk[selectedTable.id]) ? reservationsByDesk[selectedTable.id] : [];
-        const clipped = res
-            .map(r => clipInterval(r.start, r.end, openStart, openEnd))
-            .filter(Boolean)
-            .sort((a, b) => a.start - b.start);
-
-        const mergedBusy = mergeIntervals(clipped);
+        const mergedBusy = getMergedBusyIntervals(res, openStart, openEnd);
         let slots = complementIntervals(openStart, openEnd, mergedBusy);
 
         // If the date is today: only show future hours
@@ -402,7 +406,7 @@ export default function BookingPage() {
         }
 
         return slots;
-    }, [selectedRoom, selectedTable, selectedDate, reservationsByDesk, isToday]);
+    }, [selectedRoom, selectedTable, selectedDate, reservationsByDesk, isToday, openingWindow]);
     
     // Generate "HH:MM" ticks from intervals (rounded up to step)
     function generateTicksFromIntervals(intervals, stepMinutes = 15) {
@@ -583,10 +587,8 @@ export default function BookingPage() {
                         const label = desk?.readableId ?? String(deskId);
 
                         // Opening window for the selected date (local)
-                        const openHHMM  = toHHMMFromBackendTimeString(selectedRoom?.openingHours?.openingTime);
-                        const closeHHMM = toHHMMFromBackendTimeString(selectedRoom?.openingHours?.closingTime);
-                        const openStart = dateAtHHMM(selectedDate, openHHMM);
-                        const openEnd   = dateAtHHMM(selectedDate, closeHHMM);
+                        const { openStart, openEnd } = openingWindow || { openStart: null, openEnd: null };
+                        if (!openStart || !openEnd) return null;
 
                         // Reservations for this desk
                         const res = reservationsByDesk[deskId] || [];
