@@ -56,7 +56,8 @@ export default function UserHomePage() {
                     const date = start.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
                     const time = `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}-${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
                     return {
-                        id: r.id,                      
+                        id: r.id,
+                        deskId: r.deskId,                     
                         desk: r.deskLabel ?? r.deskId,         // shows id until label exists
                         room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
@@ -87,6 +88,7 @@ export default function UserHomePage() {
 
                     return {
                         id: r.id, // uses reservation id as key; could also use deskId
+                        deskId: r.deskId,
                         desk: r.deskLabel ?? r.deskId,         // shows id until label exists
                         room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
@@ -146,6 +148,7 @@ export default function UserHomePage() {
                             <Link to="/user/desk" 
                             state={{
                                 reservationId: booking.id,
+                                deksId: booking.deskId,
                                 desk: booking.desk,
                                 room: booking.room ?? "-",
                                 date: booking.date,
