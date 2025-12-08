@@ -25,7 +25,9 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             Id = Guid.NewGuid(),
             Name = "Test Company",
             UserMemberships = [],
-            Rooms = []
+            Rooms = [],
+            SimulatorLink = null,
+            SimulatorApiKey = null
         };
 
         _testUser = new User

@@ -141,6 +141,49 @@
         }
       }
     },
+    "/api/Company/{companyId}/simulator": {
+      "put": {
+        "tags": [
+          "Company"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/{companyId}/DamageReport": {
       "get": {
         "tags": [
@@ -1439,27 +1482,14 @@
   },
   "components": {
     "schemas": {
-      "Company": {
-        "required": [
-          "name"
-        ],
+      "CompanySimulatorSettingsDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "simulatorLink": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
           },
-          "name": {
-            "maxLength": 100,
-            "type": "string"
-          },
-          "rooms": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Rooms"
-            }
-          },
-          "secretInviteCode": {
+          "simulatorApiKey": {
             "type": "string",
             "nullable": true
           }
