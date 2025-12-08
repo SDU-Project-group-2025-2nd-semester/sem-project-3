@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
+using System.Security.Claims;
 
 namespace Backend.Controllers;
 
@@ -27,10 +28,24 @@ public class UsersController(IUserService userService) : ControllerBase
 
     [HttpGet]
     [RequireRole(UserRole.Admin)]
-    public async Task<ActionResult<List<User>>> GetAllUsers()
+    public async Task<ActionResult<IEnumerable<object>>> GetUsers([FromQuery] Guid? companyId)
     {
-        var users = await userService.GetAllUsersAsync();
-        return Ok(users);
+        try
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (currentUserId == null) return Unauthorized();
+
+            var users = await userService.GetUsersByCompanyAsync(currentUserId, companyId);
+            return Ok(users);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 
     [HttpDelete("{userId}")]
@@ -67,6 +82,15 @@ public class UsersController(IUserService userService) : ControllerBase
             return NotFound();
 
         return Ok(user);
+    }
+
+    [HttpGet("me/companies")]
+    public async Task<ActionResult> GetMyCompanies()
+    {
+        var currentUserId = User.GetUserId();
+        var companies = await userService.GetUserCompaniesAsync(currentUserId);
+
+        return Ok(companies);
     }
 
     [HttpPut("me")]

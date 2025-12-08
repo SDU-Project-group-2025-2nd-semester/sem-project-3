@@ -34,6 +34,7 @@ export default function Sidebar({ isOpen, onClose }) {
             { to: `/admin/desksManager`, icon: "grid", label: "Desks" },
             { to: `/admin/healthStatsManager`, icon: "bar-chart", label: "Statistics" },
             { to: `/admin/damagesManager`, icon: "exclamation-triangle", label: "Damages" }, 
+            { to: `/admin/settings`, icon: "person", label: "Profile" },
         ],
     };
 

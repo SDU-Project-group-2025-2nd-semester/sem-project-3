@@ -23,7 +23,9 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             Id = Guid.NewGuid(),
             Name = "Test Company",
             UserMemberships = new List<UserCompany>(),
-            Rooms = []
+            Rooms = [],
+            SimulatorLink = null,
+            SimulatorApiKey = null
         };
 
         _testUser = new User

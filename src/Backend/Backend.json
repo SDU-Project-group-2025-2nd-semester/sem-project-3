@@ -141,6 +141,49 @@
         }
       }
     },
+    "/api/Company/{companyId}/simulator": {
+      "put": {
+        "tags": [
+          "Company"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/{companyId}/DamageReport": {
       "get": {
         "tags": [
@@ -1344,32 +1387,33 @@
         "tags": [
           "Users"
         ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/User"
-                  }
+                  "type": "array"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/User"
-                  }
+                  "type": "array"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/User"
-                  }
+                  "type": "array"
                 }
               }
             }
@@ -1435,31 +1479,30 @@
           }
         }
       }
+    },
+    "/api/Users/me/companies": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
-      "Company": {
-        "required": [
-          "name"
-        ],
+      "CompanySimulatorSettingsDto": {
         "type": "object",
         "properties": {
-          "id": {
+          "simulatorLink": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
           },
-          "name": {
-            "maxLength": 100,
-            "type": "string"
-          },
-          "rooms": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Rooms"
-            }
-          },
-          "secretInviteCode": {
+          "simulatorApiKey": {
             "type": "string",
             "nullable": true
           }
