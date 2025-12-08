@@ -1,5 +1,5 @@
 const BASE = (() => {
-  return "https://s3-be-dev.michalvalko.eu/api"; // "https://localhost:8081/api";
+  return "https://localhost:8081/api";
 })();
 
 async function parseResponse(res) {
