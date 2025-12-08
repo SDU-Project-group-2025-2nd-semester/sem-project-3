@@ -335,9 +335,7 @@ export default function DesksManagerPage() {
     const Simulator = () => {
         return (
             <div className="bg-white rounded-2xl overflow-hidden mb-6">
-                <div className="flex items-center justify-between p-6">
-                    <h1 className="text-3xl font-semibold text-gray-800">Simulator Management</h1>
-                </div>
+                <h1 className="text-3xl font-semibold text-gray-800 py-6">Simulator Management</h1>
                 <form onSubmit={handleSaveSimulator} className="bg-white rounded-2xl shadow-sm border border-gray-150 p-6 max-w-md">
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -415,12 +413,11 @@ export default function DesksManagerPage() {
                 <Simulator />
 
                 <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-semibold text-gray-800">Desk Management</h1>
+                    <h1 className="text-3xl font-semibold text-gray-800">Room Management</h1>
                 </div>
 
                 {/* Room Management */}
                 <section>
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">Room Management</h2>
                     <div className="flex gap-2 flex-wrap mb-6">
                         {rooms.map(room => (
                             <RoomButton key={room.id} roomId={room.id} label={room.readableId || 'Unknown Room'} />
@@ -436,21 +433,35 @@ export default function DesksManagerPage() {
                         </button>
                     </div>
 
+                    {/* Info card */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span className="text-gray-600">Status:</span>
+                                <span className={`ml-2 font-semibold capitalize ${isRoomOpen(currentRoom) ? 'text-success-600'
+                                    : currentRoom?.currentStatus === 'maintenance' ? 'text-warning-600'
+                                        : 'text-danger-600'
+                                    }`}>
+                                    {isRoomOpen(currentRoom) ? 'open'
+                                        : currentRoom?.currentStatus === 'maintenance' ? 'maintenance'
+                                            : 'closed'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-gray-600">Desks:</span>
+                                <span className="ml-2 font-semibold">
+                                    {desks.filter(d => d.roomId === currentRoom?.id).length}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Desks table*/}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
                         <div className="flex items-center justify-between p-4 border-b border-gray-100">
                             <h3 className="text-lg font-semibold text-gray-700">
-                                Desks in {currentRoom?.readableId || 'Unknown Room'}
+                                Desks
                             </h3>
-                            <button
-                                onClick={() => setShowNewDeskForm(!showNewDeskForm)}
-                                className="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-white hover:bg-accent-600 transition-all inline-flex items-center gap-2"
-                            >
-                                <span className="material-symbols-outlined text-base">
-                                    {showNewDeskForm ? 'close' : 'add'}
-                                </span>
-                                <span>Desk</span>
-                            </button>
                         </div>
 
                         <div className="overflow-x-auto">
@@ -521,58 +532,6 @@ export default function DesksManagerPage() {
                         </div>
                     </div>
 
-                    {/* New Desk form*/}
-                    {showNewDeskForm && activeRoom && (
-                        <form onSubmit={handleSaveNewDesk} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">New Desk</h3>
-
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="Desk name"
-                                    value={newDeskName}
-                                    onChange={(e) => setNewDeskName(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                                />
-                            </div>
-
-                            <div className="mb-6">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                    <div className="relative">
-                                        <input
-                                            type="checkbox"
-                                            checked={newDeskAvailable}
-                                            onChange={(e) => setNewDeskAvailable(e.target.checked)}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-accent transition-colors"></div>
-                                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                                    </div>
-                                    <span className="text-sm font-medium text-gray-700">Available</span>
-                                </label>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    type="submit"
-                                    className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
-                                >
-                                    Save
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleCancelNewDesk}
-                                    className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    )}
 
                     {/* New Room form*/}
                     {showNewRoomForm && (
@@ -640,44 +599,6 @@ export default function DesksManagerPage() {
                             </div>
                         </form>
                     )}
-                </section>
-
-                {/* Room Control */}
-                <section>
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                        {currentRoom?.readableId || 'Unknown Room'} Control
-                    </h2>
-
-                    {/* Info card */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                                <span className="text-gray-600">Floor:</span>
-                                <span className="ml-2 font-semibold">{currentRoom?.floor || 'N/A'}</span>
-                            </div>
-                            <div>
-                                <span className="text-gray-600">Capacity:</span>
-                                <span className="ml-2 font-semibold">{currentRoom?.capacity || 'N/A'}</span>
-                            </div>
-                            <div>
-                                <span className="text-gray-600">Status:</span>
-                                <span className={`ml-2 font-semibold capitalize ${isRoomOpen(currentRoom) ? 'text-success-600'
-                                    : currentRoom?.currentStatus === 'maintenance' ? 'text-warning-600'
-                                        : 'text-danger-600'
-                                    }`}>
-                                    {isRoomOpen(currentRoom) ? 'open'
-                                        : currentRoom?.currentStatus === 'maintenance' ? 'maintenance'
-                                            : 'closed'}
-                                </span>
-                            </div>
-                            <div>
-                                <span className="text-gray-600">Desks:</span>
-                                <span className="ml-2 font-semibold">
-                                    {desks.filter(d => d.roomId === currentRoom?.id).length}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
                 </section>
             </main>
         </div>
