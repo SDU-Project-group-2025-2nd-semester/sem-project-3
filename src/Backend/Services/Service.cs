@@ -33,12 +33,19 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
             var deskApi = scope.ServiceProvider.GetRequiredService<IDeskApi>();
             var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
 
-            var desks = await dbContext.Desks.ToListAsync(stoppingToken);
+            var desks = await dbContext.Desks.Include(desk => desk.Metadata).ToListAsync(stoppingToken);
             foreach (var desk in desks)
             {
                 try
                 {
                     var currentState = await deskApi.GetDeskState(desk.MacAddress);
+
+                    desk.Metadata.IsOverloadProtectionDown = currentState.IsOverloadProtectionDown;
+                    desk.Metadata.IsAntiCollision = currentState.IsAntiCollision;
+                    desk.Metadata.IsOverloadProtectionUp = currentState.IsOverloadProtectionUp;
+                    desk.Metadata.Status = currentState.Status;
+                    desk.Metadata.IsPositionLost = currentState.IsPositionLost;
+
                     if (currentState.PositionMm == desk.Height)
                     {
                         // Just for sake of testing - will be more complicated later
@@ -414,4 +421,23 @@ public class LastError
     public int TimeS { get; set; }
     [JsonPropertyName("errorCode")]
     public int ErrorCode { get; set; }
+}
+
+public class DeskMetadata
+{
+    public Config Config { get; set; }
+
+    public Usage Usage { get; set; }
+
+    public List<LastError> LastErrors { get; set; }
+
+    public string Status { get; set; }
+
+    public bool IsPositionLost { get; set; }
+
+    public bool IsOverloadProtectionUp { get; set; }
+    
+    public bool IsOverloadProtectionDown { get; set; }
+
+    public bool IsAntiCollision { get; set; }
 }

@@ -1381,6 +1381,17 @@
   },
   "components": {
     "schemas": {
+      "Config": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          }
+        }
+      },
       "CreateDamageReportDto": {
         "required": [
           "description",
@@ -1489,6 +1500,9 @@
             "maxLength": 17,
             "type": "string"
           },
+          "metadata": {
+            "$ref": "#/components/schemas/DeskMetadata"
+          },
           "roomId": {
             "type": "string",
             "format": "uuid"
@@ -1506,8 +1520,53 @@
           }
         }
       },
+      "DeskMetadata": {
+        "type": "object",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/Config"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          },
+          "lastErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LastError"
+            }
+          },
+          "status": {
+            "type": "string"
+          },
+          "isPositionLost": {
+            "type": "boolean"
+          },
+          "isOverloadProtectionUp": {
+            "type": "boolean"
+          },
+          "isOverloadProtectionDown": {
+            "type": "boolean"
+          },
+          "isAntiCollision": {
+            "type": "boolean"
+          }
+        }
+      },
       "HealthRemindersFrequency": {
         "type": "integer"
+      },
+      "LastError": {
+        "type": "object",
+        "properties": {
+          "timeS": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorCode": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "LoginDto": {
         "type": "object",
@@ -1601,6 +1660,19 @@
           "companyId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "Usage": {
+        "type": "object",
+        "properties": {
+          "activationsCounter": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sitStandCounter": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
