@@ -10,6 +10,8 @@ public class DamageReport
     [MaxLength(512)]
     public string Description { get; set; } = string.Empty;
 
+    public string Issue { get; set; } = string.Empty;
+
     public DateTime SubmitTime { get; set; } = DateTime.UtcNow;
 
     public DateTime? ResolveTime { get; set; }
@@ -44,6 +46,7 @@ public class DamageReport
         new()
         {
             Description = dto.Description,
+            Issue = dto.Issue,
             DeskId = dto.DeskId,
             IsResolved = false
         };
