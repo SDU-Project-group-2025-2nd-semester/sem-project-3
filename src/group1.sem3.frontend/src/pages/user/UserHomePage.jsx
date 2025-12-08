@@ -41,7 +41,14 @@ export default function UserHomePage() {
                 const now = new Date();
 
                 // 'Current bookings' --> the end of the booking is in the future
-                const futurereservations = (myreservations ?? []).filter(r => new Date(r.end) > now);
+                const futurereservations = (myreservations ?? []).filter(r => new Date(r.end) > now)
+                .sort((a, b) => {
+                    const sa = new Date(a.start).getTime();
+                    const sb = new Date(b.start).getTime();
+                    if (sa !== sb) return sa - sb; // earlier start first
+                    // earlier end first
+                    return new Date(a.end).getTime() - new Date(b.end).getTime();
+                });
 
                 const currentMapped = futurereservations.map(r => {
                     const start = new Date(r.start);
