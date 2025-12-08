@@ -34,6 +34,10 @@ export default function DesksManagerPage() {
     const [newRoomFloor, setNewRoomFloor] = useState('');
     const [newRoomCapacity, setNewRoomCapacity] = useState('');
 
+    const [simulatorLink, setSimulatorLink] = useState('');
+    const [simulatorApiKey, setSimulatorApiKey] = useState('');
+    const [simulatorErrors, setSimulatorErrors] = useState({});
+
     // TODO: profiles backend implementation
     const [roomProfiles, setRoomProfiles] = useState(() => {
         const initial = {};
@@ -168,6 +172,48 @@ export default function DesksManagerPage() {
         } catch (error) {
             console.error('Error canceling booking:', error);
             alert('Failed to cancel booking: ' + error.message);
+        }
+    };
+
+    const handleSaveSimulator = async (e) => {
+        e.preventDefault();
+
+        // Validation
+        const errors = {};
+
+        if (!simulatorLink.trim()) {
+            errors.link = 'Simulator link is required';
+        } else if (!/^https?:\/\/.+/.test(simulatorLink)) {
+            errors.link = 'Must be a valid URL (http:// or https://)';
+        }
+
+        if (!simulatorApiKey.trim()) {
+            errors.apiKey = 'API key is required';
+        } else if (simulatorApiKey.length != 32) {
+            errors.apiKey = 'API key must be 32 characters long';
+        }
+
+        setSimulatorErrors(errors);
+
+        // If there are errors, don't submit
+        if (Object.keys(errors).length > 0) {
+            return;
+        }
+
+        try {
+            const simulatorSettings = {
+                simulatorLink: simulatorLink.trim(),
+                simulatorApiKey: simulatorApiKey.trim()
+            };
+
+            await put(`/Company/${companyId}/simulator`, simulatorSettings);
+            alert('Simulator settings saved successfully!');
+            setSimulatorLink('');
+            setSimulatorApiKey('');
+            setSimulatorErrors({});
+        } catch (error) {
+            console.error('Error saving simulator:', error);
+            alert('Failed to save simulator: ' + error.message);
         }
     };
 
@@ -341,6 +387,59 @@ export default function DesksManagerPage() {
 
     const currentRoom = rooms.find(r => r.id === activeRoom);
 
+    const Simulator = () => {
+        return (
+            <div className="bg-white rounded-2xl overflow-hidden mb-6">
+                <div className="flex items-center justify-between p-6">
+                    <h1 className="text-3xl font-semibold text-gray-800">Simulator Management</h1>
+                </div>
+                <form onSubmit={handleSaveSimulator} className="bg-white rounded-2xl shadow-sm border border-gray-150 p-6 max-w-md">
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Link
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="https://simulator.example.com"
+                            value={simulatorLink}
+                            onChange={(e) => setSimulatorLink(e.target.value)}
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500' : 'border-gray-300'
+                                }`}
+                        />
+                        {simulatorErrors.link && (
+                            <p className="text-danger-600 text-sm mt-1">{simulatorErrors.link}</p>
+                        )}
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Api Key
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="Enter API key"
+                            value={simulatorApiKey}
+                            onChange={(e) => setSimulatorApiKey(e.target.value)}
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.apiKey ? 'border-danger-500' : 'border-gray-300'
+                                }`}
+                        />
+                        {simulatorErrors.apiKey && (
+                            <p className="text-danger-600 text-sm mt-1">{simulatorErrors.apiKey}</p>
+                        )}
+                    </div>
+                    <div className="flex gap-3">
+                        <button
+                            type="submit"
+                            className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
+                        >
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div >
+        );
+    };
+
     // Don't render if no rooms available
     if (!currentRoom && rooms.length === 0) {
         return (
@@ -358,14 +457,18 @@ export default function DesksManagerPage() {
                             Create First Room
                         </button>
                     </div>
+                    <Simulator />
                 </main>
             </div>
         );
     }
 
+
     return (
         <div className="relative bg-background min-h-screen px-4 mt-20">
             <main className="w-full max-w-7xl mx-auto flex flex-col gap-8 pb-32">
+                <Simulator />
+
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-semibold text-gray-800">Desk Management</h1>
                 </div>
