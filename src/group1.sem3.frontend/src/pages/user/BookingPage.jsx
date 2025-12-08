@@ -1,10 +1,23 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { get, post, put, del } from "../../context/apiClient";
 
 export default function BookingPage() {   
     const { currentCompany } = useAuth();
     const COMPANY_ID = currentCompany?.id;
+    
+    const navigate = useNavigate();
+
+    const location = useLocation();
+    // Navigation from DeskPage 'Book Again' Button
+    const mode = location.state?.mode ?? "new";
+    const presetRoomId = location.state?.roomId ?? null;
+    const presetRoomName = location.state?.roomName ?? "";
+    const presetDeskId = location.state?.deskId ?? null;
+    const presetDeskName = location.state?.deskName ?? "";
+
+    const isRebook = mode === "rebook";
    
     // #region Date Selection
     // JS Date.getDay(): 0=Sunday, ..., 6=Saturday
@@ -153,8 +166,9 @@ export default function BookingPage() {
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
   
-    // Auto-select the first open room after date selection
+    // Auto-select the first open room after date selection; in 'new' mode
     useEffect(() => {
+        if (isRebook) return;
         if (!selectedDateObj || loadingRooms) return;
 
         if (openRooms.length > 0) {
@@ -174,9 +188,25 @@ export default function BookingPage() {
                 setEndTime("");
             }
         }
-    }, [selectedDateObj, loadingRooms, openRooms, selectedRoom]);
- 
-    const canBook = Boolean(selectedDate) && Boolean(selectedTable?.id) && Boolean(startTime) && Boolean(endTime);
+    }, [isRebook, selectedDateObj, loadingRooms, openRooms, selectedRoom]);
+    
+    // Auto-select the preset room; in 'rebook' mode
+    useEffect(() => {
+        if (!isRebook) return;
+        if (!presetRoomId || !rooms.length) return;
+
+        const room = rooms.find(r => r.id === presetRoomId);
+        if (!room) return; // preset room not found
+
+        // If the room is not open on the selected date, it is still selected,
+        // but the availability section will say "The room is closed on the selected day"
+        if (!selectedRoom || selectedRoom.id !== room.id) {
+            setSelectedRoom(room);
+            setSelectedTable(null);
+            setStartTime("");
+            setEndTime("");
+        }
+    }, [isRebook, presetRoomId, rooms, selectedRoom]);
     
     // Reset selections when changing room/date
     function handleSelectRoom(room) {
@@ -198,6 +228,21 @@ export default function BookingPage() {
     const [desksLoading, setDesksLoading] = useState(false);
     const [desksError, setDesksError] = useState(null);
 
+    // Auto-select the preset desk; in 'rebook' mode
+    useEffect(() => {
+        if (!isRebook) return;
+        if (!presetDeskId || !Array.isArray(desks) || !desks.length) return;
+
+        const desk = desks.find(d => d.id === presetDeskId);
+        if (!desk) return; // preset desk not in room or not loaded
+
+        if (!selectedTable || selectedTable.id !== desk.id) {
+            setSelectedTable(desk);
+            setStartTime("");
+            setEndTime("");
+        }
+    }, [isRebook, presetDeskId, desks, selectedTable]);
+    
     useEffect(() => {
         // Clear desks when room changes
         setDesks([]);
@@ -386,9 +431,20 @@ export default function BookingPage() {
         };
     }, [selectedRoom, selectedDate]);
 
+    // In 'rebook' mode
+    const isRoomClosedOnSelectedDate = useMemo(() => {
+        if (!selectedRoom || !selectedDateObj) return false;
+        const jsDow = selectedDateObj.getDay();
+        const dayFlag = DayFlag[jsDow];
+        const mask = selectedRoom?.openingHours?.daysOfTheWeek ?? 0;
+        // Closed if the DOW flag is not present in the mask
+        return (mask & dayFlag) === 0;
+    }, [selectedRoom, selectedDateObj]);
+
     // Available intervals for the selected desk on the selected day
     const availableIntervals = useMemo(() => {
         if (!selectedRoom || !selectedTable || !selectedDate || !openingWindow) return [];
+        if (isRoomClosedOnSelectedDate) return [];
 
         const { openStart, openEnd} = openingWindow;
 
@@ -406,7 +462,7 @@ export default function BookingPage() {
         }
 
         return slots;
-    }, [selectedRoom, selectedTable, selectedDate, reservationsByDesk, isToday, openingWindow]);
+    }, [selectedRoom, selectedTable, selectedDate, reservationsByDesk, isToday, openingWindow, isRoomClosedOnSelectedDate]);
     
     // Generate "HH:MM" ticks from intervals (rounded up to step)
     function generateTicksFromIntervals(intervals, stepMinutes = 15) {
@@ -454,12 +510,14 @@ export default function BookingPage() {
     }
 
     const availabilityLabel = useMemo(() => {
-        if (!availableIntervals.length) return "No availability left today.";
+        if (!availableIntervals.length) return "No availability left on this day.";
         return availableIntervals.map(formatIntervalLabel).join(", ");
     }, [availableIntervals]);
     //#endregion
 
     //#region Booking
+    const canBook = Boolean(selectedDate) && Boolean(selectedTable?.id) && Boolean(startTime) && Boolean(endTime) && !isRoomClosedOnSelectedDate;
+
     // Track booking submission
     const [bookingSubmitting, setBookingSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
@@ -514,9 +572,20 @@ export default function BookingPage() {
 
             alert(`Booked desk ${selectedTable.readableId} on ${selectedDate} from ${startTime} to ${endTime} in room ${selectedRoom.readableId}`);
 
-            // Reset time selection
-            setStartTime("");
-            setEndTime("");
+            // navigate back to the homepage
+            navigate("/user/homepage", {
+                replace: true,
+                state: {
+                justBooked: {
+                    roomName: selectedRoom?.readableId,
+                    deskName: selectedTable?.readableId,
+                    date: selectedDate,
+                    startTime,
+                    endTime,
+                    mode,
+                },
+                },
+            });
         } catch (err) {
             if (err?.status === 409) {
                 setBookingError(err?.body || "Requested time is already occupied!");
@@ -548,12 +617,19 @@ export default function BookingPage() {
             {/* Second step: Choose a room -- Display rooms that are open on the selected day. */}
             {selectedDate && (
                 <div className="max-w-3xl mx-auto flex gap-4 mb-8 overflow-x-auto pt-16">
-                    {loadingRooms ? (
-                    <div className="text-gray-600">Loading rooms…</div>
+                    {isRebook ? (
+                        <div>
+                            <p className="text-primary font-semibold text-lg">Room:</p>
+                            <div className="px-4 py-2 rounded-lg font-semibold bg-primary text-white">
+                                {presetRoomName || selectedRoom?.readableId || "—"}
+                            </div>
+                        </div>
+                    ) : loadingRooms ? (
+                        <div className="text-gray-600">Loading rooms…</div>
                     ) : roomsError ? (
-                    <div className="text-red-600">Error loading rooms: {roomsError}</div>
+                        <div className="text-red-600">Error loading rooms: {roomsError}</div>
                     ) : openRooms.length === 0 ? (
-                    <div className="text-gray-600">No rooms are open on this day.</div>
+                        <div className="text-gray-600">No rooms are open on this day.</div>
                     ) : (
                         openRooms.map((room) => (
                             <button
@@ -580,6 +656,13 @@ export default function BookingPage() {
                         <div className="text-red-600">Error: {desksError || reservationsError}</div>
                     ) : !Array.isArray(desks) || desks.length === 0 ? (
                         <div className="text-gray-600">No desks found for this room.</div>
+                    ) : isRebook ? (                        
+                        <div>
+                            <p className="text-primary font-semibold text-lg mb-2">Desk:</p>
+                            <div className="inline-block max-w-[16rem] px-4 py-2 rounded-lg font-semibold bg-accent text-white shadow whitespace-nowrap overflow-hidden text-ellipsis" title={presetDeskName || selectedTable?.readableId || '—'}>
+                                {presetDeskName || selectedTable?.readableId || '—'}
+                            </div>
+                        </div>
                     ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {desks.map((desk) => {
@@ -623,8 +706,14 @@ export default function BookingPage() {
 
                     {/* Availability preview */}
                     <div className="text-sm text-gray-700 bg-white rounded-lg px-4 py-2 shadow">
-                        <span className="font-medium">Available this day: </span>
-                        {availabilityLabel}
+                        {isRoomClosedOnSelectedDate ? (
+                            <span className="text-red-700 font-medium">The room is closed on the selected day.</span>
+                        ) : (
+                            <>
+                            <span className="font-medium">Available this day: </span>
+                            {availabilityLabel}
+                            </>
+                        )}
                     </div>
 
                     <div className="flex flex-row gap-4 flex-stretch">
@@ -635,7 +724,7 @@ export default function BookingPage() {
                                 setEndTime("");
                             }}
                             className="px-4 py-2 rounded-lg border border-primary bg-white text-primary font-medium shadow hover:bg-primary/90"
-                            disabled={!startOptions.length}
+                            disabled={!startOptions.length || isRoomClosedOnSelectedDate}
                         >
                             <option value="">From</option>
                             {startOptions.map((time) => (
@@ -652,7 +741,7 @@ export default function BookingPage() {
                                     ? "bg-gray-200 cursor-not-allowed text-gray-500"
                                     : "bg-white hover:bg-secondary/90"
                                 }`}
-                            disabled={!startTime || !endOptions.length}
+                            disabled={!startTime || !endOptions.length || isRoomClosedOnSelectedDate}
                         >
                             <option value="">Til</option>
                             {endOptions.map((time) => (

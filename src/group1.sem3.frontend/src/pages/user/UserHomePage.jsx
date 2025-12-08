@@ -59,6 +59,7 @@ export default function UserHomePage() {
                         id: r.id,
                         deskId: r.deskId,                     
                         desk: r.deskLabel ?? r.deskId,         // shows id until label exists
+                        roomId: r.roomId,
                         room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
                         time,
@@ -90,6 +91,7 @@ export default function UserHomePage() {
                         id: r.id, // uses reservation id as key; could also use deskId
                         deskId: r.deskId,
                         desk: r.deskLabel ?? r.deskId,         // shows id until label exists
+                        roomId: r.roomId,
                         room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
                         time,
@@ -148,8 +150,9 @@ export default function UserHomePage() {
                             <Link to="/user/desk" 
                             state={{
                                 reservationId: booking.id,
-                                deksId: booking.deskId,
+                                deskId: booking.deskId,
                                 desk: booking.desk,
+                                roomId: booking.roomId, 
                                 room: booking.room ?? "-",
                                 date: booking.date,
                                 time: booking.time,
@@ -193,6 +196,7 @@ export default function UserHomePage() {
                     <div className="flex flex-wrap gap-4">
                         {recentBookings.map((booking) => (
                             <div
+                                key={booking.id}
                                 className="bg-white rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4"
                             >
                                 <div>
@@ -203,9 +207,16 @@ export default function UserHomePage() {
                                         Room: {booking.room ?? "-"}
                                     </p>
                                 </div>
-                                {/* Rebook button, to be implemented */}
+
                                 <Link
                                     to="/user/booking"
+                                    state={{
+                                        mode: "rebook",
+                                        roomId: booking.roomId,
+                                        roomName: booking.room,
+                                        deskId: booking.deskId,
+                                        deskName: booking.desk,
+                                    }}
                                     className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition shrink-0"
                                 >
                                     Rebook

@@ -11,10 +11,11 @@ export default function DeskPage() {
 
     const navigate = useNavigate();
 
-    // Pull from navigation state, if it exists
+    // Pull from navigation state, if it exists (navigating from UserHomePage)
     const deskName = location.state?.desk ?? '';
-    const deskId = location.state?.deskId ?? '';
+    const deskId = location.state?.deskId ?? null;
     const roomName = location.state?.room ?? '';
+    const roomId = location.state?.roomId ?? null;
     const reservationDate = location.state?.date ?? '';
     const reservationTime = location.state?.time ?? '';
 
@@ -142,10 +143,16 @@ export default function DeskPage() {
                 </p>
             </div>
 
-            {/* TODO: implement booking */}
             {/* Book Button */}
             <Link
                 to="/user/booking"
+                state={{
+                    mode: "rebook",
+                    roomId,
+                    roomName,
+                    deskId,
+                    deskName,
+                }}
                 className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-11/12 max-w-md bg-accent text-white py-4 rounded-2xl text-lg font-semibold shadow-lg hover:bg-accent/90 transition z-30 block text-center"
             >
                 Book Again
