@@ -30,10 +30,9 @@ export default function Sidebar({ isOpen, onClose }) {
         ],
         2: [
             { to: `/admin/usersManager`, icon: "people", label: "Users" },
-            { to: `/admin/profilesManager`, icon: "clock", label: "Profiles" },
             { to: `/admin/desksManager`, icon: "grid", label: "Desks" },
             { to: `/admin/healthStatsManager`, icon: "bar-chart", label: "Statistics" },
-            { to: `/admin/damagesManager`, icon: "exclamation-triangle", label: "Damages" }, 
+            { to: `/admin/damagesManager`, icon: "exclamation-triangle", label: "Damages" },
             { to: `/admin/settings`, icon: "person", label: "Profile" },
         ],
     };

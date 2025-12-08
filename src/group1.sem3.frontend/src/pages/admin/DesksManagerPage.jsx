@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react";
 import { get, post, put, del } from "../../context/apiClient";
 
-// mock data
-import desksMockData from '../../assets/admin/DesksMockData.json'
-import profileMockData from '../../assets/admin/ProfileMockData.json'
-import userMockData from '../../assets/admin/UserMockData.json'
-
 export default function DesksManagerPage() {
     const DEFAULT_DESK_HEIGHT = 95;
 
-    // mock data
-    const allProfiles = [
-        ...profileMockData.open.map(p => ({ ...p, category: 'open' })),
-        ...profileMockData.closed.map(p => ({ ...p, category: 'closed' })),
-        ...profileMockData.maintenance.map(p => ({ ...p, category: 'maintenance' })),
-    ];
 
     const [activeTab, setActiveTab] = useState('open');
     const [activeRoom, setActiveRoom] = useState(null);
@@ -37,40 +26,6 @@ export default function DesksManagerPage() {
     const [simulatorLink, setSimulatorLink] = useState('');
     const [simulatorApiKey, setSimulatorApiKey] = useState('');
     const [simulatorErrors, setSimulatorErrors] = useState({});
-
-    // TODO: profiles backend implementation
-    const [roomProfiles, setRoomProfiles] = useState(() => {
-        const initial = {};
-        Object.keys(desksMockData.roomProfiles).forEach(roomId => {
-            initial[roomId] = {};
-            desksMockData.roomProfiles[roomId].activeProfiles.forEach(profileId => {
-                initial[roomId][profileId] = true;
-            });
-        });
-        return initial;
-    });
-
-    const handleProfileToggle = (profileId) => {
-        setRoomProfiles(prev => ({
-            ...prev,
-            [activeRoom]: {
-                ...prev[activeRoom],
-                [profileId]: !prev[activeRoom]?.[profileId]
-            }
-        }));
-    };
-
-    const handleApplyProfileToAllRooms = (profileId) => {
-        const updatedProfiles = {};
-        rooms.forEach(room => {
-            updatedProfiles[room.id] = {
-                ...roomProfiles[room.id],
-                [profileId]: true
-            };
-        });
-        setRoomProfiles(updatedProfiles);
-        console.log(`Applied profile ${profileId} to all rooms`);
-    };
 
     useEffect(() => {
         fetchInitialData();
@@ -349,16 +304,6 @@ export default function DesksManagerPage() {
         return now >= start && now <= end;
     }
 
-    // const getUserName = (userId) => {
-    //     if (!userId) return null;
-    //     const user = userMockData.Users.find(u => u.id === userId);
-    //     return user ? user.Name : null;
-    // };
-
-    // const getProfileById = (profileId) => {
-    //     return allProfiles.find(p => p.id === profileId);
-    // };
-
     if (loading) {
         return (
             <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
@@ -472,58 +417,6 @@ export default function DesksManagerPage() {
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-semibold text-gray-800">Desk Management</h1>
                 </div>
-
-                {/*TODO: Global Room Control */}
-                <section>
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">Global Room Control</h2>
-                    <div className="flex gap-2 flex-wrap">
-                        <TabButton value="open" label="Open" />
-                        <TabButton value="closed" label="Closed" />
-                        <TabButton value="maintenance" label="Maintenance" />
-                    </div>
-
-                    {/* TODO:Display profiles*/}
-                    {activeTab && (
-                        <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                            <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Profiles
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {profileMockData[activeTab]?.map(profile => (
-                                    <div key={profile.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div className="flex-1">
-                                                <h4 className="font-semibold text-gray-900 text-sm mb-1">{profile.name}</h4>
-                                                <p className="text-xs text-gray-600 mb-1">{profile.schedule}</p>
-                                            </div>
-                                            <span className={`text-xs px-2 py-0.5 rounded ${profile.autoApply
-                                                ? 'bg-success-100 text-success-700'
-                                                : 'bg-gray-200 text-gray-700'
-                                                }`}>
-                                                {profile.autoApply ? 'Auto' : 'Manual'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between mt-2">
-                                            <span className="text-xs text-gray-500">Height: {profile.deskHeight}</span>
-                                            <button
-                                                onClick={() => handleApplyProfileToAllRooms(profile.id)}
-                                                className="px-3 py-1 bg-accent text-white text-xs font-medium rounded-lg hover:bg-accent-600 transition-colors"
-                                                title="Apply to all rooms"
-                                            >
-                                                Apply to all rooms
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                                {(!profileMockData[activeTab] || profileMockData[activeTab].length === 0) && (
-                                    <p className="text-sm text-gray-500 col-span-full text-center py-4">
-                                        No profiles found for this category
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </section>
 
                 {/* Room Management */}
                 <section>
@@ -783,57 +676,6 @@ export default function DesksManagerPage() {
                                     {desks.filter(d => d.roomId === currentRoom?.id).length}
                                 </span>
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-2xl">
-                        <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                            Active Profiles
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Apply profiles to control all desks in this room
-                        </p>
-                        <div className="space-y-4">
-                            {allProfiles.map(profile => (
-                                <div key={profile.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h4 className="font-semibold text-gray-900 text-sm">{profile.name}</h4>
-                                            <span className={`text-xs px-2 py-0.5 rounded ${profile.category === 'open' ? 'bg-success-100 text-success-700' :
-                                                profile.category === 'closed' ? 'bg-danger-100 text-danger-700' :
-                                                    'bg-warning-100 text-warning-700'
-                                                }`}>
-                                                {profile.category}
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-gray-600">{profile.schedule}</p>
-                                        <div className="flex items-center gap-3 mt-1">
-                                            <span className="text-xs text-gray-500">Height: {profile.deskHeight}</span>
-                                            <span className="text-xs text-gray-500">•</span>
-                                            <span className="text-xs text-gray-500">
-                                                {profile.autoApply ? 'Auto-apply' : 'Manual'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <label className="flex items-center gap-3 cursor-pointer ml-4">
-                                        <div className="relative">
-                                            <input
-                                                type="checkbox"
-                                                checked={roomProfiles[activeRoom]?.[profile.id] || false}
-                                                onChange={() => handleProfileToggle(profile.id)}
-                                                className="sr-only peer"
-                                            />
-                                            <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-accent transition-colors"></div>
-                                            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                                        </div>
-                                    </label>
-                                </div>
-                            ))}
-                            {allProfiles.length === 0 && (
-                                <p className="text-sm text-gray-500 text-center py-4">
-                                    No profiles available. Create profiles in the Profiles Management page.
-                                </p>
-                            )}
                         </div>
                     </div>
                 </section>
