@@ -676,17 +676,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/UpdateDeskDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/UpdateDeskDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/UpdateDeskDto"
               }
             }
           },
@@ -1495,6 +1495,40 @@
   },
   "components": {
     "schemas": {
+      "Company": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "maxLength": 100,
+            "type": "string"
+          },
+          "rooms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rooms"
+            }
+          },
+          "secretInviteCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "simulatorLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "simulatorApiKey": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "CompanySimulatorSettingsDto": {
         "type": "object",
         "properties": {
@@ -1772,6 +1806,34 @@
           "companyId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "UpdateDeskDto": {
+        "type": "object",
+        "properties": {
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },

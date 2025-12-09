@@ -81,7 +81,18 @@ public class DesksController(IDeskService deskService) : ControllerBase
     [RequireRole(UserRole.Admin, UserRole.Janitor)]
     public async Task<ActionResult<List<string>>> GetNotAdoptedDesks(Guid companyId)
     {
-        var desks = await deskService.GetNotAdoptedDesks(companyId);
-        return Ok(desks);
+        try
+        {
+            var desks = await deskService.GetNotAdoptedDesks(companyId);
+            return Ok(desks);
+        }
+        catch (SimulatorConfigurationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (SimulatorConnectionException ex)
+        {
+            return StatusCode(502, new { error = ex.Message });
+        }
     }
 }
