@@ -141,6 +141,49 @@
         }
       }
     },
+    "/api/Company/{companyId}/simulator": {
+      "put": {
+        "tags": [
+          "Company"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanySimulatorSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/{companyId}/DamageReport": {
       "get": {
         "tags": [
@@ -901,7 +944,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               },
@@ -909,7 +952,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               },
@@ -917,7 +960,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Reservation"
+                    "$ref": "#/components/schemas/ReservationViewDto"
                   }
                 }
               }
@@ -1278,6 +1321,26 @@
           }
         }
       },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "put": {
         "tags": [
           "Users"
@@ -1315,6 +1378,45 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array"
+                }
+              }
+            }
           }
         }
       }
@@ -1377,10 +1479,35 @@
           }
         }
       }
+    },
+    "/api/Users/me/companies": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CompanySimulatorSettingsDto": {
+        "type": "object",
+        "properties": {
+          "simulatorLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "simulatorApiKey": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "CreateDamageReportDto": {
         "required": [
           "description",
@@ -1468,6 +1595,9 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "readableId": {
+            "type": "string"
           },
           "height": {
             "type": "integer",
@@ -1577,12 +1707,57 @@
           }
         }
       },
+      "ReservationViewDto": {
+        "required": [
+          "id",
+          "start",
+          "end",
+          "deskId",
+          "deskLabel",
+          "roomId",
+          "roomLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deskLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomLabel": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "Rooms": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "readableId": {
+            "type": "string"
           },
           "deskIds": {
             "type": "array",
@@ -1622,6 +1797,12 @@
           "healthRemindersFrequency": {
             "$ref": "#/components/schemas/HealthRemindersFrequency"
           },
+          "reservations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reservation"
+            }
+          },
           "sittingTime": {
             "type": "integer",
             "format": "int32"
@@ -1634,8 +1815,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "role": {
-            "$ref": "#/components/schemas/UserRole"
+          "companyMemberships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserCompany"
+            }
           },
           "id": {
             "type": "string",
@@ -1693,6 +1877,27 @@
           "accessFailedCount": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "UserCompany": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company": {
+            "$ref": "#/components/schemas/Company"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
           }
         }
       },

@@ -47,9 +47,9 @@ public class ReservationController(IReservationService reservationService, Backe
                 r.Start,
                 r.End,
                 r.DeskId,
-                r.Desk != null ? r.Desk.MacAddress : null, // TODO: Replace MacAddress with Label, once it exists in the Desk model
+                r.Desk != null ? r.Desk.ReadableId : null,
                 r.Desk != null ? r.Desk.RoomId : Guid.Empty,
-                r.Desk != null && r.Desk.Room != null ? r.Desk.Room.Id.ToString() : null // TODO: Replace Id.ToString() with Label, once it exists in the Room model
+                r.Desk != null && r.Desk.Room != null ? r.Desk.Room.ReadableId : null
             ))
             .ToListAsync();
 
@@ -105,9 +105,14 @@ public class ReservationController(IReservationService reservationService, Backe
             return Unauthorized();
         }
 
-        var isAdmin = currentUser.Role == UserRole.Admin;
+        var membership = currentUser.CompanyMemberships
+            .FirstOrDefault(cm => cm.CompanyId == companyId);
+
+        if (membership == null)
+            return Forbid();
         
-        var isJanitor = currentUser.Role == UserRole.Janitor;
+        var isAdmin = membership.Role == UserRole.Admin;
+        var isJanitor = membership.Role == UserRole.Janitor;
         
         if (!isAdmin && reservation.UserId != currentUserId)
         {
