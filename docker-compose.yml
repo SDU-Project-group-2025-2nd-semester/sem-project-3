@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: src/Backend/Dockerfile
-    environment:
-      - DeskApi__BaseUrl=http://box-simulator:${SIMULATOR_PORT:-8000}/api/v2/${SIMULATOR_API_KEY:-E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7}/
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,24 +59,10 @@ services:
     configs:
       - source: servers_config
         target: /pgadmin4/servers.json   
-
-  # deprecated and to be removed
-  box-simulator:
-    hostname: box-simulator
-    build:
-      context: .
-      dockerfile: infra/docker/simulator.Dockerfile
-    container_name: box-simulator
-    ports:
-      - "8000:8000"
-    volumes:
-      - simulator_data:/app/data
-    restart: unless-stopped  
     
 volumes:
   postgres_data:
   pgadmin_data:
-  simulator_data:
 
 configs:
   servers_config:
