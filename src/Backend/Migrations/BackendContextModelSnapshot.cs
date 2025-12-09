@@ -115,6 +115,10 @@ namespace Backend.Migrations
                     b.Property<int>("MinHeight")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ReadableId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.PrimitiveCollection<List<Guid>>("ReservationIds")
                         .IsRequired()
                         .HasColumnType("uuid[]");
@@ -186,6 +190,10 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("ReadableId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
@@ -251,9 +259,6 @@ namespace Backend.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
@@ -295,6 +300,9 @@ namespace Backend.Migrations
 
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
 
                     b.HasKey("UserId", "CompanyId");
 
@@ -451,11 +459,13 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Data.User", "ResolvedBy")
                         .WithMany()
-                        .HasForeignKey("ResolvedById");
+                        .HasForeignKey("ResolvedById")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Backend.Data.User", "SubmittedBy")
                         .WithMany()
-                        .HasForeignKey("SubmittedById");
+                        .HasForeignKey("SubmittedById")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Company");
 

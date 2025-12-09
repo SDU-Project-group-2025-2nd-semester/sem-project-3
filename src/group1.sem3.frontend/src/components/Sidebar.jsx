@@ -4,36 +4,36 @@ import { useAuth } from "../context/AuthContext";
 import Icon from "@reacticons/bootstrap-icons";
 export default function Sidebar({ isOpen, onClose }) {
     const { currentUser } = useAuth();
+    const { companies, currentCompany, setCurrentCompany } = useAuth();
     const location = useLocation();
     if (["/", "/signuppage"].includes(location.pathname)) return null;
 
     const role = currentUser?.role;
 
-    const companies = ["Company A", "Company B", "Company C"];
     const [showCompanies, setShowCompanies] = useState(false);
-    const [selectedCompany, setSelectedCompany] = useState(companies[0]);
+    const selectedCompany = currentCompany?.name ?? (companies?.[0]?.name ?? "No company");
 
     function handleCompanySelect(company) {
-        setSelectedCompany(company);
+        setCurrentCompany(company);
+        localStorage.setItem("currentCompanyId", company.id);
         setShowCompanies(false);
     }
 
     // Role --> menu configuration
     const menuByRole = {
-        user: [
-            { to: `/${role}/settings`, icon: "person", label: "Profile" },
+        0: [
+            { to: `/user/settings`, icon: "person", label: "Profile" },
             { to: `/user/statistics`, icon: "bar-chart", label: "Statistics" },
         ],
-        staff: [
-            { to: `/${role}/settings`, icon: "person", label: "Profile" },
+        1: [
+            { to: `/staff/settings`, icon: "person", label: "Profile" },
         ],
-        admin: [
-            { to: `/${role}/usersManager`, icon: "people", label: "Users" },
-            { to: `/${role}/profilesManager`, icon: "clock", label: "Profiles" },
-            { to: `/${role}/desksManager`, icon: "grid", label: "Desks" },
-            { to: `/${role}/healthStatsManager`, icon: "bar-chart", label: "Statistics" },
-            { to: `/${role}/damagesManager`, icon: "exclamation-triangle", label: "Damages" }, // icon: "file-earmark-text"
-            // other icons: "speedometer"  "gear"  "pencil-square"
+        2: [
+            { to: `/admin/usersManager`, icon: "people", label: "Users" },
+            { to: `/admin/desksManager`, icon: "grid", label: "Desks" },
+            { to: `/admin/healthStatsManager`, icon: "bar-chart", label: "Statistics" },
+            { to: `/admin/damagesManager`, icon: "exclamation-triangle", label: "Damages" },
+            { to: `/admin/settings`, icon: "person", label: "Profile" },
         ],
     };
 
@@ -67,7 +67,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         </Link>
                     ))}
 
-                    {(role === "user" || role === "staff") && (
+                    {(role === 0 || role === 1) && (
                         <div className="mb-4">
                             <button
                                 onClick={() => setShowCompanies(!showCompanies)}
@@ -80,11 +80,11 @@ export default function Sidebar({ isOpen, onClose }) {
                                 <ul className="mt-2 ml-6 list-disc">
                                     {companies.map((company) => (
                                         <li
-                                            key={company}
+                                            key={company.id}
                                             onClick={() => { handleCompanySelect(company); onClose(); }}
                                             className="hover:text-blue-500 cursor-pointer"
                                         >
-                                            {company}
+                                            {company.name}
                                         </li>
                                     ))}
                                 </ul>

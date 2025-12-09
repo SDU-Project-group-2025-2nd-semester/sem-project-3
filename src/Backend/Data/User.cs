@@ -22,8 +22,7 @@ public class User : IdentityUser
 
     public HealthRemindersFrequency HealthRemindersFrequency { get; set; }
 
-    [JsonIgnore]
-    public List<Reservation> Reservations { get; set; }
+    public List<Reservation> Reservations { get; set; } = new();
 
     public int SittingTime { get; set; }
 
@@ -31,9 +30,6 @@ public class User : IdentityUser
 
     public DateTime AccountCreation { get; set; } = new();
     
-    public UserRole Role { get; set; } = UserRole.User;
-    
-    [JsonIgnore] 
     public List<UserCompany> CompanyMemberships { get; set; } = [];
     
     // TODO: Implement time-series db for tracking user posture over time 

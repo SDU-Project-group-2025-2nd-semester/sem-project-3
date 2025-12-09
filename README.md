@@ -1,17 +1,7 @@
+## Desk Simulator 
 
-### Frontend
-- **React 19** with Vite
-- **React Router** for navigation
-- **Tailwind CSS** + **Bootstrap** for styling
-- **React Bootstrap** for UI components
-- **QR Scanner** for desk scanning functionality
-
-### Backend
-- **ASP.NET Core 9.0** Web API
-- **Entity Framework Core** with PostgreSQL
-- **ASP.NET Core Identity** for authentication
-- **OpenAPI/Swagger** for API documentation
-- **Docker** for containerization
+- **For use in local environment it is exposed to localhost:8000**
+- **For the deployment to the server only accessible through the local docker network (e.g. simulator-develop:8000)**
 
 ## 🌐 Deployment Links
 
@@ -30,13 +20,6 @@
 - **Integration**: https://s3-be-int.michalvalko.eu/swagger
 - **Development**: https://s3-be-dev.michalvalko.eu/swagger
 
-## 🚀 Getting Started
-
-### Prerequisites
-- **.NET 9.0 SDK** (for backend development)
-- **Node.js 18+** and **npm** (for frontend development)
-- **Docker** and **Docker Compose** (for containerized deployment)
-- **PostgreSQL** (or use Docker Compose)
 
 ### Backend Setup
 
@@ -87,21 +70,4 @@
    ```
    
    The frontend will be available at `http://localhost:5173`
-
-### Docker Setup
-
-1. From the project root, start all services:
-   ```bash
-   docker compose up -d
-   ```
-
-2. The services will be available at:
-   - Backend: `http://localhost:5002`
-   - Frontend: `http://localhost:3000` (if configured)
-   - PostgreSQL: `localhost:5432`
-
-3. To stop all services:
-   ```bash
-   docker compose down
-   ```
 
