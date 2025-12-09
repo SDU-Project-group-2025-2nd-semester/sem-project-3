@@ -5,6 +5,7 @@ using Backend.Data;
 using Backend.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(BackendContext))]
-    partial class BackendContextModelSnapshot : ModelSnapshot
+    [Migration("20251208190650_Added metadata todesks")]
+    partial class Addedmetadatatodesks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -115,10 +118,6 @@ namespace Backend.Migrations
                     b.Property<int>("MinHeight")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ReadableId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.PrimitiveCollection<List<Guid>>("ReservationIds")
                         .IsRequired()
                         .HasColumnType("uuid[]");
@@ -190,10 +189,6 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.Property<string>("ReadableId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyId");
@@ -259,6 +254,9 @@ namespace Backend.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
@@ -300,9 +298,6 @@ namespace Backend.Migrations
 
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
 
                     b.HasKey("UserId", "CompanyId");
 
@@ -459,13 +454,11 @@ namespace Backend.Migrations
 
                     b.HasOne("Backend.Data.User", "ResolvedBy")
                         .WithMany()
-                        .HasForeignKey("ResolvedById")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ResolvedById");
 
                     b.HasOne("Backend.Data.User", "SubmittedBy")
                         .WithMany()
-                        .HasForeignKey("SubmittedById")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("SubmittedById");
 
                     b.Navigation("Company");
 

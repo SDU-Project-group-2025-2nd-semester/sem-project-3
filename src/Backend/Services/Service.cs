@@ -1,11 +1,19 @@
 ﻿using Backend.Data;
 using Backend.Hubs;
+using Hangfire;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json.Serialization;
 
 namespace Backend.Services;
+
+public interface IReservationScheduler
+{
+    Task ScheduleDeskAdjustment(Reservation reservation);
+    Task CancelScheduledAdjustment(Guid reservationId);
+}
 
 public interface IDeskControlService
 {
@@ -14,7 +22,155 @@ public interface IDeskControlService
     Task<int?> GetCurrentDeskHeightAsync(string macAddress);
 }
 
-public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider) : BackgroundService
+public class ReservationScheduler(
+    ILogger<ReservationScheduler> logger,
+    IBackgroundJobClient backgroundJobClient,
+    BackendContext context) : IReservationScheduler
+{
+    public async Task ScheduleDeskAdjustment(Reservation reservation)
+    {
+        var triggerTime = reservation.Start;
+        
+
+        if (triggerTime <= DateTime.UtcNow)
+        {
+            // If reservation starts soon, trigger immediately
+            backgroundJobClient.Enqueue<DeskAdjustmentJob>(job => 
+                job.AdjustDeskForReservation(reservation.Id));
+        }
+        else
+        {
+            // Schedule for future
+            string jobId = backgroundJobClient.Schedule<DeskAdjustmentJob>(
+                job => job.AdjustDeskForReservation(reservation.Id),
+                triggerTime);
+
+            reservation.JobId = jobId;
+
+            await context.SaveChangesAsync();
+
+            logger.LogInformation(
+                "Scheduled desk adjustment for reservation {ReservationId} at {TriggerTime} (JobId: {JobId})",
+                reservation.Id, triggerTime, jobId);
+        }
+    }
+
+    public async Task CancelScheduledAdjustment(Guid reservationId)
+    {
+
+        var reservation = await context.Reservations.FindAsync(reservationId);
+
+        if (reservation == null || string.IsNullOrEmpty(reservation.JobId))
+        {
+            logger.LogWarning("No scheduled job found for reservation {ReservationId}", reservationId);
+            return;
+        }
+
+        BackgroundJob.Delete(reservation.JobId);
+
+        reservation.JobId = null;
+
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Cancelling scheduled adjustment for reservation {ReservationId}", reservationId);
+    }
+}
+
+
+public class DeskAdjustmentJob(
+    ILogger<DeskAdjustmentJob> logger,
+    IServiceProvider serviceProvider)
+{
+    public async Task AdjustDeskForReservation(Guid reservationId)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+        var deskControlService = scope.ServiceProvider.GetRequiredService<IDeskControlService>();
+
+        var reservation = await dbContext.Reservations
+            .Include(r => r.User)
+            .Include(r => r.Desk)
+            .FirstOrDefaultAsync(r => r.Id == reservationId);
+
+        if (reservation == null)
+        {
+            logger.LogWarning("Reservation {ReservationId} not found", reservationId);
+            return;
+        }
+
+        try
+        {
+            int targetHeight = (int)reservation.User.SittingHeight;
+
+            var success = await deskControlService.SetDeskHeightAsync(
+                reservation.Desk.Id, 
+                targetHeight);
+
+            if (success)
+            {
+                logger.LogInformation(
+                    "Auto-adjusted desk {DeskId} to {Height}mm for reservation {ReservationId}",
+                    reservation.Desk.Id, targetHeight, reservationId);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, 
+                "Error auto-adjusting desk for reservation {ReservationId}", reservationId);
+        }
+    }
+}
+
+public class DeskLedService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (Bullshit.IsGeneratingOpenApiDocument())
+        {
+            return;
+        }
+
+        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // HACK: Wait a minute before starting to allow db migrations to complete
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            using var scope = serviceProvider.CreateScope();
+
+            var deskApi = scope.ServiceProvider.GetRequiredService<IDeskApi>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+
+            var desks = await dbContext.Desks.ToListAsync(stoppingToken);
+            foreach (var desk in desks)
+            {
+                try
+                {
+                    bool isOccupied = await dbContext.Reservations
+                        .AnyAsync(r => r.DeskId == desk.Id &&
+                                       r.Start <= DateTime.UtcNow &&
+                                       r.End >= DateTime.UtcNow, stoppingToken);
+
+                    if (isOccupied)
+                    {
+                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/red");
+                    }
+                    else
+                    {
+                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/green");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error setting LED for desk {DeskId}", desk.Id);
+                }
+            }
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+        }
+    }
+}
+
+
+public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -38,7 +194,21 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
                 try
                 {
                     var currentState = await deskApi.GetDeskState(desk.MacAddress);
-                    if (currentState.PositionMm != desk.Height)
+
+                    desk.Metadata.IsOverloadProtectionDown = currentState.IsOverloadProtectionDown;
+                    desk.Metadata.IsAntiCollision = currentState.IsAntiCollision;
+                    desk.Metadata.IsOverloadProtectionUp = currentState.IsOverloadProtectionUp;
+                    desk.Metadata.Status = currentState.Status;
+                    desk.Metadata.IsPositionLost = currentState.IsPositionLost;
+
+                    if (currentState.PositionMm == desk.Height)
+                    {
+                        // Just for sake of testing - will be more complicated later
+                        // Notify table
+
+                         await mqttClient.SendMessage("buzz", $"{desk.RpiMacAddress}/buzzer");
+                    }
+                    else
                     {
                         var oldHeight = desk.Height;
                         desk.Height = currentState.PositionMm;
@@ -58,7 +228,8 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
                         await hubContext.Clients
                             .Group($"room-{desk.RoomId}")
                             .SendAsync("DeskHeightChanged", update, cancellationToken: stoppingToken);
-                        logger.LogInformation("Pulled and updated height for desk {DeskId} to {Height}mm", desk.Id, currentState.PositionMm);
+                        logger.LogInformation("Pulled and updated height for desk {DeskId} to {Height}mm", desk.Id,
+                            currentState.PositionMm);
                     }
                 }
                 catch (Exception ex)
@@ -126,10 +297,16 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
             .Where(d => d.RoomId == roomId)
             .ToListAsync();
 
-        var tasks = desks.Select(desk => SetDeskHeightAsync(desk.Id, newHeight));
-        var results = await Task.WhenAll(tasks);
 
-        return results.All(r => r);
+        foreach (Desk desk in desks)
+        {
+            if (!await SetDeskHeightAsync(desk.Id, newHeight))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public async Task<int?> GetCurrentDeskHeightAsync(string macAddress)
@@ -205,9 +382,9 @@ public interface IDeskApi
     Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors);
 }
 
-public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
+public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
 {
-    private HttpClient httpClient = httpClientFactory.CreateClient("DeskApi");
+    private readonly HttpClient httpClient = httpClientFactory.CreateClient("DeskApi");
 
     public async Task<List<string>> GetAllDesks()
     {
@@ -223,7 +400,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<DeskJsonElement> GetDeskStatus(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/status");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/status");
 
         result.EnsureSuccessStatusCode();
 
@@ -239,7 +416,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Config> GetDeskConfig(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/config");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/config");
         result.EnsureSuccessStatusCode();
         var config = await result.Content.ReadFromJsonAsync<Config>();
         if (config == null)
@@ -252,8 +429,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<State> GetDeskState(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/state");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/state");
         result.EnsureSuccessStatusCode();
+
         var state = await result.Content.ReadFromJsonAsync<State>();
         if (state == null)
         {
@@ -265,7 +443,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Usage> GetDeskUsage(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/usage");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/usage");
         result.EnsureSuccessStatusCode();
         var usage = await result.Content.ReadFromJsonAsync<Usage>();
         if (usage == null)
@@ -278,7 +456,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<List<LastError>> GetDeskLastErrors(string macAddress)
     {
-        var result = await httpClient.GetAsync($"desk/{macAddress}/lastErrors");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/lastErrors");
         result.EnsureSuccessStatusCode();
         var lastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
         if (lastErrors == null)
@@ -291,7 +469,7 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Config> SetConfig(string macAddress, Config config)
     {
-        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/config", config);
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/config", config);
         result.EnsureSuccessStatusCode();
         var updatedConfig = await result.Content.ReadFromJsonAsync<Config>();
         if (updatedConfig == null)
@@ -303,7 +481,12 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<State> SetState(string macAddress, State state)
     {
-        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/state", state);
+
+        var json = System.Text.Json.JsonSerializer.Serialize(state);
+
+        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var result = await httpClient.PutAsync($"desks/{macAddress}/state", content);
         result.EnsureSuccessStatusCode();
         var updatedState = await result.Content.ReadFromJsonAsync<State>();
         if (updatedState == null)
@@ -315,7 +498,11 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Usage> SetUsage(string macAddress, Usage usage)
     {
-        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/usage", usage);
+        var json = System.Text.Json.JsonSerializer.Serialize(usage);
+
+        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/usage", content);
         result.EnsureSuccessStatusCode();
         var updatedUsage = await result.Content.ReadFromJsonAsync<Usage>();
         if (updatedUsage == null)
@@ -327,7 +514,11 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors)
     {
-        var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/lastErrors", lastErrors);
+        var json = System.Text.Json.JsonSerializer.Serialize(lastErrors);
+
+        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/lastErrors", content);
         result.EnsureSuccessStatusCode();
         var updatedLastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
         if (updatedLastErrors == null)
@@ -341,37 +532,84 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
 
 public class DeskJsonElement
 {
+    [JsonPropertyName("config")]
     public Config Config { get; set; }
+
+    [JsonPropertyName("state")]
     public State State { get; set; }
+
+    [JsonPropertyName("usage")]
     public Usage Usage { get; set; }
+
+    [JsonPropertyName("lastErrors")]
     public List<LastError> LastErrors { get; set; }
 }
 
 public class Config
 {
+    [JsonPropertyName("name")]
     public string Name { get; set; }
+
+    [JsonPropertyName("manufacturer")]
     public string Manufacturer { get; set; }
 }
 
 public class State
 {
+    [JsonPropertyName("position_mm")]
     public int PositionMm { get; set; }
+
+    [JsonPropertyName("speed_mms")]
     public int SpeedMms { get; set; }
+
+    [JsonPropertyName("status")]
     public string Status { get; set; }
+
+    [JsonPropertyName("isPositionLost")]
     public bool IsPositionLost { get; set; }
+
+    [JsonPropertyName("isOverloadProtectionUp")]
     public bool IsOverloadProtectionUp { get; set; }
+    
+    [JsonPropertyName("isOverloadProtectionDown")]
     public bool IsOverloadProtectionDown { get; set; }
+
+    [JsonPropertyName("isAntiCollision")]
     public bool IsAntiCollision { get; set; }
 }
 
 public class Usage
 {
+    [JsonPropertyName("activationsCounter")]
     public int ActivationsCounter { get; set; }
+
+    [JsonPropertyName("sitStandCounter")]
     public int SitStandCounter { get; set; }
 }
 
 public class LastError
 {
+    [JsonPropertyName("timeS")]
     public int TimeS { get; set; }
+    [JsonPropertyName("errorCode")]
     public int ErrorCode { get; set; }
+}
+
+public class DeskMetadata
+{
+    public Config Config { get; set; }
+
+    public Usage Usage { get; set; }
+
+    public List<LastError> LastErrors { get; set; }
+
+    public string Status { get; set; }
+
+    public bool IsPositionLost { get; set; }
+
+    public bool IsOverloadProtectionUp { get; set; }
+    
+    public bool IsOverloadProtectionDown { get; set; }
+
+    public bool IsAntiCollision { get; set; }
 }
