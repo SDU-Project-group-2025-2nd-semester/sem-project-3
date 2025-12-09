@@ -1,10 +1,12 @@
 ﻿using Backend.Data;
 using Backend.Hubs;
+using Hangfire;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json.Serialization;
 
 namespace Backend.Services;
 
@@ -20,6 +22,12 @@ public class SimulatorConnectionException : Exception
         : base(message, innerException) { }
 }
 
+public interface IReservationScheduler
+{
+    Task ScheduleDeskAdjustment(Reservation reservation);
+    Task CancelScheduledAdjustment(Guid reservationId);
+}
+
 public interface IDeskControlService
 {
     Task<bool> SetDeskHeightAsync(Guid deskId, int newHeight);
@@ -27,7 +35,155 @@ public interface IDeskControlService
     Task<int?> GetCurrentDeskHeightAsync(string macAddress);
 }
 
-public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider) : BackgroundService
+public class ReservationScheduler(
+    ILogger<ReservationScheduler> logger,
+    IBackgroundJobClient backgroundJobClient,
+    BackendContext context) : IReservationScheduler
+{
+    public async Task ScheduleDeskAdjustment(Reservation reservation)
+    {
+        var triggerTime = reservation.Start;
+        
+
+        if (triggerTime <= DateTime.UtcNow)
+        {
+            // If reservation starts soon, trigger immediately
+            backgroundJobClient.Enqueue<DeskAdjustmentJob>(job => 
+                job.AdjustDeskForReservation(reservation.Id));
+        }
+        else
+        {
+            // Schedule for future
+            string jobId = backgroundJobClient.Schedule<DeskAdjustmentJob>(
+                job => job.AdjustDeskForReservation(reservation.Id),
+                triggerTime);
+
+            reservation.JobId = jobId;
+
+            await context.SaveChangesAsync();
+
+            logger.LogInformation(
+                "Scheduled desk adjustment for reservation {ReservationId} at {TriggerTime} (JobId: {JobId})",
+                reservation.Id, triggerTime, jobId);
+        }
+    }
+
+    public async Task CancelScheduledAdjustment(Guid reservationId)
+    {
+
+        var reservation = await context.Reservations.FindAsync(reservationId);
+
+        if (reservation == null || string.IsNullOrEmpty(reservation.JobId))
+        {
+            logger.LogWarning("No scheduled job found for reservation {ReservationId}", reservationId);
+            return;
+        }
+
+        BackgroundJob.Delete(reservation.JobId);
+
+        reservation.JobId = null;
+
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Cancelling scheduled adjustment for reservation {ReservationId}", reservationId);
+    }
+}
+
+
+public class DeskAdjustmentJob(
+    ILogger<DeskAdjustmentJob> logger,
+    IServiceProvider serviceProvider)
+{
+    public async Task AdjustDeskForReservation(Guid reservationId)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+        var deskControlService = scope.ServiceProvider.GetRequiredService<IDeskControlService>();
+
+        var reservation = await dbContext.Reservations
+            .Include(r => r.User)
+            .Include(r => r.Desk)
+            .FirstOrDefaultAsync(r => r.Id == reservationId);
+
+        if (reservation == null)
+        {
+            logger.LogWarning("Reservation {ReservationId} not found", reservationId);
+            return;
+        }
+
+        try
+        {
+            int targetHeight = (int)reservation.User.SittingHeight;
+
+            var success = await deskControlService.SetDeskHeightAsync(
+                reservation.Desk.Id, 
+                targetHeight);
+
+            if (success)
+            {
+                logger.LogInformation(
+                    "Auto-adjusted desk {DeskId} to {Height}mm for reservation {ReservationId}",
+                    reservation.Desk.Id, targetHeight, reservationId);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, 
+                "Error auto-adjusting desk for reservation {ReservationId}", reservationId);
+        }
+    }
+}
+
+public class DeskLedService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (Bullshit.IsGeneratingOpenApiDocument())
+        {
+            return;
+        }
+
+        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // HACK: Wait a minute before starting to allow db migrations to complete
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            using var scope = serviceProvider.CreateScope();
+
+            var deskApi = scope.ServiceProvider.GetRequiredService<IDeskApi>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+
+            var desks = await dbContext.Desks.ToListAsync(stoppingToken);
+            foreach (var desk in desks)
+            {
+                try
+                {
+                    bool isOccupied = await dbContext.Reservations
+                        .AnyAsync(r => r.DeskId == desk.Id &&
+                                       r.Start <= DateTime.UtcNow &&
+                                       r.End >= DateTime.UtcNow, stoppingToken);
+
+                    if (isOccupied)
+                    {
+                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/red");
+                    }
+                    else
+                    {
+                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/green");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error setting LED for desk {DeskId}", desk.Id);
+                }
+            }
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+        }
+    }
+}
+
+
+public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -52,7 +208,20 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
                 {
                     // Pass companyId to DeskApi, which will fetch simulator settings from DB
                     var currentState = await deskApi.GetDeskState(desk.MacAddress, desk.CompanyId);
-                    if (currentState.PositionMm != desk.Height)
+
+                    desk.Metadata.IsOverloadProtectionDown = currentState.IsOverloadProtectionDown;
+                    desk.Metadata.IsAntiCollision = currentState.IsAntiCollision;
+                    desk.Metadata.IsOverloadProtectionUp = currentState.IsOverloadProtectionUp;
+                    desk.Metadata.Status = currentState.Status;
+                    desk.Metadata.IsPositionLost = currentState.IsPositionLost;
+
+                    if (currentState.PositionMm == desk.Height)
+                    {
+                        // Just for sake of testing - will be more complicated later
+                        // Notify table
+                        await mqttClient.SendMessage("buzz", $"{desk.RpiMacAddress}/buzzer");
+                    }
+                    else
                     {
                         var oldHeight = desk.Height;
                         desk.Height = currentState.PositionMm;
@@ -72,7 +241,8 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
                         await hubContext.Clients
                             .Group($"room-{desk.RoomId}")
                             .SendAsync("DeskHeightChanged", update, cancellationToken: stoppingToken);
-                        logger.LogInformation("Pulled and updated height for desk {DeskId} to {Height}mm", desk.Id, currentState.PositionMm);
+                        logger.LogInformation("Pulled and updated height for desk {DeskId} to {Height}mm", desk.Id,
+                            currentState.PositionMm);
                     }
                 }
                 catch (Exception ex)
@@ -141,10 +311,16 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
             .Where(d => d.RoomId == roomId)
             .ToListAsync();
 
-        var tasks = desks.Select(desk => SetDeskHeightAsync(desk.Id, newHeight));
-        var results = await Task.WhenAll(tasks);
 
-        return results.All(r => r);
+        foreach (Desk desk in desks)
+        {
+            if (!await SetDeskHeightAsync(desk.Id, newHeight))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public async Task<int?> GetCurrentDeskHeightAsync(string macAddress)
@@ -357,7 +533,7 @@ public class DeskApi(IHttpClientFactory httpClientFactory, BackendContext dbCont
     public async Task<DeskJsonElement> GetDeskStatus(string macAddress, Guid? companyId = null)
     {
         var httpClient = await GetHttpClientAsync(companyId);
-        var result = await httpClient.GetAsync($"desks/{macAddress}");
+        var result = await httpClient.GetAsync($"desks/{macAddress}/status");
 
         result.EnsureSuccessStatusCode();
 
@@ -525,37 +701,84 @@ public class DeskApi(IHttpClientFactory httpClientFactory, BackendContext dbCont
 
 public class DeskJsonElement
 {
+    [JsonPropertyName("config")]
     public Config Config { get; set; }
+
+    [JsonPropertyName("state")]
     public State State { get; set; }
+
+    [JsonPropertyName("usage")]
     public Usage Usage { get; set; }
+
+    [JsonPropertyName("lastErrors")]
     public List<LastError> LastErrors { get; set; }
 }
 
 public class Config
 {
+    [JsonPropertyName("name")]
     public string Name { get; set; }
+
+    [JsonPropertyName("manufacturer")]
     public string Manufacturer { get; set; }
 }
 
 public class State
 {
+    [JsonPropertyName("position_mm")]
     public int PositionMm { get; set; }
+
+    [JsonPropertyName("speed_mms")]
     public int SpeedMms { get; set; }
+
+    [JsonPropertyName("status")]
     public string Status { get; set; }
+
+    [JsonPropertyName("isPositionLost")]
     public bool IsPositionLost { get; set; }
+
+    [JsonPropertyName("isOverloadProtectionUp")]
     public bool IsOverloadProtectionUp { get; set; }
+    
+    [JsonPropertyName("isOverloadProtectionDown")]
     public bool IsOverloadProtectionDown { get; set; }
+
+    [JsonPropertyName("isAntiCollision")]
     public bool IsAntiCollision { get; set; }
 }
 
 public class Usage
 {
+    [JsonPropertyName("activationsCounter")]
     public int ActivationsCounter { get; set; }
+
+    [JsonPropertyName("sitStandCounter")]
     public int SitStandCounter { get; set; }
 }
 
 public class LastError
 {
+    [JsonPropertyName("timeS")]
     public int TimeS { get; set; }
+    [JsonPropertyName("errorCode")]
     public int ErrorCode { get; set; }
+}
+
+public class DeskMetadata
+{
+    public Config Config { get; set; }
+
+    public Usage Usage { get; set; }
+
+    public List<LastError> LastErrors { get; set; }
+
+    public string Status { get; set; }
+
+    public bool IsPositionLost { get; set; }
+
+    public bool IsOverloadProtectionUp { get; set; }
+    
+    public bool IsOverloadProtectionDown { get; set; }
+
+    public bool IsAntiCollision { get; set; }
 }

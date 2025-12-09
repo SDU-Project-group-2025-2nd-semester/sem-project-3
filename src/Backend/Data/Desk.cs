@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Backend.Services;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Backend.Data;
@@ -42,6 +44,12 @@ public class Desk
     [Required]
     [MaxLength(17)] // TODO: Add Regex validation for MAC address format
     public string MacAddress { get; set; }
+
+    [MaxLength(17)] // TODO: Add Regex validation for MAC address format
+    public string RpiMacAddress { get; set; }
+
+    [Column(TypeName = "jsonb")]
+    public DeskMetadata Metadata { get; set; } = new();
 
     public Guid RoomId { get; set; }
 

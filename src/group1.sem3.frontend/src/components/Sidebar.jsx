@@ -15,7 +15,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
     function handleCompanySelect(company) {
         setCurrentCompany(company);
-        localStorage.setItem("currentCompanyId", company.id);
+        localStorage.setItem("currentCompanyId", String(company.id));
         setShowCompanies(false);
     }
 

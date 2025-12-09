@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function UserHomePage() {
     
-    const { currentCompany } = useAuth();
+    const { currentCompany, isHydrating } = useAuth();
     const COMPANY_ID = currentCompany?.id;
     const [currentBookings, setCurrentBookings] = useState([]);
     const [recentBookings, setRecentBookings] = useState([]);
@@ -16,12 +16,18 @@ export default function UserHomePage() {
     useEffect(() => {
         const ctrl = new AbortController();
 
-        async function load() {
+        async function load() {            
             if (!COMPANY_ID) {
-                setErr("No company selected");
-                setLoading(false);
+                if (isHydrating) {
+                    setLoading(true);
+                    setErr(undefined);
+                } else {
+                    setErr("No company selected");
+                    setLoading(false);
+                }
                 return;
             }
+
             setLoading(true);
             setErr(undefined);
             try {                
@@ -35,7 +41,14 @@ export default function UserHomePage() {
                 const now = new Date();
 
                 // 'Current bookings' --> the end of the booking is in the future
-                const futurereservations = (myreservations ?? []).filter(r => new Date(r.end) > now);
+                const futurereservations = (myreservations ?? []).filter(r => new Date(r.end) > now)
+                .sort((a, b) => {
+                    const sa = new Date(a.start).getTime();
+                    const sb = new Date(b.start).getTime();
+                    if (sa !== sb) return sa - sb; // earlier start first
+                    // earlier end first
+                    return new Date(a.end).getTime() - new Date(b.end).getTime();
+                });
 
                 const currentMapped = futurereservations.map(r => {
                     const start = new Date(r.start);
@@ -43,8 +56,10 @@ export default function UserHomePage() {
                     const date = start.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
                     const time = `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}-${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
                     return {
-                        id: r.id,                      
+                        id: r.id,
+                        deskId: r.deskId,                     
                         desk: r.deskLabel ?? r.deskId,         // shows id until label exists
+                        roomId: r.roomId,
                         room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
                         time,
@@ -74,7 +89,9 @@ export default function UserHomePage() {
 
                     return {
                         id: r.id, // uses reservation id as key; could also use deskId
+                        deskId: r.deskId,
                         desk: r.deskLabel ?? r.deskId,         // shows id until label exists
+                        roomId: r.roomId,
                         room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
                         time,
@@ -92,7 +109,7 @@ export default function UserHomePage() {
 
         load();
         return () => ctrl.abort();
-    }, []);
+    }, [COMPANY_ID, isHydrating]);
 
     async function cancelBooking(id) {
         if (!confirm('Are you sure you want to cancel this reservation?')) {
@@ -127,13 +144,15 @@ export default function UserHomePage() {
                     <div className="flex flex-wrap gap-4">
                         {currentBookings.map((booking) => (
                             <div key={booking.id}
-                                className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center w-full"
+                                className="bg-white rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4"
                             >
 
                             <Link to="/user/desk" 
                             state={{
                                 reservationId: booking.id,
+                                deskId: booking.deskId,
                                 desk: booking.desk,
+                                roomId: booking.roomId, 
                                 room: booking.room ?? "-",
                                 date: booking.date,
                                 time: booking.time,
@@ -153,7 +172,7 @@ export default function UserHomePage() {
                             </Link>
 
                             <button
-                            className="mt-4 sm:mt-0 ml-4 sm:ml-0 bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition"
+                            className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition shrink-0"
                             onClick={(e) => cancelBooking(booking.id)}>
                             Cancel
                             </button>
@@ -176,24 +195,33 @@ export default function UserHomePage() {
 
                     <div className="flex flex-wrap gap-4">
                         {recentBookings.map((booking) => (
-                            <Link to="/user/desk" key={booking.id}>
-                                <div
-                                    className="bg-white rounded-2xl shadow p-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center"
-                                >
-                                    <div>
-                                        <p className="text-primary font-semibold">
-                                            Desk: {booking.desk}
-                                        </p>
-                                        <p className="text-primary font-semibold">
-                                            Room: {booking.room ?? "-"}
-                                        </p>
-                                    </div>
-                                    {/* Rebook button, to be implemented */}
-                                    <button className="mt-4 sm:mt-0 ml-4 sm:ml-0 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
-                                        Rebook
-                                    </button>
+                            <div
+                                key={booking.id}
+                                className="bg-white rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4"
+                            >
+                                <div>
+                                    <p className="text-primary font-semibold">
+                                        Desk: {booking.desk}
+                                    </p>
+                                    <p className="text-primary font-semibold">
+                                        Room: {booking.room ?? "-"}
+                                    </p>
                                 </div>
-                            </Link>
+
+                                <Link
+                                    to="/user/booking"
+                                    state={{
+                                        mode: "rebook",
+                                        roomId: booking.roomId,
+                                        roomName: booking.room,
+                                        deskId: booking.deskId,
+                                        deskName: booking.desk,
+                                    }}
+                                    className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition shrink-0"
+                                >
+                                    Rebook
+                                </Link>
+                            </div>
                         ))}   
                     </div>
                 </section>
