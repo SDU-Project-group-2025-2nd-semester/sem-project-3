@@ -1637,6 +1637,10 @@
           "companyId": {
             "type": "string",
             "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -1688,12 +1692,12 @@
             "type": "string"
           },
           "standingHeight": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "sittingHeight": {
-            "type": "number",
-            "format": "double"
+            "type": "integer",
+            "format": "int32"
           },
           "healthRemindersFrequency": {
             "$ref": "#/components/schemas/HealthRemindersFrequency"

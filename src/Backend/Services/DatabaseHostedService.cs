@@ -9,6 +9,8 @@ public class DatabaseMigrationHostedService(
     ILogger<DatabaseMigrationHostedService> logger,
     IHostEnvironment environment) : IHostedService
 {
+    private Task _dbMigrationTask;
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
 
@@ -32,6 +34,48 @@ public class DatabaseMigrationHostedService(
         if (environment.IsDevelopment())
         {
             await SeedDatabaseAsync(applicationDbContext, scope.ServiceProvider);
+        }
+
+        _dbMigrationTask = TheScheduling();
+
+
+        async Task TheScheduling()
+        {
+            await Task.Delay(TimeSpan.FromMinutes(1.1), cancellationToken); // A bit of a dirty hack to make sure jobs work
+
+            try
+            {
+
+                using var scope = serviceProvider.CreateScope();
+
+                await using var applicationDbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+
+                var reservationService = scope.ServiceProvider.GetRequiredService<IReservationService>();
+
+                var user = await applicationDbContext.Users.Include(u => u.CompanyMemberships).FirstAsync();
+
+                var company = await applicationDbContext.Companies.Include(t => t.Rooms).Where(c => c.Id == user.CompanyMemberships.First().CompanyId).FirstAsync();
+
+                var desk = await applicationDbContext.Desks.Where(d => d.RoomId == company.Rooms.First().Id)
+                    .FirstOrDefaultAsync(cancellationToken: cancellationToken)!;
+
+
+                var now = DateTime.UtcNow;
+                var reservationDto = new CreateReservationDto()
+                {
+                    DeskId = desk.Id,
+                    Start = now.AddMinutes(0.5),
+                    End = now.AddHours(1)
+                };
+
+                await reservationService.CreateReservation(reservationDto, user.Id, company.Id);
+
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Something went wrong!");
+                throw;
+            }
         }
     }
 
@@ -85,8 +129,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Admin",
             LastName = "User",
-            StandingHeight = 750.0,
-            SittingHeight = 650.0,
+            StandingHeight = 750,
+            SittingHeight = 650,
             HealthRemindersFrequency = HealthRemindersFrequency.Medium,
             SittingTime = 30,
             StandingTime = 15,
@@ -103,8 +147,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "John",
             LastName = "Doe",
-            StandingHeight = 720.0,
-            SittingHeight = 630.0,
+            StandingHeight = 720,
+            SittingHeight = 630,
             HealthRemindersFrequency = HealthRemindersFrequency.High,
             SittingTime = 25,
             StandingTime = 10,
@@ -121,8 +165,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Jane",
             LastName = "Doe",
-            StandingHeight = 680.0,
-            SittingHeight = 600.0,
+            StandingHeight = 680,
+            SittingHeight = 600,
             HealthRemindersFrequency = HealthRemindersFrequency.Medium,
             SittingTime = 30,
             StandingTime = 15,
@@ -139,8 +183,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Bob",
             LastName = "Smith",
-            StandingHeight = 740.0,
-            SittingHeight = 650.0,
+            StandingHeight = 740,
+            SittingHeight = 650,
             HealthRemindersFrequency = HealthRemindersFrequency.Low,
             SittingTime = 45,
             StandingTime = 20,
@@ -157,8 +201,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Alice",
             LastName = "Johnson",
-            StandingHeight = 700.0,
-            SittingHeight = 620.0,
+            StandingHeight = 700,
+            SittingHeight = 620,
             HealthRemindersFrequency = HealthRemindersFrequency.High,
             SittingTime = 20,
             StandingTime = 10,
@@ -168,9 +212,9 @@ public class DatabaseMigrationHostedService(
         await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
 
         await context.SaveChangesAsync();
-        
+
         // Create Users-Company Relations
-        
+
         context.UserCompanies.AddRange(
             new UserCompany
             {
@@ -215,7 +259,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(8, 0),
                 ClosingTime = new TimeOnly(18, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday
             },
             DeskIds = [],
@@ -230,7 +274,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(7, 0),
                 ClosingTime = new TimeOnly(20, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday | DaysOfTheWeek.Saturday
             },
             DeskIds = [],
@@ -245,7 +289,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(9, 0),
                 ClosingTime = new TimeOnly(17, 0),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday
             },
             DeskIds = [],
@@ -260,7 +304,7 @@ public class DatabaseMigrationHostedService(
             {
                 OpeningTime = new TimeOnly(0, 0),
                 ClosingTime = new TimeOnly(23, 59),
-                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday | 
+                DaysOfTheWeek = DaysOfTheWeek.Monday | DaysOfTheWeek.Tuesday | DaysOfTheWeek.Wednesday |
                                 DaysOfTheWeek.Thursday | DaysOfTheWeek.Friday | DaysOfTheWeek.Saturday | DaysOfTheWeek.Sunday
             },
             DeskIds = [],
@@ -408,7 +452,7 @@ public class DatabaseMigrationHostedService(
                 Start = now.AddHours(-3),
                 End = now.AddHours(3),
                 UserId = johnDoe.Id,
-                DeskId = desks[0].Id,
+                DeskId = desks[1].Id,
                 CompanyId = techCoWorkingCompany.Id
             },
             // Current/Today reservation
@@ -527,10 +571,10 @@ public class DatabaseMigrationHostedService(
     private static bool IsGeneratingOpenApiDocument()
     {
         // Check if running in a context that suggests OpenAPI generation
-        return Environment.GetCommandLineArgs().Any(arg => 
+        return Environment.GetCommandLineArgs().Any(arg =>
             arg.Contains("swagger", StringComparison.OrdinalIgnoreCase) ||
             arg.Contains("openapi", StringComparison.OrdinalIgnoreCase));
     }
 
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public async Task StopAsync(CancellationToken cancellationToken) => await _dbMigrationTask;
 }

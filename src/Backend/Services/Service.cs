@@ -1,5 +1,6 @@
 ﻿using Backend.Data;
 using Backend.Hubs;
+using Hangfire;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
@@ -8,11 +9,118 @@ using System.Text.Json.Serialization;
 
 namespace Backend.Services;
 
+public interface IReservationScheduler
+{
+    Task ScheduleDeskAdjustment(Reservation reservation);
+    Task CancelScheduledAdjustment(Guid reservationId);
+}
+
 public interface IDeskControlService
 {
     Task<bool> SetDeskHeightAsync(Guid deskId, int newHeight);
     Task<bool> SetRoomDesksHeightAsync(Guid roomId, int newHeight);
     Task<int?> GetCurrentDeskHeightAsync(string macAddress);
+}
+
+public class ReservationScheduler(
+    ILogger<ReservationScheduler> logger,
+    IBackgroundJobClient backgroundJobClient,
+    BackendContext context) : IReservationScheduler
+{
+    public Task ScheduleDeskAdjustment(Reservation reservation)
+    {
+        var triggerTime = reservation.Start;
+        
+
+        if (triggerTime <= DateTime.UtcNow)
+        {
+            // If reservation starts soon, trigger immediately
+            backgroundJobClient.Enqueue<DeskAdjustmentJob>(job => 
+                job.AdjustDeskForReservation(reservation.Id));
+        }
+        else
+        {
+            // Schedule for future
+            string jobId = backgroundJobClient.Schedule<DeskAdjustmentJob>(
+                job => job.AdjustDeskForReservation(reservation.Id),
+                triggerTime);
+
+            reservation.JobId = jobId;
+
+            context.SaveChanges();
+
+            logger.LogInformation(
+                "Scheduled desk adjustment for reservation {ReservationId} at {TriggerTime} (JobId: {JobId})",
+                reservation.Id, triggerTime, jobId);
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    public async Task CancelScheduledAdjustment(Guid reservationId)
+    {
+
+        var reservation = await context.Reservations.FindAsync();
+
+        if (reservation == null || string.IsNullOrEmpty(reservation.JobId))
+        {
+            logger.LogWarning("No scheduled job found for reservation {ReservationId}", reservationId);
+            return;
+        }
+
+        BackgroundJob.Delete(reservation.JobId);
+
+        reservation.JobId = null;
+
+        await context.SaveChangesAsync();
+
+        logger.LogInformation("Cancelling scheduled adjustment for reservation {ReservationId}", reservationId);
+    }
+}
+
+
+public class DeskAdjustmentJob(
+    ILogger<DeskAdjustmentJob> logger,
+    IServiceProvider serviceProvider)
+{
+    public async Task AdjustDeskForReservation(Guid reservationId)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+        var deskControlService = scope.ServiceProvider.GetRequiredService<IDeskControlService>();
+
+        var reservation = await dbContext.Reservations
+            .Include(r => r.User)
+            .Include(r => r.Desk)
+            .FirstOrDefaultAsync(r => r.Id == reservationId);
+
+        if (reservation == null)
+        {
+            logger.LogWarning("Reservation {ReservationId} not found", reservationId);
+            return;
+        }
+
+        try
+        {
+            int targetHeight = (int)reservation.User.SittingHeight;
+
+            var success = await deskControlService.SetDeskHeightAsync(
+                reservation.Desk.Id, 
+                targetHeight);
+
+            if (success)
+            {
+                logger.LogInformation(
+                    "Auto-adjusted desk {DeskId} to {Height}mm for reservation {ReservationId}",
+                    reservation.Desk.Id, targetHeight, reservationId);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, 
+                "Error auto-adjusting desk for reservation {ReservationId}", reservationId);
+        }
+    }
 }
 
 public class DeskLedService(ILogger<DeskHeightPullingService> logger, IHubContext<DeskHub> hubContext, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
@@ -371,7 +479,12 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<State> SetState(string macAddress, State state)
     {
-        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/state", state);
+
+        var json = System.Text.Json.JsonSerializer.Serialize(state);
+
+        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var result = await httpClient.PutAsync($"desks/{macAddress}/state", content);
         result.EnsureSuccessStatusCode();
         var updatedState = await result.Content.ReadFromJsonAsync<State>();
         if (updatedState == null)

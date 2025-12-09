@@ -79,6 +79,7 @@ builder.Services
     .AddTransient<IDeskControlService,DeskControlService>()
     .AddTransient<IDeskService, DeskService>()
     .AddTransient<IUserService,UserService>()
+    .AddTransient<IReservationScheduler,ReservationScheduler>()
     .AddSignalR();;
 
 builder.Services.AddHostedService<MqttHostedService>()
