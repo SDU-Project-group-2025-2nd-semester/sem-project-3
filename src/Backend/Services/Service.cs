@@ -297,10 +297,16 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
             .Where(d => d.RoomId == roomId)
             .ToListAsync();
 
-        var tasks = desks.Select(desk => SetDeskHeightAsync(desk.Id, newHeight));
-        var results = await Task.WhenAll(tasks);
 
-        return results.All(r => r);
+        foreach (Desk desk in desks)
+        {
+            if (!await SetDeskHeightAsync(desk.Id, newHeight))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public async Task<int?> GetCurrentDeskHeightAsync(string macAddress)

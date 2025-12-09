@@ -47,6 +47,17 @@ public class RoomsController(IRoomService roomService) : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{roomId}/height")]
+    [RequireRole(UserRole.Admin, UserRole.Janitor)]
+    public async Task<IActionResult> SetRoomHeight(Guid companyId, Guid roomId, [FromBody] int newHeight)
+    {
+        var update = await roomService.SetRoomHeightAsync(companyId, roomId, newHeight);
+        if (!update)
+            return NotFound();
+
+        return Ok();
+    }
+
     [HttpDelete("{roomId}")]
     [RequireRole(UserRole.Admin)]
     public async Task<IActionResult> DeleteRoom(Guid companyId, Guid roomId)
