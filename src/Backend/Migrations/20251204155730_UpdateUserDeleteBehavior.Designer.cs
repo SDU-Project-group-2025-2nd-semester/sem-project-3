@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using Backend.Data;
-using Backend.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(BackendContext))]
-    partial class BackendContextModelSnapshot : ModelSnapshot
+    [Migration("20251204155730_UpdateUserDeleteBehavior")]
+    partial class UpdateUserDeleteBehavior
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,10 +110,6 @@ namespace Backend.Migrations
                     b.Property<int>("MaxHeight")
                         .HasColumnType("integer");
 
-                    b.Property<DeskMetadata>("Metadata")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<int>("MinHeight")
                         .HasColumnType("integer");
 
@@ -125,11 +123,6 @@ namespace Backend.Migrations
 
                     b.Property<Guid>("RoomId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("RpiMacAddress")
-                        .IsRequired()
-                        .HasMaxLength(17)
-                        .HasColumnType("character varying(17)");
 
                     b.HasKey("Id");
 

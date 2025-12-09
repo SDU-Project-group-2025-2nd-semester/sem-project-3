@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { post, get } from "./apiClient";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { homepagePathForRole } from "../utils/homepage";
 
 const AuthContext = createContext(null);
@@ -13,7 +13,7 @@ function pickUser(serverUser) {
     userName: serverUser.userName,
     firstName: serverUser.firstName,
     lastName: serverUser.lastName,
-    role: serverUser.role,
+    role: serverUser.companyMemberships?.[0]?.role ?? 0,
     standingHeight: serverUser.standingHeight,
     sittingHeight: serverUser.sittingHeight,
     healthRemindersFrequency: serverUser.healthRemindersFrequency,
@@ -24,9 +24,38 @@ function pickUser(serverUser) {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-
+  const [companies, setCompanies] = useState([]);
+  const [currentCompany, setCurrentCompany] = useState(null);
+  const [isHydrating, setIsHydrating] = useState(true);
   const navigate = useNavigate();
-  // automatically move to homepage if already logged in
+
+  function initializeCompanies(me) {
+    // build companies list from server payload (companyMemberships)
+    const mapped = (me.companyMemberships ?? []).map(cm => ({
+      id: cm.company.id,
+      name: cm.company.name ?? "Unnamed",
+      role: cm.role
+    }));
+    setCompanies(mapped);
+
+    // restore selected company from localStorage or pick first
+    const savedId = localStorage.getItem("currentCompanyId");
+    const initial = 
+      (savedId && mapped.find(c => String(c.id) === String(savedId))) ||
+      mapped[0] ||
+      null;
+    if (initial) {
+      setCurrentCompany(initial);
+      localStorage.setItem("currentCompanyId", String(initial.id));
+    } else {
+      setCurrentCompany(null);
+      localStorage.removeItem("currentCompanyId");
+    }
+  }
+  
+  const location = useLocation();
+
+  // automatically move to homepage if already logged in (but only from login page)
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -36,27 +65,50 @@ export function AuthProvider({ children }) {
         const user = pickUser(me);
         setCurrentUser(user);
 
-        navigate(homepagePathForRole(user?.role));
+        initializeCompanies(me);
+
+        // navigate to homepage only from login/signup pages
+        if (location.pathname === '/' || location.pathname === '/signuppage') {
+          navigate(homepagePathForRole(user?.role));
+        }
 
       } catch {
         // no session
+      } finally {
+        if (mounted) setIsHydrating(false);
       }
+
     })();
     return () => { mounted = false; };
   }, []);
 
-  async function login({ email, password }) {
-    const data = await post("/auth/login", { email, password });
-
-    let me = null;
+  // Refresh current user from server (returns picked user or null)
+  async function refreshCurrentUser() {
     try {
-      me = await get("/Users/me");
-    } catch {
-      me = null;
+      setIsHydrating(true);
+      const me = await get("/Users/me");
+      const user = pickUser(me);
+      setCurrentUser(user);
+      initializeCompanies(me);
+      return user;
+    } catch (err) {
+      // Not authenticated or error � clear local state
+      setCurrentUser(null);
+      return null;
+    } finally {
+      setIsHydrating(false);
     }
 
-    const user = pickUser(me ?? { email, userName: email });
-    setCurrentUser(user);
+  }
+
+  async function login({ email, password }) {
+    await post("/auth/login", { email, password });
+
+    // Refresh user state after successful login
+    const user = await refreshCurrentUser();
+
+    navigate(homepagePathForRole(user?.role));
+
     return user;
   }
 
@@ -68,10 +120,13 @@ export function AuthProvider({ children }) {
   async function logout() {
     await post("/auth/logout");
     setCurrentUser(null);
+    setCompanies([]);
+    setCurrentCompany(null);
+    localStorage.removeItem("currentCompanyId");
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, signup }}>
+    <AuthContext.Provider value={{ currentUser, companies, currentCompany, setCurrentCompany, login, logout, signup, isHydrating }}>
       {children}
     </AuthContext.Provider>
   );

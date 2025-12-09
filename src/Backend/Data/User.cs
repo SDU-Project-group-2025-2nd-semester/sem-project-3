@@ -16,9 +16,9 @@ public class User : IdentityUser
 
     [MaxLength(100)] public string LastName { get; set; } = "Not set";
 
-    public double StandingHeight { get; set; }
+    public int StandingHeight { get; set; } // In mm
 
-    public double SittingHeight { get; set; }
+    public int SittingHeight { get; set; }
 
     public HealthRemindersFrequency HealthRemindersFrequency { get; set; }
 

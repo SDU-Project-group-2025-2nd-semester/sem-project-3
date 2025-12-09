@@ -9,6 +9,8 @@ public class DatabaseMigrationHostedService(
     ILogger<DatabaseMigrationHostedService> logger,
     IHostEnvironment environment) : IHostedService
 {
+    private Task _dbMigrationTask;
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
 
@@ -33,6 +35,62 @@ public class DatabaseMigrationHostedService(
         {
             await SeedDatabaseAsync(applicationDbContext, scope.ServiceProvider);
         }
+
+        _dbMigrationTask = ScheduleTestReservationsAsync();
+
+
+        async Task ScheduleTestReservationsAsync()
+        {
+            await Task.Delay(TimeSpan.FromMinutes(1.1), cancellationToken); // A bit of a dirty hack to make sure jobs work
+
+            try
+            {
+
+                using var scope = serviceProvider.CreateScope();
+
+                await using var applicationDbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
+
+                var reservationService = scope.ServiceProvider.GetRequiredService<IReservationService>();
+
+                var user = await applicationDbContext.Users.Include(u => u.CompanyMemberships).FirstAsync();
+
+                var company = await applicationDbContext.Companies.Include(t => t.Rooms).Where(c => c.Id == user.CompanyMemberships.First().CompanyId).FirstAsync();
+
+                var desk = await applicationDbContext.Desks.Where(d => d.RoomId == company.Rooms.First().Id)
+                    .FirstOrDefaultAsync(cancellationToken: cancellationToken)!;
+
+
+                var now = DateTime.UtcNow;
+                var reservationDto = new CreateReservationDto()
+                {
+                    DeskId = desk.Id,
+                    Start = now.AddMinutes(0.5),
+                    End = now.AddHours(1)
+                };
+
+                await reservationService.CreateReservation(reservationDto, user.Id, company.Id);
+
+                now = now.AddDays(1);
+
+                reservationDto = new CreateReservationDto()
+                {
+                    DeskId = desk.Id,
+                    Start = now.AddMinutes(0.5),
+                    End = now.AddHours(1)
+                };
+
+                var reservation = await reservationService.CreateReservation(reservationDto, user.Id, company.Id);
+
+                await Task.Delay(100, cancellationToken);
+
+                await reservationService.DeleteReservation(reservation);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Something went wrong!");
+                throw;
+            }
+        }
     }
 
     private async Task SeedDatabaseAsync(BackendContext context, IServiceProvider sp)
@@ -54,7 +112,9 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
             Name = "Tech Co-Working Space",
             SecretInviteCode = "TECH2024",
-            Rooms = []
+            Rooms = [],
+            SimulatorLink = null,
+            SimulatorApiKey = null
         };
 
         var innovationHubCompany = new Company
@@ -62,7 +122,9 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
             Name = "Innovation Hub",
             SecretInviteCode = "INNOVATE",
-            Rooms = []
+            Rooms = [],
+            SimulatorLink = null,
+            SimulatorApiKey = null
         };
 
         var startupCenterCompany = new Company
@@ -70,7 +132,9 @@ public class DatabaseMigrationHostedService(
             Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
             Name = "Startup Center",
             SecretInviteCode = null, // Email verification required
-            Rooms = []
+            Rooms = [],
+            SimulatorLink = null,
+            SimulatorApiKey = null
         };
 
         context.Companies.AddRange(techCoWorkingCompany, innovationHubCompany, startupCenterCompany);
@@ -85,9 +149,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Admin",
             LastName = "User",
-            Role = UserRole.Admin,
-            StandingHeight = 750.0,
-            SittingHeight = 650.0,
+            StandingHeight = 750,
+            SittingHeight = 650,
             HealthRemindersFrequency = HealthRemindersFrequency.Medium,
             SittingTime = 30,
             StandingTime = 15,
@@ -104,8 +167,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "John",
             LastName = "Doe",
-            StandingHeight = 720.0,
-            SittingHeight = 630.0,
+            StandingHeight = 720,
+            SittingHeight = 630,
             HealthRemindersFrequency = HealthRemindersFrequency.High,
             SittingTime = 25,
             StandingTime = 10,
@@ -122,8 +185,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Jane",
             LastName = "Doe",
-            StandingHeight = 680.0,
-            SittingHeight = 600.0,
+            StandingHeight = 680,
+            SittingHeight = 600,
             HealthRemindersFrequency = HealthRemindersFrequency.Medium,
             SittingTime = 30,
             StandingTime = 15,
@@ -140,8 +203,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Bob",
             LastName = "Smith",
-            StandingHeight = 740.0,
-            SittingHeight = 650.0,
+            StandingHeight = 740,
+            SittingHeight = 650,
             HealthRemindersFrequency = HealthRemindersFrequency.Low,
             SittingTime = 45,
             StandingTime = 20,
@@ -158,8 +221,8 @@ public class DatabaseMigrationHostedService(
             EmailConfirmed = true,
             FirstName = "Alice",
             LastName = "Johnson",
-            StandingHeight = 700.0,
-            SittingHeight = 620.0,
+            StandingHeight = 700,
+            SittingHeight = 620,
             HealthRemindersFrequency = HealthRemindersFrequency.High,
             SittingTime = 20,
             StandingTime = 10,
@@ -167,6 +230,24 @@ public class DatabaseMigrationHostedService(
             Reservations = []
         };
         await userManager.CreateAsync(aliceJohnson, "AliceJohnson123!");
+
+        var staffUser = new User
+        {
+            Id = "f1111111-1111-1111-1111-111111111111",
+            UserName = "staff@techcoworking.com",
+            Email = "staff@techcoworking.com",
+            EmailConfirmed = true,
+            FirstName = "Staff",
+            LastName = "Staffy",
+            StandingHeight = 750,
+            SittingHeight = 650,
+            HealthRemindersFrequency = HealthRemindersFrequency.Medium,
+            SittingTime = 30,
+            StandingTime = 15,
+            AccountCreation = DateTime.UtcNow.AddMonths(-6),
+            Reservations = []
+        };
+        await userManager.CreateAsync(staffUser, "Staff123!");
 
         await context.SaveChangesAsync();
 
@@ -181,9 +262,9 @@ public class DatabaseMigrationHostedService(
             },
             new UserCompany
             {
-                UserId = adminUser.Id,
-                CompanyId = innovationHubCompany.Id,
-                Role = UserRole.Admin
+                UserId = staffUser.Id,
+                CompanyId = techCoWorkingCompany.Id,
+                Role = UserRole.Janitor
             },
             new UserCompany
             {
@@ -291,7 +372,8 @@ public class DatabaseMigrationHostedService(
                 Height = 700,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:01",
+                MacAddress = "cd:fb:1a:53:fb:e6",
+                RpiMacAddress = "cd:fb:1a:53:fb:e6",
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -304,7 +386,8 @@ public class DatabaseMigrationHostedService(
                 Height = 650,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:02",
+                MacAddress = "ee:62:5b:b8:73:1d",
+                RpiMacAddress = "ee:62:5b:b8:73:1d",
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -317,7 +400,8 @@ public class DatabaseMigrationHostedService(
                 Height = 720,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:03",
+                MacAddress = "70:9e:d5:e7:8c:98",
+                RpiMacAddress = "70:9e:d5:e7:8c:98",
                 RoomId = room1Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -331,7 +415,8 @@ public class DatabaseMigrationHostedService(
                 Height = 680,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:04",
+                MacAddress = "00:ec:eb:50:c2:c8",
+                RpiMacAddress = "00:ec:eb:50:c2:c8",
                 RoomId = room2Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -344,7 +429,8 @@ public class DatabaseMigrationHostedService(
                 Height = 710,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "AA:BB:CC:DD:EE:05",
+                MacAddress = "f1:50:c2:b8:bf:22",
+                RpiMacAddress = "f1:50:c2:b8:bf:22",
                 RoomId = room2Company1.Id,
                 CompanyId = techCoWorkingCompany.Id,
                 ReservationIds = [],
@@ -358,7 +444,8 @@ public class DatabaseMigrationHostedService(
                 Height = 700,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "BB:CC:DD:EE:FF:01",
+                MacAddress = "ce:38:a6:30:af:1d",
+                RpiMacAddress = "ce:38:a6:30:af:1d",
                 RoomId = room1Company2.Id,
                 CompanyId = innovationHubCompany.Id,
                 ReservationIds = [],
@@ -371,40 +458,39 @@ public class DatabaseMigrationHostedService(
                 Height = 730,
                 MinHeight = 600,
                 MaxHeight = 1200,
-                MacAddress = "BB:CC:DD:EE:FF:02",
+                MacAddress = "91:17:a4:3b:f4:4d",
+                RpiMacAddress = "91:17:a4:3b:f4:4d",
                 RoomId = room1Company2.Id,
                 CompanyId = innovationHubCompany.Id,
                 ReservationIds = [],
                 Reservations = [],
                 ReadableId = "D-102"
             },
-            // Startup Center - Room 1
-            new Desk
-            {
-                Id = Guid.Parse("dc111111-1111-1111-1111-111111111111"),
-                Height = 690,
-                MinHeight = 600,
-                MaxHeight = 1200,
-                MacAddress = "CC:DD:EE:FF:AA:01",
-                RoomId = room1Company3.Id,
-                CompanyId = startupCenterCompany.Id,
-                ReservationIds = [],
-                Reservations = [],
-                ReadableId = "D-101"
-            },
-            new Desk
-            {
-                Id = Guid.Parse("dc111111-2222-2222-2222-222222222222"),
-                Height = 705,
-                MinHeight = 600,
-                MaxHeight = 1200,
-                MacAddress = "CC:DD:EE:FF:AA:02",
-                RoomId = room1Company3.Id,
-                CompanyId = startupCenterCompany.Id,
-                ReservationIds = [],
-                Reservations = [],
-                ReadableId = "D-102"
-            }
+            //// Startup Center - Room 1
+            //new Desk
+            //{
+            //    Id = Guid.Parse("dc111111-1111-1111-1111-111111111111"),
+            //    Height = 690,
+            //    MinHeight = 600,
+            //    MaxHeight = 1200,
+            //    MacAddress = "CC:DD:EE:FF:AA:01",
+            //    RoomId = room1Company3.Id,
+            //    CompanyId = startupCenterCompany.Id,
+            //    ReservationIds = [],
+            //    Reservations = []
+            //},
+            //new Desk
+            //{
+            //    Id = Guid.Parse("dc111111-2222-2222-2222-222222222222"),
+            //    Height = 705,
+            //    MinHeight = 600,
+            //    MaxHeight = 1200,
+            //    MacAddress = "CC:DD:EE:FF:AA:02",
+            //    RoomId = room1Company3.Id,
+            //    CompanyId = startupCenterCompany.Id,
+            //    ReservationIds = [],
+            //    Reservations = []
+            //}
         };
 
         context.Desks.AddRange(desks);
@@ -418,10 +504,10 @@ public class DatabaseMigrationHostedService(
             new Reservation
             {
                 Id = Guid.Parse("a1111111-1111-1111-1111-111111111111"),
-                Start = now.AddDays(-7).Date.AddHours(9),
-                End = now.AddDays(-7).Date.AddHours(17),
+                Start = now.AddHours(-3),
+                End = now.AddHours(3),
                 UserId = johnDoe.Id,
-                DeskId = desks[0].Id,
+                DeskId = desks[1].Id,
                 CompanyId = techCoWorkingCompany.Id
             },
             // Current/Today reservation
@@ -462,15 +548,15 @@ public class DatabaseMigrationHostedService(
                 DeskId = desks[5].Id,
                 CompanyId = innovationHubCompany.Id
             },
-            new Reservation
-            {
-                Id = Guid.Parse("f6666666-6666-6666-6666-666666666666"),
-                Start = now.AddDays(5).Date.AddHours(8),
-                End = now.AddDays(5).Date.AddHours(12),
-                UserId = aliceJohnson.Id,
-                DeskId = desks[7].Id,
-                CompanyId = startupCenterCompany.Id
-            }
+            //new Reservation
+            //{
+            //    Id = Guid.Parse("f6666666-6666-6666-6666-666666666666"),
+            //    Start = now.AddDays(5).Date.AddHours(8),
+            //    End = now.AddDays(5).Date.AddHours(12),
+            //    UserId = aliceJohnson.Id,
+            //    DeskId = desks[7].Id,
+            //    CompanyId = startupCenterCompany.Id
+            //}
         };
 
         context.Reservations.AddRange(reservations);
@@ -515,18 +601,18 @@ public class DatabaseMigrationHostedService(
                 CompanyId = innovationHubCompany.Id
             },
             // Resolved report
-            new DamageReport
-            {
-                Id = Guid.Parse("d1111111-1111-1111-1111-111111111111"),
-                Description = "Power outlet near desk not working.",
-                SubmitTime = now.AddDays(-15),
-                ResolveTime = now.AddDays(-14),
-                IsResolved = true,
-                SubmittedById = aliceJohnson.Id,
-                ResolvedById = adminUser.Id,
-                DeskId = desks[7].Id,
-                CompanyId = startupCenterCompany.Id
-            }
+            //new DamageReport
+            //{
+            //    Id = Guid.Parse("d1111111-1111-1111-1111-111111111111"),
+            //    Description = "Power outlet near desk not working.",
+            //    SubmitTime = now.AddDays(-15),
+            //    ResolveTime = now.AddDays(-14),
+            //    IsResolved = true,
+            //    SubmittedById = aliceJohnson.Id,
+            //    ResolvedById = adminUser.Id,
+            //    DeskId = desks[7].Id,
+            //    CompanyId = startupCenterCompany.Id
+            //}
         };
 
         context.DamageReports.AddRange(damageReports);
@@ -545,5 +631,12 @@ public class DatabaseMigrationHostedService(
             arg.Contains("openapi", StringComparison.OrdinalIgnoreCase));
     }
 
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        if (_dbMigrationTask != null)
+        {
+            await _dbMigrationTask;
+        }
+        // else: nothing to await, just return
+    }
 }

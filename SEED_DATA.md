@@ -13,6 +13,7 @@ All users have **email confirmed** and can log in immediately.
 | jane.doe@techcoworking.com | `JaneDoe123!` | Jane | Doe | c1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
 | bob.smith@innovationhub.com | `BobSmith123!` | Bob | Smith | d1111111-1111-1111-1111-111111111111 | Innovation Hub |
 | alice.johnson@startupcenter.com | `AliceJohnson123!` | Alice | Johnson | e1111111-1111-1111-1111-111111111111 | Startup Center |
+| staff@techcoworking.com | `Staff123!` | Staff | Staffy | f1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
 
 ### User Details
 
@@ -54,6 +55,14 @@ All users have **email confirmed** and can log in immediately.
 - **Sitting Time**: 20 min
 - **Standing Time**: 10 min
 - **Has Reservations**: Yes (future)
+
+#### Staff Staffy
+- **Standing Height**: 750mm
+- **Sitting Height**: 650mm
+- **Health Reminders**: Medium
+- **Sitting Time**: 30 min
+- **Standing Time**: 15 min
+- **Has Reservations**: No
 
 ---
 
@@ -120,17 +129,9 @@ All users have **email confirmed** and can log in immediately.
 | db111111-1111-1111-1111-111111111111 | BB:CC:DD:EE:FF:01 | 700mm | 600mm | 1200mm | Has damage report |
 | db111111-2222-2222-2222-222222222222 | BB:CC:DD:EE:FF:02 | 730mm | 600mm | 1200mm | Available |
 
-### Startup Center
-
-#### Room 1
-| Desk ID | MAC Address | Height | Min Height | Max Height | Status |
-|---------|-------------|--------|------------|------------|--------|
-| dc111111-1111-1111-1111-111111111111 | CC:DD:EE:FF:AA:01 | 690mm | 600mm | 1200mm | Resolved damage |
-| dc111111-2222-2222-2222-222222222222 | CC:DD:EE:FF:AA:02 | 705mm | 600mm | 1200mm | Available |
-
 ---
 
-## Reservations
+## Reservations [ Desk mack addresses are incorrect ]
 
 | ID | User | Desk | Start | End | Status |
 |----|------|------|-------|-----|--------|
@@ -139,7 +140,6 @@ All users have **email confirmed** and can log in immediately.
 | c3333333-3333-3333-3333-333333333333 | Jane Doe | AA:BB:CC:DD:EE:02 | Tomorrow, 09:00 | Tomorrow, 17:00 | Future |
 | d4444444-4444-4444-4444-444444444444 | John Doe | AA:BB:CC:DD:EE:03 | In 2 days, 10:00 | In 2 days, 15:00 | Future |
 | e5555555-5555-5555-5555-555555555555 | Bob Smith | BB:CC:DD:EE:FF:01 | In 3 days, 09:00 | In 3 days, 18:00 | Future |
-| f6666666-6666-6666-6666-666666666666 | Alice Johnson | CC:DD:EE:FF:AA:01 | In 5 days, 08:00 | In 5 days, 12:00 | Future |
 
 ---
 
@@ -150,7 +150,6 @@ All users have **email confirmed** and can log in immediately.
 | a1111111-1111-1111-1111-111111111111 | AA:BB:CC:DD:EE:01 | The desk height adjustment button is stuck and won't respond to presses. | John Doe | 5 days ago | **Unresolved** | - | - |
 | b1111111-1111-1111-1111-111111111111 | AA:BB:CC:DD:EE:02 | Desk surface has a scratch on the left side. | Jane Doe | 10 days ago | **Resolved** | Admin User | 3 days ago |
 | c1111111-1111-1111-1111-111111111111 | BB:CC:DD:EE:FF:01 | BLE connection keeps disconnecting. Might need battery replacement. | Bob Smith | 2 days ago | **Unresolved** | - | - |
-| d1111111-1111-1111-1111-111111111111 | CC:DD:EE:FF:AA:01 | Power outlet near desk not working. | Alice Johnson | 15 days ago | **Resolved** | Admin User | 14 days ago |
 
 ---
 
@@ -195,23 +194,9 @@ POST /api/company/join
 - Seeding runs automatically after migrations on application startup
 - If data already exists, seeding is skipped
 - All passwords follow the format: `{FirstName}{LastName}123!` or `Admin123!`
-- MAC addresses follow format: `XX:XX:XX:XX:XX:XX`
+- MAC addresses follow format: `xx:xx:xx:xx:xx:xx`
 - All heights are in millimeters (mm)
 - All times are in UTC
 - Secret invite codes are optional (Startup Center doesn't have one)
 
 ---
-
-## Resetting Seed Data
-
-To reset the seed data:
-
-1. Drop the database or run down migration
-2. Restart the application
-3. Migrations will run and seed data will be recreated
-
-```bash
-# Using dotnet ef tools
-dotnet ef database drop
-dotnet run
-```

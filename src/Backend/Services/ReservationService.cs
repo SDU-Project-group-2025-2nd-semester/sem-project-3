@@ -3,22 +3,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services;
 
-public class ReservationService(BackendContext dbContext) : IReservationService
+public class ReservationService(BackendContext dbContext, IReservationScheduler scheduler) : IReservationService
 {
     public async Task<object> GetReservations(Guid companyId, string? userId, Guid? deskId = null,
         DateTime? startDate = null, DateTime? endDate = null)
     {
         var query = dbContext.Reservations
+            .AsNoTracking()
             .Where(r => r.CompanyId == companyId);
 
         if (!string.IsNullOrEmpty(userId))
         {
-            query = query.Where(r => r.User.Id == userId);
+            query = query.Where(r => r.UserId == userId);
         }
 
         if (deskId.HasValue)
         {
-            query = query.Where(r => r.Id == deskId.Value);
+            query = query.Where(r => r.DeskId == deskId.Value);
         }
 
         if (startDate.HasValue)
@@ -36,11 +37,15 @@ public class ReservationService(BackendContext dbContext) : IReservationService
 
     public async Task<Reservation?> GetReservation(Guid reservationId)
     {
-        return await dbContext.Reservations.FindAsync(reservationId);
+        return await dbContext.Reservations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == reservationId);
     }
 
     public async Task DeleteReservation(Reservation reservation)
     {
+        await scheduler.CancelScheduledAdjustment(reservation.Id);
+
         dbContext.Reservations.Remove(reservation);
 
         await dbContext.SaveChangesAsync();
@@ -50,7 +55,7 @@ public class ReservationService(BackendContext dbContext) : IReservationService
         Guid companyId)
     {
         var reservations = await dbContext.Reservations
-            .Where(r => r.Desk.Id == createReservationDto.DeskId)
+            .Where(r => r.DeskId == createReservationDto.DeskId)
             .Where(r => r.Start < createReservationDto.End && r.End > createReservationDto.Start)
             .ToListAsync();
 
@@ -65,6 +70,8 @@ public class ReservationService(BackendContext dbContext) : IReservationService
         reservation.UserId = userId;
 
         dbContext.Reservations.Add(reservation);
+
+        await scheduler.ScheduleDeskAdjustment(reservation);
 
         await dbContext.SaveChangesAsync();
 

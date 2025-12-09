@@ -9,6 +9,10 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
+
+		<!-- Disable build-time OpenAPI document generation -->
+		<OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
+
 		<OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
 		<OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)</OpenApiDocumentsDirectory>
 		<DockerfileContext>..\..</DockerfileContext>
@@ -16,8 +20,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Hangfire.Core" Version="1.8.22" />
+		<PackageReference Include="Hangfire.InMemory" Version="1.0.0" />
+		<PackageReference Include="Hangfire.SqlServer" Version="1.8.22" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.10" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.*-*" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.*" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

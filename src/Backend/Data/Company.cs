@@ -25,5 +25,9 @@ public class Company
     
     [JsonIgnore]
     public List<UserCompany> UserMemberships { get; set; } = [];
+    
+    public string? SimulatorLink { get; set; }
+    
+    public string? SimulatorApiKey { get; set; }
 
 }
