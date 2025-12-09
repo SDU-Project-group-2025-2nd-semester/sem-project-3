@@ -631,5 +631,12 @@ public class DatabaseMigrationHostedService(
             arg.Contains("openapi", StringComparison.OrdinalIgnoreCase));
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken) => await _dbMigrationTask;
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        if (_dbMigrationTask != null)
+        {
+            await _dbMigrationTask;
+        }
+        // else: nothing to await, just return
+    }
 }
