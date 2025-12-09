@@ -36,10 +36,10 @@ public class DatabaseMigrationHostedService(
             await SeedDatabaseAsync(applicationDbContext, scope.ServiceProvider);
         }
 
-        _dbMigrationTask = TheScheduling();
+        _dbMigrationTask = ScheduleTestReservationsAsync();
 
 
-        async Task TheScheduling()
+        async Task ScheduleTestReservationsAsync()
         {
             await Task.Delay(TimeSpan.FromMinutes(1.1), cancellationToken); // A bit of a dirty hack to make sure jobs work
 

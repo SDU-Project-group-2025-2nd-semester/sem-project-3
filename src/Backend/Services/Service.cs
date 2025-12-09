@@ -27,7 +27,7 @@ public class ReservationScheduler(
     IBackgroundJobClient backgroundJobClient,
     BackendContext context) : IReservationScheduler
 {
-    public Task ScheduleDeskAdjustment(Reservation reservation)
+    public async Task ScheduleDeskAdjustment(Reservation reservation)
     {
         var triggerTime = reservation.Start;
         
@@ -47,14 +47,12 @@ public class ReservationScheduler(
 
             reservation.JobId = jobId;
 
-            context.SaveChanges();
+            await context.SaveChangesAsync();
 
             logger.LogInformation(
                 "Scheduled desk adjustment for reservation {ReservationId} at {TriggerTime} (JobId: {JobId})",
                 reservation.Id, triggerTime, jobId);
         }
-        
-        return Task.CompletedTask;
     }
 
     public async Task CancelScheduledAdjustment(Guid reservationId)
@@ -427,8 +425,6 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
     {
         var result = await httpClient.GetAsync($"desks/{macAddress}/state");
         result.EnsureSuccessStatusCode();
-
-        var content = await result.Content.ReadAsStringAsync();
 
         var state = await result.Content.ReadFromJsonAsync<State>();
         if (state == null)
