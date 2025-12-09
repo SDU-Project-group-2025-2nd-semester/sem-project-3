@@ -676,17 +676,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/UpdateDeskDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/UpdateDeskDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/UpdateDeskDto"
               }
             }
           },
@@ -722,6 +722,61 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/{companyId}/Desks/{deskId}/height": {
+      "put": {
+        "tags": [
+          "Desks"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "deskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1495,14 +1550,40 @@
   },
   "components": {
     "schemas": {
-      "Config": {
+      "Company": {
+        "required": [
+          "name"
+        ],
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "name": {
+            "maxLength": 100,
             "type": "string"
           },
-          "manufacturer": {
-            "type": "string"
+          "rooms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rooms"
+            }
+          },
+          "secretInviteCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "simulatorLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "simulatorApiKey": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "CompanySimulatorSettingsDto": {
         "type": "object",
         "properties": {
@@ -1513,6 +1594,17 @@
           "simulatorApiKey": {
             "type": "string",
             "nullable": true
+          }
+        }
+      },
+      "Config": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
           }
         }
       },
@@ -1836,6 +1928,34 @@
           "companyId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "UpdateDeskDto": {
+        "type": "object",
+        "properties": {
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
