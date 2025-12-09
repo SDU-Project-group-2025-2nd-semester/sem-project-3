@@ -51,6 +51,8 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services
     .AddTransient<IDamageReportService, DamageReportService>()
     .AddTransient<IReservationService, ReservationService>()

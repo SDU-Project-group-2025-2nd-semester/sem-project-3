@@ -1,6 +1,7 @@
 ﻿using Backend.Data;
 using Backend.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Http;
@@ -37,7 +38,8 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
             {
                 try
                 {
-                    var currentState = await deskApi.GetDeskState(desk.MacAddress);
+                    // Pass companyId to DeskApi, which will fetch simulator settings from DB
+                    var currentState = await deskApi.GetDeskState(desk.MacAddress, desk.CompanyId);
                     if (currentState.PositionMm != desk.Height)
                     {
                         var oldHeight = desk.Height;
@@ -96,10 +98,11 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
 
         try
         {
+            // Pass companyId to DeskApi, which will fetch simulator settings from DB
             var newState = await deskApi.SetState(desk.MacAddress, new State()
             {
                 PositionMm = newHeight,
-            });
+            }, desk.CompanyId);
 
 
             // Update database
@@ -136,8 +139,18 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
     {
         try
         {
-            var response = await deskApi.GetDeskState(macAddress);
+            // Find desk to get companyId
+            var desk = await dbContext.Desks
+                .FirstOrDefaultAsync(d => d.MacAddress == macAddress);
 
+            if (desk == null)
+            {
+                logger.LogWarning("Desk with MAC address {MacAddress} not found", macAddress);
+                return null;
+            }
+
+            // Pass companyId to DeskApi, which will fetch simulator settings from DB
+            var response = await deskApi.GetDeskState(macAddress, desk.CompanyId);
 
             return response.PositionMm;
         }
@@ -193,25 +206,80 @@ public static class Bullshit
 
 public interface IDeskApi
 {
-    Task<List<string>> GetAllDesks();
-    Task<DeskJsonElement> GetDeskStatus(string macAddress);
-    Task<Config> GetDeskConfig(string macAddress);
-    Task<State> GetDeskState(string macAddress);
-    Task<Usage> GetDeskUsage(string macAddress);
-    Task<List<LastError>> GetDeskLastErrors(string macAddress);
-    Task<Config> SetConfig(string macAddress, Config config);
-    Task<State> SetState(string macAddress, State state);
-    Task<Usage> SetUsage(string macAddress, Usage usage);
-    Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors);
+    Task<List<string>> GetAllDesks(Guid? companyId = null);
+    Task<DeskJsonElement> GetDeskStatus(string macAddress, Guid? companyId = null);
+    Task<Config> GetDeskConfig(string macAddress, Guid? companyId = null);
+    Task<State> GetDeskState(string macAddress, Guid? companyId = null);
+    Task<Usage> GetDeskUsage(string macAddress, Guid? companyId = null);
+    Task<List<LastError>> GetDeskLastErrors(string macAddress, Guid? companyId = null);
+    Task<Config> SetConfig(string macAddress, Config config, Guid? companyId = null);
+    Task<State> SetState(string macAddress, State state, Guid? companyId = null);
+    Task<Usage> SetUsage(string macAddress, Usage usage, Guid? companyId = null);
+    Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors, Guid? companyId = null);
 }
 
-public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
+public class DeskApi(IHttpClientFactory httpClientFactory, BackendContext dbContext, IHttpContextAccessor httpContextAccessor) : IDeskApi
 {
-    private HttpClient httpClient = httpClientFactory.CreateClient("DeskApi");
+    private readonly HttpClient defaultHttpClient = httpClientFactory.CreateClient("DeskApi");
 
-    public async Task<List<string>> GetAllDesks()
+    private Guid? GetCompanyIdFromContext()
     {
+        // Try to get companyId from route data if available (controller calls)
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext?.Request.RouteValues.TryGetValue("companyId", out var routeValue) == true)
+        {
+            if (Guid.TryParse(routeValue?.ToString(), out var companyId))
+            {
+                return companyId;
+            }
+        }
+        return null;
+    }
 
+    private async Task<HttpClient> GetHttpClientAsync(Guid? companyId)
+    {
+        // If no companyId provided, try to get it from HttpContext (for controller calls)
+        if (companyId == null)
+        {
+            companyId = GetCompanyIdFromContext();
+        }
+
+        // If still no companyId, use default
+        if (companyId == null)
+        {
+            return defaultHttpClient;
+        }
+
+        // Fetch company to get simulator settings
+        var company = await dbContext.Companies
+            .FirstOrDefaultAsync(c => c.Id == companyId);
+
+        // If company not found or no simulator settings, use default
+        if (company == null || string.IsNullOrEmpty(company.SimulatorLink))
+        {
+            return defaultHttpClient;
+        }
+
+        // Create a new HttpClient with company-specific settings
+        var client = httpClientFactory.CreateClient();
+        
+        // Ensure the URL ends with / if it doesn't already
+        var baseUrl = company.SimulatorLink.EndsWith("/") ? company.SimulatorLink : company.SimulatorLink + "/";
+        client.BaseAddress = new Uri(baseUrl);
+        client.Timeout = TimeSpan.FromSeconds(10);
+        
+        // Add API key as header if provided
+        if (!string.IsNullOrEmpty(company.SimulatorApiKey))
+        {
+            client.DefaultRequestHeaders.Add("X-API-Key", company.SimulatorApiKey);
+        }
+        
+        return client;
+    }
+
+    public async Task<List<string>> GetAllDesks(Guid? companyId = null)
+    {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync("desks");
 
         result.EnsureSuccessStatusCode();
@@ -221,8 +289,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return desks ?? [];
     }
 
-    public async Task<DeskJsonElement> GetDeskStatus(string macAddress)
+    public async Task<DeskJsonElement> GetDeskStatus(string macAddress, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desk/{macAddress}/status");
 
         result.EnsureSuccessStatusCode();
@@ -237,8 +306,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return desk;
     }
 
-    public async Task<Config> GetDeskConfig(string macAddress)
+    public async Task<Config> GetDeskConfig(string macAddress, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desk/{macAddress}/config");
         result.EnsureSuccessStatusCode();
         var config = await result.Content.ReadFromJsonAsync<Config>();
@@ -250,8 +320,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return config;
     }
 
-    public async Task<State> GetDeskState(string macAddress)
+    public async Task<State> GetDeskState(string macAddress, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desk/{macAddress}/state");
         result.EnsureSuccessStatusCode();
         var state = await result.Content.ReadFromJsonAsync<State>();
@@ -263,8 +334,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return state;
     }
 
-    public async Task<Usage> GetDeskUsage(string macAddress)
+    public async Task<Usage> GetDeskUsage(string macAddress, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desk/{macAddress}/usage");
         result.EnsureSuccessStatusCode();
         var usage = await result.Content.ReadFromJsonAsync<Usage>();
@@ -276,8 +348,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return usage;
     }
 
-    public async Task<List<LastError>> GetDeskLastErrors(string macAddress)
+    public async Task<List<LastError>> GetDeskLastErrors(string macAddress, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desk/{macAddress}/lastErrors");
         result.EnsureSuccessStatusCode();
         var lastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
@@ -289,8 +362,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return lastErrors;
     }
 
-    public async Task<Config> SetConfig(string macAddress, Config config)
+    public async Task<Config> SetConfig(string macAddress, Config config, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/config", config);
         result.EnsureSuccessStatusCode();
         var updatedConfig = await result.Content.ReadFromJsonAsync<Config>();
@@ -301,8 +375,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return updatedConfig;
     }
 
-    public async Task<State> SetState(string macAddress, State state)
+    public async Task<State> SetState(string macAddress, State state, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/state", state);
         result.EnsureSuccessStatusCode();
         var updatedState = await result.Content.ReadFromJsonAsync<State>();
@@ -313,8 +388,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return updatedState;
     }
 
-    public async Task<Usage> SetUsage(string macAddress, Usage usage)
+    public async Task<Usage> SetUsage(string macAddress, Usage usage, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/usage", usage);
         result.EnsureSuccessStatusCode();
         var updatedUsage = await result.Content.ReadFromJsonAsync<Usage>();
@@ -325,8 +401,9 @@ public class DeskApi( IHttpClientFactory httpClientFactory) : IDeskApi
         return updatedUsage;
     }
 
-    public async Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors)
+    public async Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.PostAsJsonAsync($"desk/{macAddress}/lastErrors", lastErrors);
         result.EnsureSuccessStatusCode();
         var updatedLastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
