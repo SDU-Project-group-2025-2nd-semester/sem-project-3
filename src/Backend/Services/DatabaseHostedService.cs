@@ -70,6 +70,20 @@ public class DatabaseMigrationHostedService(
 
                 await reservationService.CreateReservation(reservationDto, user.Id, company.Id);
 
+                now = now.AddDays(1);
+
+                reservationDto = new CreateReservationDto()
+                {
+                    DeskId = desk.Id,
+                    Start = now.AddMinutes(0.5),
+                    End = now.AddHours(1)
+                };
+
+                var reservation = await reservationService.CreateReservation(reservationDto, user.Id, company.Id);
+
+                await Task.Delay(100, cancellationToken);
+
+                await reservationService.DeleteReservation(reservation);
             }
             catch (Exception e)
             {

@@ -60,7 +60,7 @@ public class ReservationScheduler(
     public async Task CancelScheduledAdjustment(Guid reservationId)
     {
 
-        var reservation = await context.Reservations.FindAsync();
+        var reservation = await context.Reservations.FindAsync(reservationId);
 
         if (reservation == null || string.IsNullOrEmpty(reservation.JobId))
         {
