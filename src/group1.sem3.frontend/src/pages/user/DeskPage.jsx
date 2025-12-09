@@ -77,7 +77,7 @@ export default function DeskPage() {
     }, [location.state, navigate, location.pathname]);
 
     const reportDamage = () => {
-        navigate("/user/damagereport", { state: { tableId: deskId } });
+        navigate("/user/damagereport", { state: { tableId: deskId, table: deskName } });
     };
 
     return (
@@ -116,8 +116,7 @@ export default function DeskPage() {
                     </div>
                 </div>
             </div>
-
-            {/* TODO: Connect damage reporting with backend */}    
+    
             {/* Report Damage */}
             <div className="mt-4 flex justify-center">
 
