@@ -1,5 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { post } from "../../context/apiClient";
+
+const currentCompany = '33333333-3333-3333-3333-333333333333'; // Company ID 
 
 export default function DamageReportPage() {
     const location = useLocation();
@@ -16,6 +19,13 @@ export default function DamageReportPage() {
             alert("Please select an issue.");
             return;
         }
+
+        const payload = {
+            deskId: tableId,
+            description: issue + description,
+        };
+
+        post(`/${currentCompany}/DamageReport`, payload );
 
         alert("Damage reported successfully!");
       
