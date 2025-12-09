@@ -68,12 +68,13 @@ All users have **email confirmed** and can log in immediately.
 
 ## Companies
 
-| Company Name | ID | Secret Invite Code | Description |
-|--------------|----|--------------------|-------------|
-| Tech Co-Working Space | 11111111-1111-1111-1111-111111111111 | `TECH2024` | Main company with multiple rooms |
-| Innovation Hub | 22222222-2222-2222-2222-222222222222 | `INNOVATE` | Secondary company |
-| Startup Center | 33333333-3333-3333-3333-333333333333 | *(None)* | Email verification required |
+| Company Name           | ID                                      | Secret Invite Code | Description                     | SimulatorLink                                          | SimulatorApiKey |
+|------------------------|-------------------------------------------|---------------------|---------------------------------|--------------------------------------------------------|------------------|
+| Tech Co-Working Space  | 11111111-1111-1111-1111-111111111111      | `TECH2024`         | Main company with multiple rooms | https://s3-sproj-techcowork.michalvalko.eu             | E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7              |
+| Innovation Hub         | 22222222-2222-2222-2222-222222222222      | `INNOVATE`         | Secondary company                | https://s3-sproj-innovationhub.michalvalko.eu          | F7H1vM3kQ5rW8zT9xG2pJ6nY4dL0aZ3K              |
+| Startup Center         | 33333333-3333-3333-3333-333333333333      | *(None)*           | Email verification required      | https://s3-sproj-startupcenter.michalvalko.eu          | A3B5C7D9E1F2G4H6I8J0K2L4M6N8O0P2              |
 
+Yes, I did publish the api key to that and no, I do not care :D they are also in the docker-compose so any scrapers, be my guests. 
 ---
 
 ## Rooms
