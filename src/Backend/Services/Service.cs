@@ -496,7 +496,11 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<Usage> SetUsage(string macAddress, Usage usage)
     {
-        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/usage", usage);
+        var json = System.Text.Json.JsonSerializer.Serialize(usage);
+
+        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/usage", content);
         result.EnsureSuccessStatusCode();
         var updatedUsage = await result.Content.ReadFromJsonAsync<Usage>();
         if (updatedUsage == null)
@@ -508,7 +512,11 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
 
     public async Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors)
     {
-        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/lastErrors", lastErrors);
+        var json = System.Text.Json.JsonSerializer.Serialize(lastErrors);
+
+        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/lastErrors", content);
         result.EnsureSuccessStatusCode();
         var updatedLastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
         if (updatedLastErrors == null)
