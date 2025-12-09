@@ -11,6 +11,7 @@ export default function DamageReportPage() {
     const navigate = useNavigate();
     const tableId = location.state?.tableId ?? null;
     const table = location.state?.table ?? "Unknown";
+    const reservationId = location.state?.reservationId ?? null;
 
     const [issue, setIssue] = useState("");
     const [description, setDescription] = useState("");
@@ -52,9 +53,10 @@ export default function DamageReportPage() {
 
             const isStaff = location.pathname.includes("/staff");
 
-            // Navigate back and pass the damaged table ID  
-            navigate(isStaff ? "/staff/homepage" : "/user/desk", {
-                state: isStaff ? { damagedTableId: tableId } : { damagedDeskId: tableId },
+            // Navigate back 
+            // NOTE: might need to change the state for staff 
+            navigate(isStaff ? "/staff/homepage" : `/user/reservation/${reservationId}`, {
+                state: isStaff ? { damagedTableId: tableId } : { damagedReservationId: reservationId },
                 replace: true,
             });
         } catch (e) {
