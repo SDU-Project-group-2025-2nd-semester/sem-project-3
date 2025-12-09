@@ -2,7 +2,27 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "qrcodegen.hpp"
+#include <string.h>
+#include <time.h>
+#include "pico/cyw43_arch.h"
+#include "lwip/pbuf.h"
+#include "lwip/tcp.h"
+#include "lwip/dns.h"
+#include "lwip/altcp_tcp.h"
+#include "lwip/altcp_tls.h"
+#include "lwip/apps/mqtt.h"
+#include "lwip/apps/mqtt_priv.h"
+#include "crypto_consts.h"
+#include "tusb.h"
+#include "picow_iot.h"
 
+typedef struct MQTT_CLIENT_T_ {
+    ip_addr_t remote_addr;
+    mqtt_client_t *mqtt_client;
+    u32_t received;
+    u32_t counter;
+    u32_t reconnect;
+} MQTT_CLIENT_T;
 
 
 
@@ -10,7 +30,27 @@ MyApp::MyApp()
     :                                                                
       display(i2c_default, 0x3C, 128, 32)                                  
 {
-    stdio_init_all();                                                      
+    stdio_init_all();
+    
+    if (cyw43_arch_init()) {
+        printf("failed to initialise\n");
+        //return 1;
+    }
+
+    cyw43_arch_enable_sta_mode();
+
+    printf("Connecting to WiFi...\n");
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
+        printf("failed to  connect.\n");
+        //return 1;
+    } else {
+        printf("Connected.\n");
+    }
+
+    
+
+    
+
     i2c_init(i2c_default, 400 * 1000);                                     
     gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);            
     gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);            
@@ -71,6 +111,15 @@ void MyApp::buzz() {
 void MyApp::run() {
     stdio_init_all();
 
+
+    MQTT_CLIENT_T *state = mqtt_client_init();
+
+    run_dns_lookup(state);
+ 
+    mqtt_run_test(state);
+
+    cyw43_arch_deinit();
+    
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, true);
 
