@@ -70,8 +70,6 @@ if (!Bullshit.IsGeneratingOpenApiDocument())
 builder.Services.AddHangfireServer();
 
 }
-//builder.Services.AddScoped<IReservationScheduler, ReservationScheduler>();
-//builder.Services.AddScoped<DeskAdjustmentJob>();
 
 
 builder.Services
