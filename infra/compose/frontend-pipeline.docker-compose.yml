@@ -3,6 +3,8 @@ services:
     build:
       context: ../../src/group1.sem3.frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: https://s3-be-main.michalvalko.eu/api
     container_name: react-main
     ports:
       - "3000:80"
@@ -12,6 +14,8 @@ services:
     build:
       context: ../../src/group1.sem3.frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: https://s3-be-int.michalvalko.eu/api
     container_name: react-integrate
     ports:
       - "3001:80"
@@ -21,6 +25,8 @@ services:
     build:
       context: ../../src/group1.sem3.frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: https://s3-be-dev.michalvalko.eu/api
     container_name: react-develop
     ports:
       - "3002:80"
