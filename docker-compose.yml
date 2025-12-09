@@ -7,9 +7,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      box-simulator:
-        condition: service_started
-
   mqtt:
     container_name: mqtt
     build:
