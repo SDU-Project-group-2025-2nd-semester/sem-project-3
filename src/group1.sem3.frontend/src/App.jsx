@@ -4,6 +4,7 @@ import SignUpPage from "./pages/auth/SignUpPage";
 import UserHomePage from "./pages/user/UserHomePage";
 import StaffHomePage from "./pages/staff/StaffHomePage";
 import UserSettingsPage from "./pages/user/UserSettingsPage";
+import UserStatisticsPage from "./pages/user/UserStatisticsPage";
 import StaffSettingsPage from "./pages/staff/StaffSettingsPage";
 import AdminSettingsPage from "./pages/staff/StaffSettingsPage";
 import BookingPage from "./pages/user/BookingPage";
@@ -36,6 +37,7 @@ export default function App() {
                         <Route path="/user/settings" element={<UserSettingsPage />} />
                         <Route path="/staff/settings" element={<StaffSettingsPage />} />
                         <Route path="/admin/settings" element={<AdminSettingsPage />} />
+                        <Route path="/user/statistics" element={<UserStatisticsPage />} />
                         <Route path="/user/booking" element={<BookingPage />} />
                         <Route path="/admin/homepage" element={<UsersManagerPage />} />
                         <Route path="/admin/usersManager" element={<UsersManagerPage />} />
