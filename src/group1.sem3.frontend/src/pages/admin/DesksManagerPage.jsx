@@ -4,16 +4,12 @@ import { get, post, put, del } from "../../context/apiClient";
 
 export default function DesksManagerPage() {
     const navigate = useNavigate();
-    const DEFAULT_DESK_HEIGHT = 95;
 
-
-    const [activeTab, setActiveTab] = useState('open');
     const [activeRoom, setActiveRoom] = useState(null);
     const [showNewRoomForm, setShowNewRoomForm] = useState(false);
     const [desks, setDesks] = useState([]);
     const [rooms, setRooms] = useState([]);
     const [reservations, setReservations] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [companyId, setCompanyId] = useState(null);
 
@@ -46,6 +42,7 @@ export default function DesksManagerPage() {
         sunday: false
     });
 
+    // Initialization
     useEffect(() => {
         fetchInitialData();
     }, []);
@@ -58,7 +55,6 @@ export default function DesksManagerPage() {
 
     const fetchInitialData = async () => {
         try {
-            setLoading(true);
             setError(null);
 
             const userCompanies = await get('/Users/me/companies');
@@ -79,11 +75,9 @@ export default function DesksManagerPage() {
         } catch (error) {
             console.error('Error fetching initial data:', error);
             setError(error.message);
-            if (error.message?.includes('401') || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
-                setTimeout(() => navigate('/'), 2000);
+            if (error.status === 401 || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
+                navigate('/');
             }
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -97,56 +91,17 @@ export default function DesksManagerPage() {
             setDesks(desksData);
             setReservations(reservationsData);
         } catch (error) {
-            console.error('Error fetching desks:', error);
             if (error.status === 404) {
                 setDesks([]);
                 setReservations([]);
             } else {
+                console.error('Error fetching desks:', error);
                 setError(error.message);
             }
         }
     };
 
-    const handleDeleteDesk = async (deskId) => {
-        if (!confirm('Are you sure you want to delete this desk?')) {
-            return;
-        }
-
-        try {
-            await del(`/${companyId}/desks/${deskId}`);
-            await fetchDesksForRoom(activeRoom);
-        } catch (error) {
-            console.error('Error deleting desk:', error);
-            alert('Failed to delete desk: ' + error.message);
-        }
-    };
-
-    const handleDeskUnBook = async (deskId) => {
-        try {
-            const now = new Date();
-            const activeReservation = reservations.find(r => {
-                if (r.deskId !== deskId) return false;
-                const start = new Date(r.start);
-                const end = new Date(r.end);
-                return start <= now && now <= end;
-            });
-
-            if (!activeReservation) {
-                alert('No active booking found for this desk');
-                return;
-            }
-            if (!confirm('Are you sure you want to cancel this booking?')) {
-                return;
-            }
-
-            await del(`/${companyId}/reservation/${activeReservation.id}`);
-            await fetchDesksForRoom(activeRoom);
-        } catch (error) {
-            console.error('Error canceling booking:', error);
-            alert('Failed to cancel booking: ' + error.message);
-        }
-    };
-
+    // Simulator
     const handleSaveSimulator = async (e) => {
         e.preventDefault();
 
@@ -187,6 +142,24 @@ export default function DesksManagerPage() {
         }
     };
 
+    // Info card
+    function decodeDaysOfTheWeek(daysBitmask) {
+        if (!daysBitmask || typeof daysBitmask !== 'number') return 'Not set';
+        const days = [
+            { name: 'Monday', value: 1 },
+            { name: 'Tuesday', value: 2 },
+            { name: 'Wednesday', value: 4 },
+            { name: 'Thursday', value: 8 },
+            { name: 'Friday', value: 16 },
+            { name: 'Saturday', value: 32 },
+            { name: 'Sunday', value: 64 },
+        ];
+        const openDays = days.filter(d => (daysBitmask & d.value) !== 0).map(d => d.name);
+        if (openDays.length === 0) return 'Not set';
+        return openDays.join(', ');
+    }
+
+    // New Room
     const handleSaveNewRoom = async (e) => {
         e.preventDefault();
 
@@ -205,7 +178,7 @@ export default function DesksManagerPage() {
             if (newRoomDays.sunday) daysValue += 64;
 
             const newRoom = {
-                ReadableId: "R- 00",
+                ReadableId: "R-00",
                 DeskIds: [],
                 OpeningHours: {
                     OpeningTime: formatTime(newRoomOpeningTime),
@@ -240,6 +213,7 @@ export default function DesksManagerPage() {
         setShowNewRoomForm(false);
     };
 
+    // Room Editing
     const handleEditHours = () => {
         if (currentRoom && currentRoom.openingHours) {
             setOpeningTime(currentRoom.openingHours.openingTime || '');
@@ -297,10 +271,10 @@ export default function DesksManagerPage() {
             await put(`/${companyId}/rooms/${currentRoom.id}`, updatedRoom);
             await fetchInitialData();
             setEditingHours(false);
-            alert('Opening hours updated successfully!');
+            alert('Room schedule updated successfully!');
         } catch (error) {
             console.error('Error updating opening hours:', error);
-            alert('Failed to update opening hours: ' + error.message);
+            alert('Failed to update room schedule: ' + error.message);
         }
     };
 
@@ -309,18 +283,6 @@ export default function DesksManagerPage() {
         setOpeningTime('');
         setClosingTime('');
     };
-
-    const TabButton = ({ value, label }) => (
-        <button
-            onClick={() => setActiveTab(value)}
-            className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === value
-                ? 'bg-secondary-100 text-secondary-700 border border-secondary-300'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                }`}
-        >
-            {label}
-        </button>
-    );
 
     const RoomButton = ({ roomId, label }) => (
         <button
@@ -334,6 +296,7 @@ export default function DesksManagerPage() {
         </button>
     );
 
+    // Desk table
     const getDeskStatus = (desk) => {
         const now = new Date();
         const hasReservation = reservations.some(r => {
@@ -373,32 +336,47 @@ export default function DesksManagerPage() {
         }
     };
 
-    function decodeDaysOfTheWeek(daysBitmask) {
-        if (!daysBitmask || typeof daysBitmask !== 'number') return 'Not set';
-        const days = [
-            { name: 'Monday', value: 1 },
-            { name: 'Tuesday', value: 2 },
-            { name: 'Wednesday', value: 4 },
-            { name: 'Thursday', value: 8 },
-            { name: 'Friday', value: 16 },
-            { name: 'Saturday', value: 32 },
-            { name: 'Sunday', value: 64 },
-        ];
-        const openDays = days.filter(d => (daysBitmask & d.value) !== 0).map(d => d.name);
-        if (openDays.length === 0) return 'Not set';
-        return openDays.join(', ');
-    }
+    const handleDeskUnBook = async (deskId) => {
+        try {
+            const now = new Date();
+            const activeReservation = reservations.find(r => {
+                if (r.deskId !== deskId) return false;
+                const start = new Date(r.start);
+                const end = new Date(r.end);
+                return start <= now && now <= end;
+            });
 
-    if (loading) {
-        return (
-            <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-lg text-gray-600">Loading rooms and desks...</div>
-                </div>
-            </div>
-        );
-    }
+            if (!activeReservation) {
+                alert(`No booking found for that desk`);
+                return;
+            }
+            if (!confirm('Are you sure you want to cancel this booking?')) {
+                return;
+            }
 
+            await del(`/${companyId}/reservation/${activeReservation.id}`);
+            await fetchDesksForRoom(activeRoom);
+        } catch (error) {
+            console.error('Error canceling booking:', error);
+            alert('Failed to cancel booking: ' + error.message);
+        }
+    };
+
+    const handleDeleteDesk = async (deskId) => {
+        if (!confirm('Are you sure you want to delete this desk?')) {
+            return;
+        }
+
+        try {
+            await del(`/${companyId}/desks/${deskId}`);
+            await fetchDesksForRoom(activeRoom);
+        } catch (error) {
+            console.error('Error deleting desk:', error);
+            alert('Failed to delete desk: ' + error.message);
+        }
+    };
+
+    // Error handling
     if (error) {
         return (
             <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
@@ -415,8 +393,7 @@ export default function DesksManagerPage() {
         );
     }
 
-    const currentRoom = rooms.find(r => r.id === activeRoom);
-
+    // Simulator
     const Simulator = () => {
         return (
             <div className="bg-white rounded-2xl overflow-hidden mb-6">
@@ -468,6 +445,9 @@ export default function DesksManagerPage() {
         );
     };
 
+    const currentRoom = rooms.find(r => r.id === activeRoom);
+
+    // No room available
     if (!currentRoom && rooms.length === 0) {
         return (
             <div className="relative bg-background min-h-screen px-4 mt-20">
@@ -490,18 +470,18 @@ export default function DesksManagerPage() {
         );
     }
 
-
+    // main page render
     return (
         <div className="relative bg-background min-h-screen px-4 mt-20">
             <main className="w-full max-w-7xl mx-auto flex flex-col gap-8 pb-32">
                 <Simulator />
-
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-semibold text-gray-800">Room Management</h1>
                 </div>
 
                 {/* Room Management */}
                 <section>
+                    {/* Select room buttons */}
                     <div className="flex gap-2 flex-wrap mb-6">
                         {rooms.map(room => (
                             <RoomButton key={room.id} roomId={room.id} label={room.readableId || 'Unknown Room'} />
@@ -688,7 +668,6 @@ export default function DesksManagerPage() {
                             </table>
                         </div>
                     </div>
-
 
                     {/* New Room form*/}
                     {showNewRoomForm && (
