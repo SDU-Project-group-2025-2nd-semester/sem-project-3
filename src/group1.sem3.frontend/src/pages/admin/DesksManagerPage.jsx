@@ -25,6 +25,10 @@ export default function DesksManagerPage() {
     const [simulatorApiKey, setSimulatorApiKey] = useState('');
     const [simulatorErrors, setSimulatorErrors] = useState({});
 
+    const [editingHours, setEditingHours] = useState(false);
+    const [openingTime, setOpeningTime] = useState('');
+    const [closingTime, setClosingTime] = useState('');
+
     useEffect(() => {
         fetchInitialData();
     }, []);
@@ -114,11 +118,6 @@ export default function DesksManagerPage() {
                 alert('No active booking found for this desk');
                 return;
             }
-            // if (!activeReservation) {
-            //     alert('No active booking found for this desk');
-            //     return;
-            // }
-
             if (!confirm('Are you sure you want to cancel this booking?')) {
                 return;
             }
@@ -134,7 +133,6 @@ export default function DesksManagerPage() {
     const handleSaveSimulator = async (e) => {
         e.preventDefault();
 
-        // Validation
         const errors = {};
 
         if (!simulatorLink.trim()) {
@@ -151,7 +149,6 @@ export default function DesksManagerPage() {
 
         setSimulatorErrors(errors);
 
-        // If there are errors, don't submit
         if (Object.keys(errors).length > 0) {
             return;
         }
@@ -200,6 +197,58 @@ export default function DesksManagerPage() {
         setShowNewRoomForm(false);
     };
 
+    const handleEditHours = () => {
+        if (currentRoom && currentRoom.openingHours) {
+            setOpeningTime(currentRoom.openingHours.openingTime || '');
+            setClosingTime(currentRoom.openingHours.closingTime || '');
+        }
+        setEditingHours(true);
+    };
+
+    const handleSaveHours = async () => {
+        if (!openingTime || !closingTime) {
+            alert('Please enter both opening and closing times');
+            return;
+        }
+
+        try {
+            const formatTime = (time) => {
+                return time.length === 5 ? `${time}:00` : time;
+            };
+
+            const updatedOpeningHours = {
+                OpeningTime: formatTime(openingTime),
+                ClosingTime: formatTime(closingTime),
+                DaysOfTheWeek: currentRoom.openingHours.daysOfTheWeek
+            };
+
+            const updatedRoom = {
+                Id: currentRoom.id,
+                ReadableId: currentRoom.readableId,
+                DeskIds: currentRoom.deskIds || [],
+                OpeningHours: updatedOpeningHours,
+                CompanyId: currentRoom.companyId,
+                Desks: [],
+                Company: null
+            };
+
+
+            await put(`/${companyId}/rooms/${currentRoom.id}`, updatedRoom);
+            await fetchInitialData();
+            setEditingHours(false);
+            alert('Opening hours updated successfully!');
+        } catch (error) {
+            console.error('Error updating opening hours:', error);
+            alert('Failed to update opening hours: ' + error.message);
+        }
+    };
+
+    const handleCancelEditHours = () => {
+        setEditingHours(false);
+        setOpeningTime('');
+        setClosingTime('');
+    };
+
     const TabButton = ({ value, label }) => (
         <button
             onClick={() => setActiveTab(value)}
@@ -231,7 +280,6 @@ export default function DesksManagerPage() {
             const start = new Date(r.start);
             const end = new Date(r.end);
             return start <= now;
-            // return start <= now && now <= end;
         });
 
         if (hasReservation) return 'booked';
@@ -263,21 +311,6 @@ export default function DesksManagerPage() {
                 return status;
         }
     };
-
-    function isRoomOpen(room) {
-        if (!room || !room.openinghours) return false;
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const todayHours = room.openingHours.find(h => h.dayOfWeek === dayOfWeek);
-        if (!todayHours) return false;
-        const [startHour, startMinute] = todayHours.start.split(':').map(Number);
-        const [endHour, endMinute] = todayHours.end.split(':').map(Number);
-        const start = new Date(now);
-        start.setHours(startHour, startMinute, 0, 0);
-        const end = new Date(now);
-        end.setHours(endHour, endMinute, 0, 0);
-        return now >= start && now <= end;
-    }
 
     if (loading) {
         return (
@@ -358,7 +391,6 @@ export default function DesksManagerPage() {
         );
     };
 
-    // Don't render if no rooms available
     if (!currentRoom && rooms.length === 0) {
         return (
             <div className="relative bg-background min-h-screen px-4 mt-20">
@@ -410,24 +442,75 @@ export default function DesksManagerPage() {
 
                     {/* Info card */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                                <span className="text-gray-600">Status:</span>
-                                <span className={`ml-2 font-semibold capitalize ${isRoomOpen(currentRoom) ? 'text-success-600'
-                                    : currentRoom?.currentStatus === 'maintenance' ? 'text-warning-600'
-                                        : 'text-danger-600'
-                                    }`}>
-                                    {isRoomOpen(currentRoom) ? 'open'
-                                        : currentRoom?.currentStatus === 'maintenance' ? 'maintenance'
-                                            : 'closed'}
-                                </span>
-                            </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm items-center">
                             <div>
                                 <span className="text-gray-600">Desks:</span>
                                 <span className="ml-2 font-semibold">
                                     {desks.filter(d => d.roomId === currentRoom?.id).length}
                                 </span>
                             </div>
+                            {!editingHours ? (
+                                <>
+                                    <div>
+                                        <span className="text-gray-600">Opening:</span>
+                                        <span className="ml-2 font-semibold">
+                                            {currentRoom?.openingHours?.openingTime || 'Not set'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-600">Closing:</span>
+                                        <span className="ml-2 font-semibold">
+                                            {currentRoom?.openingHours?.closingTime || 'Not set'}
+                                        </span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="text-gray-600 text-xs block mb-1">Opening:</label>
+                                        <input
+                                            type="time"
+                                            value={openingTime}
+                                            onChange={(e) => setOpeningTime(e.target.value)}
+                                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-600 text-xs block mb-1">Closing:</label>
+                                        <input
+                                            type="time"
+                                            value={closingTime}
+                                            onChange={(e) => setClosingTime(e.target.value)}
+                                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                            {!editingHours ? (
+                                <button
+                                    onClick={handleEditHours}
+                                    className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
+                                >
+                                    Edit Hours
+                                </button>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={handleSaveHours}
+                                        className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEditHours}
+                                        className="px-4 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
 
