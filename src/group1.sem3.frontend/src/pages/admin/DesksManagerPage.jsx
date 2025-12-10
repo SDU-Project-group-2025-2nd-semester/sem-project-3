@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { get, post, put, del } from "../../context/apiClient";
 
 export default function DesksManagerPage() {
+    const navigate = useNavigate();
     const DEFAULT_DESK_HEIGHT = 95;
 
 
@@ -56,6 +58,9 @@ export default function DesksManagerPage() {
         } catch (error) {
             console.error('Error fetching initial data:', error);
             setError(error.message);
+            if (error.message?.includes('401') || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
+                setTimeout(() => navigate('/'), 2000);
+            }
         } finally {
             setLoading(false);
         }
