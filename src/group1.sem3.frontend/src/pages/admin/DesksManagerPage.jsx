@@ -17,9 +17,17 @@ export default function DesksManagerPage() {
     const [error, setError] = useState(null);
     const [companyId, setCompanyId] = useState(null);
 
-    const [newRoomName, setNewRoomName] = useState('');
-    const [newRoomFloor, setNewRoomFloor] = useState('');
-    const [newRoomCapacity, setNewRoomCapacity] = useState('');
+    const [newRoomOpeningTime, setNewRoomOpeningTime] = useState('');
+    const [newRoomClosingTime, setNewRoomClosingTime] = useState('');
+    const [newRoomDays, setNewRoomDays] = useState({
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: false,
+        sunday: false
+    });
 
     const [simulatorLink, setSimulatorLink] = useState('');
     const [simulatorApiKey, setSimulatorApiKey] = useState('');
@@ -174,13 +182,31 @@ export default function DesksManagerPage() {
         e.preventDefault();
 
         try {
-            const newRoom = {
-                name: newRoomName,
-                capacity: parseInt(newRoomCapacity),
-                floor: parseInt(newRoomFloor),
+            const formatTime = (time) => {
+                return time.length === 5 ? `${time}:00` : time;
             };
 
-            const createdRoom = await post(`/${companyId}/rooms`, newRoom);
+            let daysValue = 0;
+            if (newRoomDays.monday) daysValue += 1;
+            if (newRoomDays.tuesday) daysValue += 2;
+            if (newRoomDays.wednesday) daysValue += 4;
+            if (newRoomDays.thursday) daysValue += 8;
+            if (newRoomDays.friday) daysValue += 16;
+            if (newRoomDays.saturday) daysValue += 32;
+            if (newRoomDays.sunday) daysValue += 64;
+
+            const newRoom = {
+                ReadableId: "R- 00",
+                DeskIds: [],
+                OpeningHours: {
+                    OpeningTime: formatTime(newRoomOpeningTime),
+                    ClosingTime: formatTime(newRoomClosingTime),
+                    DaysOfTheWeek: daysValue
+                },
+                CompanyId: companyId
+            };
+
+            const createdRoom = await post(`/${companyId}/Rooms`, newRoom);
             await fetchInitialData();
             handleCancelNewRoom();
             setActiveRoom(createdRoom.id);
@@ -191,9 +217,17 @@ export default function DesksManagerPage() {
     };
 
     const handleCancelNewRoom = () => {
-        setNewRoomName('');
-        setNewRoomFloor('');
-        setNewRoomCapacity('');
+        setNewRoomOpeningTime('');
+        setNewRoomClosingTime('');
+        setNewRoomDays({
+            monday: true,
+            tuesday: true,
+            wednesday: true,
+            thursday: true,
+            friday: true,
+            saturday: false,
+            sunday: false
+        });
         setShowNewRoomForm(false);
     };
 
@@ -598,46 +632,47 @@ export default function DesksManagerPage() {
 
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name
+                                    Opening Time
                                 </label>
                                 <input
-                                    type="text"
+                                    type="time"
                                     required
-                                    placeholder="Room name"
-                                    value={newRoomName}
-                                    onChange={(e) => setNewRoomName(e.target.value)}
+                                    value={newRoomOpeningTime}
+                                    onChange={(e) => setNewRoomOpeningTime(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                                 />
                             </div>
 
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Floor
+                                    Closing Time
                                 </label>
                                 <input
-                                    type="number"
+                                    type="time"
                                     required
-                                    min="0"
-                                    placeholder="e.g., 2"
-                                    value={newRoomFloor}
-                                    onChange={(e) => setNewRoomFloor(e.target.value)}
+                                    value={newRoomClosingTime}
+                                    onChange={(e) => setNewRoomClosingTime(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                                 />
                             </div>
 
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Capacity
+                                    Days of Week
                                 </label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="1"
-                                    placeholder="e.g., 12"
-                                    value={newRoomCapacity}
-                                    onChange={(e) => setNewRoomCapacity(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                                />
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                        <label key={day} className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={newRoomDays[day]}
+                                                onChange={(e) => setNewRoomDays({ ...newRoomDays, [day]: e.target.checked })}
+                                                className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
+                                            />
+                                            <span className="text-sm text-gray-700 capitalize">{day}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="flex gap-3">
