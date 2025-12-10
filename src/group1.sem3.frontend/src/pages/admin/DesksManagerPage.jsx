@@ -36,6 +36,15 @@ export default function DesksManagerPage() {
     const [editingHours, setEditingHours] = useState(false);
     const [openingTime, setOpeningTime] = useState('');
     const [closingTime, setClosingTime] = useState('');
+    const [DaysOpen, setDaysOpen] = useState({
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: false,
+        sunday: false
+    });
 
     useEffect(() => {
         fetchInitialData();
@@ -235,6 +244,16 @@ export default function DesksManagerPage() {
         if (currentRoom && currentRoom.openingHours) {
             setOpeningTime(currentRoom.openingHours.openingTime || '');
             setClosingTime(currentRoom.openingHours.closingTime || '');
+            const daysBitmask = currentRoom.openingHours.daysOfTheWeek || 0;
+            setDaysOpen({
+                monday: (daysBitmask & 1) !== 0,
+                tuesday: (daysBitmask & 2) !== 0,
+                wednesday: (daysBitmask & 4) !== 0,
+                thursday: (daysBitmask & 8) !== 0,
+                friday: (daysBitmask & 16) !== 0,
+                saturday: (daysBitmask & 32) !== 0,
+                sunday: (daysBitmask & 64) !== 0
+            });
         }
         setEditingHours(true);
     };
@@ -250,10 +269,19 @@ export default function DesksManagerPage() {
                 return time.length === 5 ? `${time}:00` : time;
             };
 
+            let daysValue = 0;
+            if (DaysOpen.monday) daysValue += 1;
+            if (DaysOpen.tuesday) daysValue += 2;
+            if (DaysOpen.wednesday) daysValue += 4;
+            if (DaysOpen.thursday) daysValue += 8;
+            if (DaysOpen.friday) daysValue += 16;
+            if (DaysOpen.saturday) daysValue += 32;
+            if (DaysOpen.sunday) daysValue += 64;
+
             const updatedOpeningHours = {
                 OpeningTime: formatTime(openingTime),
                 ClosingTime: formatTime(closingTime),
-                DaysOfTheWeek: currentRoom.openingHours.daysOfTheWeek
+                DaysOfTheWeek: daysValue
             };
 
             const updatedRoom = {
@@ -265,7 +293,6 @@ export default function DesksManagerPage() {
                 Desks: [],
                 Company: null
             };
-
 
             await put(`/${companyId}/rooms/${currentRoom.id}`, updatedRoom);
             await fetchInitialData();
@@ -345,6 +372,22 @@ export default function DesksManagerPage() {
                 return status;
         }
     };
+
+    function decodeDaysOfTheWeek(daysBitmask) {
+        if (!daysBitmask || typeof daysBitmask !== 'number') return 'Not set';
+        const days = [
+            { name: 'Monday', value: 1 },
+            { name: 'Tuesday', value: 2 },
+            { name: 'Wednesday', value: 4 },
+            { name: 'Thursday', value: 8 },
+            { name: 'Friday', value: 16 },
+            { name: 'Saturday', value: 32 },
+            { name: 'Sunday', value: 64 },
+        ];
+        const openDays = days.filter(d => (daysBitmask & d.value) !== 0).map(d => d.name);
+        if (openDays.length === 0) return 'Not set';
+        return openDays.join(', ');
+    }
 
     if (loading) {
         return (
@@ -497,6 +540,12 @@ export default function DesksManagerPage() {
                                             {currentRoom?.openingHours?.closingTime || 'Not set'}
                                         </span>
                                     </div>
+                                    <div>
+                                        <span className="text-gray-600">Open on</span>
+                                        <span className="ml-2 font-semibold">
+                                            {decodeDaysOfTheWeek(currentRoom?.openingHours?.daysOfTheWeek)}
+                                        </span>
+                                    </div>
                                 </>
                             ) : (
                                 <>
@@ -518,6 +567,22 @@ export default function DesksManagerPage() {
                                             className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
                                         />
                                     </div>
+                                    <div>
+                                        <label className="text-gray-600 text-xs block mb-1">Set open days:</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                                <label key={day} className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!DaysOpen[day]}
+                                                        onChange={e => setDaysOpen({ ...DaysOpen, [day]: e.target.checked })}
+                                                        className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
+                                                    />
+                                                    <span className="text-sm text-gray-700 capitalize">{day}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -527,7 +592,7 @@ export default function DesksManagerPage() {
                                     onClick={handleEditHours}
                                     className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
                                 >
-                                    Edit Hours
+                                    Edit Schedule
                                 </button>
                             ) : (
                                 <>
