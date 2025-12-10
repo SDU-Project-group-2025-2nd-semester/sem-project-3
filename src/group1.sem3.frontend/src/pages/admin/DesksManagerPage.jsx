@@ -4,27 +4,45 @@ import { get, post, put, del } from "../../context/apiClient";
 
 export default function DesksManagerPage() {
     const navigate = useNavigate();
-    const DEFAULT_DESK_HEIGHT = 95;
 
-
-    const [activeTab, setActiveTab] = useState('open');
     const [activeRoom, setActiveRoom] = useState(null);
     const [showNewRoomForm, setShowNewRoomForm] = useState(false);
     const [desks, setDesks] = useState([]);
     const [rooms, setRooms] = useState([]);
     const [reservations, setReservations] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [companyId, setCompanyId] = useState(null);
 
-    const [newRoomName, setNewRoomName] = useState('');
-    const [newRoomFloor, setNewRoomFloor] = useState('');
-    const [newRoomCapacity, setNewRoomCapacity] = useState('');
+    const [newRoomOpeningTime, setNewRoomOpeningTime] = useState('');
+    const [newRoomClosingTime, setNewRoomClosingTime] = useState('');
+    const [newRoomDays, setNewRoomDays] = useState({
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: false,
+        sunday: false
+    });
 
     const [simulatorLink, setSimulatorLink] = useState('');
     const [simulatorApiKey, setSimulatorApiKey] = useState('');
     const [simulatorErrors, setSimulatorErrors] = useState({});
 
+    const [editingHours, setEditingHours] = useState(false);
+    const [openingTime, setOpeningTime] = useState('');
+    const [closingTime, setClosingTime] = useState('');
+    const [DaysOpen, setDaysOpen] = useState({
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: false,
+        sunday: false
+    });
+
+    // Initialization
     useEffect(() => {
         fetchInitialData();
     }, []);
@@ -37,7 +55,6 @@ export default function DesksManagerPage() {
 
     const fetchInitialData = async () => {
         try {
-            setLoading(true);
             setError(null);
 
             const userCompanies = await get('/Users/me/companies');
@@ -58,11 +75,9 @@ export default function DesksManagerPage() {
         } catch (error) {
             console.error('Error fetching initial data:', error);
             setError(error.message);
-            if (error.message?.includes('401') || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
-                setTimeout(() => navigate('/'), 2000);
+            if (error.status === 401 || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
+                navigate('/');
             }
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -76,65 +91,20 @@ export default function DesksManagerPage() {
             setDesks(desksData);
             setReservations(reservationsData);
         } catch (error) {
-            console.error('Error fetching desks:', error);
             if (error.status === 404) {
                 setDesks([]);
                 setReservations([]);
             } else {
+                console.error('Error fetching desks:', error);
                 setError(error.message);
             }
         }
     };
 
-    const handleDeleteDesk = async (deskId) => {
-        if (!confirm('Are you sure you want to delete this desk?')) {
-            return;
-        }
-
-        try {
-            await del(`/${companyId}/desks/${deskId}`);
-            await fetchDesksForRoom(activeRoom);
-        } catch (error) {
-            console.error('Error deleting desk:', error);
-            alert('Failed to delete desk: ' + error.message);
-        }
-    };
-
-    const handleDeskUnBook = async (deskId) => {
-        try {
-            const now = new Date();
-            const activeReservation = reservations.find(r => {
-                if (r.deskId !== deskId) return false;
-                const start = new Date(r.start);
-                const end = new Date(r.end);
-                return start <= now && now <= end;
-            });
-
-            if (!activeReservation) {
-                alert('No active booking found for this desk');
-                return;
-            }
-            // if (!activeReservation) {
-            //     alert('No active booking found for this desk');
-            //     return;
-            // }
-
-            if (!confirm('Are you sure you want to cancel this booking?')) {
-                return;
-            }
-
-            await del(`/${companyId}/reservation/${activeReservation.id}`);
-            await fetchDesksForRoom(activeRoom);
-        } catch (error) {
-            console.error('Error canceling booking:', error);
-            alert('Failed to cancel booking: ' + error.message);
-        }
-    };
-
+    // Simulator
     const handleSaveSimulator = async (e) => {
         e.preventDefault();
 
-        // Validation
         const errors = {};
 
         if (!simulatorLink.trim()) {
@@ -151,7 +121,6 @@ export default function DesksManagerPage() {
 
         setSimulatorErrors(errors);
 
-        // If there are errors, don't submit
         if (Object.keys(errors).length > 0) {
             return;
         }
@@ -173,17 +142,53 @@ export default function DesksManagerPage() {
         }
     };
 
+    // Info card
+    function decodeDaysOfTheWeek(daysBitmask) {
+        if (!daysBitmask || typeof daysBitmask !== 'number') return 'Not set';
+        const days = [
+            { name: 'Monday', value: 1 },
+            { name: 'Tuesday', value: 2 },
+            { name: 'Wednesday', value: 4 },
+            { name: 'Thursday', value: 8 },
+            { name: 'Friday', value: 16 },
+            { name: 'Saturday', value: 32 },
+            { name: 'Sunday', value: 64 },
+        ];
+        const openDays = days.filter(d => (daysBitmask & d.value) !== 0).map(d => d.name);
+        if (openDays.length === 0) return 'Not set';
+        return openDays.join(', ');
+    }
+
+    // New Room
     const handleSaveNewRoom = async (e) => {
         e.preventDefault();
 
         try {
-            const newRoom = {
-                name: newRoomName,
-                capacity: parseInt(newRoomCapacity),
-                floor: parseInt(newRoomFloor),
+            const formatTime = (time) => {
+                return time.length === 5 ? `${time}:00` : time;
             };
 
-            const createdRoom = await post(`/${companyId}/rooms`, newRoom);
+            let daysValue = 0;
+            if (newRoomDays.monday) daysValue += 1;
+            if (newRoomDays.tuesday) daysValue += 2;
+            if (newRoomDays.wednesday) daysValue += 4;
+            if (newRoomDays.thursday) daysValue += 8;
+            if (newRoomDays.friday) daysValue += 16;
+            if (newRoomDays.saturday) daysValue += 32;
+            if (newRoomDays.sunday) daysValue += 64;
+
+            const newRoom = {
+                ReadableId: "R-00",
+                DeskIds: [],
+                OpeningHours: {
+                    OpeningTime: formatTime(newRoomOpeningTime),
+                    ClosingTime: formatTime(newRoomClosingTime),
+                    DaysOfTheWeek: daysValue
+                },
+                CompanyId: companyId
+            };
+
+            const createdRoom = await post(`/${companyId}/Rooms`, newRoom);
             await fetchInitialData();
             handleCancelNewRoom();
             setActiveRoom(createdRoom.id);
@@ -194,23 +199,90 @@ export default function DesksManagerPage() {
     };
 
     const handleCancelNewRoom = () => {
-        setNewRoomName('');
-        setNewRoomFloor('');
-        setNewRoomCapacity('');
+        setNewRoomOpeningTime('');
+        setNewRoomClosingTime('');
+        setNewRoomDays({
+            monday: true,
+            tuesday: true,
+            wednesday: true,
+            thursday: true,
+            friday: true,
+            saturday: false,
+            sunday: false
+        });
         setShowNewRoomForm(false);
     };
 
-    const TabButton = ({ value, label }) => (
-        <button
-            onClick={() => setActiveTab(value)}
-            className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === value
-                ? 'bg-secondary-100 text-secondary-700 border border-secondary-300'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                }`}
-        >
-            {label}
-        </button>
-    );
+    // Room Editing
+    const handleEditHours = () => {
+        if (currentRoom && currentRoom.openingHours) {
+            setOpeningTime(currentRoom.openingHours.openingTime || '');
+            setClosingTime(currentRoom.openingHours.closingTime || '');
+            const daysBitmask = currentRoom.openingHours.daysOfTheWeek || 0;
+            setDaysOpen({
+                monday: (daysBitmask & 1) !== 0,
+                tuesday: (daysBitmask & 2) !== 0,
+                wednesday: (daysBitmask & 4) !== 0,
+                thursday: (daysBitmask & 8) !== 0,
+                friday: (daysBitmask & 16) !== 0,
+                saturday: (daysBitmask & 32) !== 0,
+                sunday: (daysBitmask & 64) !== 0
+            });
+        }
+        setEditingHours(true);
+    };
+
+    const handleSaveHours = async () => {
+        if (!openingTime || !closingTime) {
+            alert('Please enter both opening and closing times');
+            return;
+        }
+
+        try {
+            const formatTime = (time) => {
+                return time.length === 5 ? `${time}:00` : time;
+            };
+
+            let daysValue = 0;
+            if (DaysOpen.monday) daysValue += 1;
+            if (DaysOpen.tuesday) daysValue += 2;
+            if (DaysOpen.wednesday) daysValue += 4;
+            if (DaysOpen.thursday) daysValue += 8;
+            if (DaysOpen.friday) daysValue += 16;
+            if (DaysOpen.saturday) daysValue += 32;
+            if (DaysOpen.sunday) daysValue += 64;
+
+            const updatedOpeningHours = {
+                OpeningTime: formatTime(openingTime),
+                ClosingTime: formatTime(closingTime),
+                DaysOfTheWeek: daysValue
+            };
+
+            const updatedRoom = {
+                Id: currentRoom.id,
+                ReadableId: currentRoom.readableId,
+                DeskIds: currentRoom.deskIds || [],
+                OpeningHours: updatedOpeningHours,
+                CompanyId: currentRoom.companyId,
+                Desks: [],
+                Company: null
+            };
+
+            await put(`/${companyId}/rooms/${currentRoom.id}`, updatedRoom);
+            await fetchInitialData();
+            setEditingHours(false);
+            alert('Room schedule updated successfully!');
+        } catch (error) {
+            console.error('Error updating opening hours:', error);
+            alert('Failed to update room schedule: ' + error.message);
+        }
+    };
+
+    const handleCancelEditHours = () => {
+        setEditingHours(false);
+        setOpeningTime('');
+        setClosingTime('');
+    };
 
     const RoomButton = ({ roomId, label }) => (
         <button
@@ -224,6 +296,7 @@ export default function DesksManagerPage() {
         </button>
     );
 
+    // Desk table
     const getDeskStatus = (desk) => {
         const now = new Date();
         const hasReservation = reservations.some(r => {
@@ -231,7 +304,6 @@ export default function DesksManagerPage() {
             const start = new Date(r.start);
             const end = new Date(r.end);
             return start <= now;
-            // return start <= now && now <= end;
         });
 
         if (hasReservation) return 'booked';
@@ -264,31 +336,47 @@ export default function DesksManagerPage() {
         }
     };
 
-    function isRoomOpen(room) {
-        if (!room || !room.openinghours) return false;
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const todayHours = room.openingHours.find(h => h.dayOfWeek === dayOfWeek);
-        if (!todayHours) return false;
-        const [startHour, startMinute] = todayHours.start.split(':').map(Number);
-        const [endHour, endMinute] = todayHours.end.split(':').map(Number);
-        const start = new Date(now);
-        start.setHours(startHour, startMinute, 0, 0);
-        const end = new Date(now);
-        end.setHours(endHour, endMinute, 0, 0);
-        return now >= start && now <= end;
-    }
+    const handleDeskUnBook = async (deskId) => {
+        try {
+            const now = new Date();
+            const activeReservation = reservations.find(r => {
+                if (r.deskId !== deskId) return false;
+                const start = new Date(r.start);
+                const end = new Date(r.end);
+                return start <= now && now <= end;
+            });
 
-    if (loading) {
-        return (
-            <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-lg text-gray-600">Loading rooms and desks...</div>
-                </div>
-            </div>
-        );
-    }
+            if (!activeReservation) {
+                alert(`No booking found for that desk`);
+                return;
+            }
+            if (!confirm('Are you sure you want to cancel this booking?')) {
+                return;
+            }
 
+            await del(`/${companyId}/reservation/${activeReservation.id}`);
+            await fetchDesksForRoom(activeRoom);
+        } catch (error) {
+            console.error('Error canceling booking:', error);
+            alert('Failed to cancel booking: ' + error.message);
+        }
+    };
+
+    const handleDeleteDesk = async (deskId) => {
+        if (!confirm('Are you sure you want to delete this desk?')) {
+            return;
+        }
+
+        try {
+            await del(`/${companyId}/desks/${deskId}`);
+            await fetchDesksForRoom(activeRoom);
+        } catch (error) {
+            console.error('Error deleting desk:', error);
+            alert('Failed to delete desk: ' + error.message);
+        }
+    };
+
+    // Error handling
     if (error) {
         return (
             <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
@@ -305,8 +393,7 @@ export default function DesksManagerPage() {
         );
     }
 
-    const currentRoom = rooms.find(r => r.id === activeRoom);
-
+    // Simulator
     const Simulator = () => {
         return (
             <div className="bg-white rounded-2xl overflow-hidden mb-6">
@@ -358,7 +445,9 @@ export default function DesksManagerPage() {
         );
     };
 
-    // Don't render if no rooms available
+    const currentRoom = rooms.find(r => r.id === activeRoom);
+
+    // No room available
     if (!currentRoom && rooms.length === 0) {
         return (
             <div className="relative bg-background min-h-screen px-4 mt-20">
@@ -381,18 +470,18 @@ export default function DesksManagerPage() {
         );
     }
 
-
+    // main page render
     return (
         <div className="relative bg-background min-h-screen px-4 mt-20">
             <main className="w-full max-w-7xl mx-auto flex flex-col gap-8 pb-32">
                 <Simulator />
-
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-semibold text-gray-800">Room Management</h1>
                 </div>
 
                 {/* Room Management */}
                 <section>
+                    {/* Select room buttons */}
                     <div className="flex gap-2 flex-wrap mb-6">
                         {rooms.map(room => (
                             <RoomButton key={room.id} roomId={room.id} label={room.readableId || 'Unknown Room'} />
@@ -410,24 +499,97 @@ export default function DesksManagerPage() {
 
                     {/* Info card */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                                <span className="text-gray-600">Status:</span>
-                                <span className={`ml-2 font-semibold capitalize ${isRoomOpen(currentRoom) ? 'text-success-600'
-                                    : currentRoom?.currentStatus === 'maintenance' ? 'text-warning-600'
-                                        : 'text-danger-600'
-                                    }`}>
-                                    {isRoomOpen(currentRoom) ? 'open'
-                                        : currentRoom?.currentStatus === 'maintenance' ? 'maintenance'
-                                            : 'closed'}
-                                </span>
-                            </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm items-center">
                             <div>
                                 <span className="text-gray-600">Desks:</span>
                                 <span className="ml-2 font-semibold">
                                     {desks.filter(d => d.roomId === currentRoom?.id).length}
                                 </span>
                             </div>
+                            {!editingHours ? (
+                                <>
+                                    <div>
+                                        <span className="text-gray-600">Opening:</span>
+                                        <span className="ml-2 font-semibold">
+                                            {currentRoom?.openingHours?.openingTime || 'Not set'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-600">Closing:</span>
+                                        <span className="ml-2 font-semibold">
+                                            {currentRoom?.openingHours?.closingTime || 'Not set'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-600">Open on</span>
+                                        <span className="ml-2 font-semibold">
+                                            {decodeDaysOfTheWeek(currentRoom?.openingHours?.daysOfTheWeek)}
+                                        </span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="text-gray-600 text-xs block mb-1">Opening:</label>
+                                        <input
+                                            type="time"
+                                            value={openingTime}
+                                            onChange={(e) => setOpeningTime(e.target.value)}
+                                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-600 text-xs block mb-1">Closing:</label>
+                                        <input
+                                            type="time"
+                                            value={closingTime}
+                                            onChange={(e) => setClosingTime(e.target.value)}
+                                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-600 text-xs block mb-1">Set open days:</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                                <label key={day} className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!DaysOpen[day]}
+                                                        onChange={e => setDaysOpen({ ...DaysOpen, [day]: e.target.checked })}
+                                                        className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
+                                                    />
+                                                    <span className="text-sm text-gray-700 capitalize">{day}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                            {!editingHours ? (
+                                <button
+                                    onClick={handleEditHours}
+                                    className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
+                                >
+                                    Edit Schedule
+                                </button>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={handleSaveHours}
+                                        className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEditHours}
+                                        className="px-4 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -507,7 +669,6 @@ export default function DesksManagerPage() {
                         </div>
                     </div>
 
-
                     {/* New Room form*/}
                     {showNewRoomForm && (
                         <form onSubmit={handleSaveNewRoom} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md">
@@ -515,46 +676,47 @@ export default function DesksManagerPage() {
 
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Name
+                                    Opening Time
                                 </label>
                                 <input
-                                    type="text"
+                                    type="time"
                                     required
-                                    placeholder="Room name"
-                                    value={newRoomName}
-                                    onChange={(e) => setNewRoomName(e.target.value)}
+                                    value={newRoomOpeningTime}
+                                    onChange={(e) => setNewRoomOpeningTime(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                                 />
                             </div>
 
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Floor
+                                    Closing Time
                                 </label>
                                 <input
-                                    type="number"
+                                    type="time"
                                     required
-                                    min="0"
-                                    placeholder="e.g., 2"
-                                    value={newRoomFloor}
-                                    onChange={(e) => setNewRoomFloor(e.target.value)}
+                                    value={newRoomClosingTime}
+                                    onChange={(e) => setNewRoomClosingTime(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
                                 />
                             </div>
 
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Capacity
+                                    Days of Week
                                 </label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="1"
-                                    placeholder="e.g., 12"
-                                    value={newRoomCapacity}
-                                    onChange={(e) => setNewRoomCapacity(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                                />
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                        <label key={day} className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={newRoomDays[day]}
+                                                onChange={(e) => setNewRoomDays({ ...newRoomDays, [day]: e.target.checked })}
+                                                className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
+                                            />
+                                            <span className="text-sm text-gray-700 capitalize">{day}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="flex gap-3">
