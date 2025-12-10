@@ -146,7 +146,7 @@ export default function HealthStatsManagerPage() {
                     });
                 }
             }
-        } else {
+        } else if (viewType === 'room') {
             rooms.forEach(room => {
                 const roomDesks = desks.filter(d => d.roomId === room.id);
                 const roomDeskIds = new Set(roomDesks.map(d => d.id));
@@ -161,6 +161,21 @@ export default function HealthStatsManagerPage() {
                     name: room.readableId || `Room ${room.id}`,
                     total: Math.round(totalHours * 100) / 100,
                     reservations: roomReservations.length
+                });
+            });
+        } else if (viewType === 'desk') {
+            desks.forEach(desk => {
+                const deskReservations = reservations.filter(r => r.deskId === desk.id);
+
+                const totalHours = deskReservations.reduce((sum, r) => {
+                    const duration = (new Date(r.end) - new Date(r.start)) / (1000 * 60 * 60);
+                    return sum + duration;
+                }, 0);
+
+                data.push({
+                    name: desk.readableId || `Desk ${desk.id}`,
+                    total: Math.round(totalHours * 100) / 100,
+                    reservations: deskReservations.length
                 });
             });
         }
@@ -258,6 +273,15 @@ export default function HealthStatsManagerPage() {
                         >
                             Per Room
                         </button>
+                        <button
+                            onClick={() => setViewType('desk')}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewType === 'desk'
+                                ? 'bg-secondary-100 text-secondary-700 border border-secondary-300'
+                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                }`}
+                        >
+                            Per Desk
+                        </button>
                     </div>
 
 
@@ -272,9 +296,7 @@ export default function HealthStatsManagerPage() {
 
                 {/* Desk Usage */}
                 <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                        {viewType === 'company' ? 'Company Desk Usage' : 'Desk Usage Per Room'}
-                    </h2>
+                    <h2 className="text-xl font-semibold text-gray-700 mb-4">Desk Usage</h2>
                     {chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <AreaChart data={chartData}>
@@ -299,9 +321,7 @@ export default function HealthStatsManagerPage() {
 
                 {/* Reservations*/}
                 <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                        {viewType === 'company' ? 'Number of Reservations' : 'Reservations Per Room'}
-                    </h2>
+                    <h2 className="text-xl font-semibold text-gray-700 mb-4">Reservations</h2>
                     {chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={chartData}>
