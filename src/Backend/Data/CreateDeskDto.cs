@@ -13,10 +13,4 @@ public class CreateDeskDto
     
     [Required]
     public Guid RoomId { get; set; }
-    
-    public int Height { get; set; }
-    
-    public int MaxHeight { get; set; }
-    
-    public int MinHeight { get; set; }
 }

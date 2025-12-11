@@ -45,6 +45,46 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         if (room is null)
             throw new ArgumentException("Room not found.");
         
+        // Sync with simulator first to get current desk state
+        DeskMetadata metadata;
+        // Default height limits (matching simulator defaults: 680-1320mm)
+        const int defaultMinHeight = 680;
+        const int defaultMaxHeight = 1320;
+        int height = defaultMinHeight;
+        int maxHeight = defaultMaxHeight;
+        int minHeight = defaultMinHeight;
+
+        try
+        {
+            // Fetch desk status from simulator (includes config, state, usage, lastErrors)
+            var deskStatus = await deskApi.GetDeskStatus(dto.MacAddress, companyId);
+            
+            // Populate metadata from simulator
+            metadata = new DeskMetadata
+            {
+                Config = deskStatus.Config ?? new Config(),
+                Usage = deskStatus.Usage ?? new Usage(),
+                LastErrors = deskStatus.LastErrors ?? [],
+                Status = deskStatus.State?.Status ?? "",
+                IsPositionLost = deskStatus.State?.IsPositionLost ?? false,
+                IsOverloadProtectionUp = deskStatus.State?.IsOverloadProtectionUp ?? false,
+                IsOverloadProtectionDown = deskStatus.State?.IsOverloadProtectionDown ?? false,
+                IsAntiCollision = deskStatus.State?.IsAntiCollision ?? false
+            };
+
+            // Sync height from simulator - use actual position from simulator
+            if (deskStatus.State != null)
+            {
+                height = deskStatus.State.PositionMm > 0 ? deskStatus.State.PositionMm : defaultMinHeight;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to sync desk {MacAddress} with simulator, using default values", dto.MacAddress);
+            // If sync fails, use default metadata
+            metadata = new DeskMetadata();
+        }
+        
         var roomNumber = 1;
 
         if (room.ReadableId != null && room.ReadableId.StartsWith("R-") && int.TryParse(room.ReadableId.AsSpan(2), out var parsedNum))
@@ -63,12 +103,12 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
             RpiMacAddress = dto.RpiMacAddress ?? string.Empty,
             RoomId = dto.RoomId,
             CompanyId = companyId,
-            Height = dto.Height,
-            MaxHeight = dto.MaxHeight,
-            MinHeight = dto.MinHeight,
+            Height = height,
+            MaxHeight = maxHeight,
+            MinHeight = minHeight,
             ReadableId = $"D-{roomNumber}{deskIndex:00}",
             ReservationIds = [],
-            Metadata = new DeskMetadata()
+            Metadata = metadata
         };
         
         dbContext.Desks.Add(desk);

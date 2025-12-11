@@ -131,10 +131,7 @@ export default function DesksManagerPage() {
         try {
             const newDesk = {
                 macAddress: macAddress,
-                roomId: roomId,
-                height: 650,
-                maxHeight: 1200,
-                minHeight: 650
+                roomId: roomId
             };
 
             // Only include rpiMacAddress if provided
