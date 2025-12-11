@@ -2,6 +2,7 @@
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
 
@@ -37,13 +38,31 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
 
         dbContext.UserCompanies.Add(uc);
 
+        await dbContext.SaveChangesAsync();
+
         return Ok();
+
+
     }
-    
+
+    [HttpGet("publiclyAccessible")]
+    public async Task<ActionResult<PublicCompanyDto>> GetPubliclyAccessibleCompanies()
+    {
+        var companies = await dbContext.Companies
+            .Where(c => c.SecretInviteCode != null)
+            .Select(c => new PublicCompanyDto()
+            {
+                Id = c.Id,
+                Name = c.Name,
+            })
+            .ToListAsync();
+        return Ok(companies);
+    }
+
     [HttpPut("{companyId:guid}/simulator")]
     [RequireRole(UserRole.Admin)]
     public async Task<IActionResult> UpdateSimulatorSettings(
-        Guid companyId, [FromBody] CompanySimulatorSettingsDto dto)
+    Guid companyId, [FromBody] CompanySimulatorSettingsDto dto)
     {
         var company = await dbContext.Companies.FindAsync(companyId);
 
