@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Backend.Data;
+using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
-using Backend.Data;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers;
 
@@ -10,9 +11,33 @@ namespace Backend.Controllers;
 public class CompanyController(BackendContext dbContext) : ControllerBase
 {
     [HttpPost("{companyId}/access/")]
-    public bool AccessCompany(string companyId, [FromBody] string accessCode)
+    public async Task<IActionResult> EnterCompany(Guid companyId, [FromBody] string accessCode)
     {
-        return false;
+        var company = await dbContext.Companies.FindAsync(companyId);
+
+        if (company is null)
+        {
+            return NotFound();
+        }
+
+        if (company.SecretInviteCode != accessCode)
+        {
+            return Unauthorized();
+        }
+
+        var currentUserId = User.GetUserId();
+        var user = await dbContext.Users.FindAsync(currentUserId);
+
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        var uc = new UserCompany() { Company = company, User = user, Role = UserRole.User };
+
+        dbContext.UserCompanies.Add(uc);
+
+        return Ok();
     }
     
     [HttpPut("{companyId:guid}/simulator")]
