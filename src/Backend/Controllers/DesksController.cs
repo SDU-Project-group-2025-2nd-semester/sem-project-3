@@ -44,9 +44,9 @@ public class DesksController(IDeskService deskService) : ControllerBase
 
     [HttpPost]
     [RequireRole(UserRole.Admin)]
-    public async Task<ActionResult<Desk>> CreateDesk(Guid companyId, [FromBody] Desk desk)
+    public async Task<ActionResult<Desk>> CreateDesk(Guid companyId, [FromBody] CreateDeskDto dto)
     {
-        var createdDesk = await deskService.CreateDeskAsync(companyId, desk);
+        var createdDesk = await deskService.CreateDeskAsync(companyId, dto);
         return CreatedAtAction(nameof(GetDesk), new { companyId, deskId = createdDesk.Id }, createdDesk);
     }
 

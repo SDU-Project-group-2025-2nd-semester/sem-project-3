@@ -9,7 +9,7 @@ public interface IDeskService
     public Task<List<Desk>> GetAllDesksAsync(Guid companyId);
     public Task<List<Desk>> GetDesksByRoomAsync(Guid companyId, Guid roomId);
     public Task<Desk?> GetDeskAsync(Guid companyId, Guid deskId);
-    Task<Desk> CreateDeskAsync(Guid companyId, Desk desk);
+    Task<Desk> CreateDeskAsync(Guid companyId, CreateDeskDto dto);
     Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, UpdateDeskDto updated);
     Task<bool> UpdateDeskHeightAsync(Guid companyId, Guid deskId, int newHeight);
     Task<bool> DeleteDeskAsync(Guid companyId, Guid deskId);
@@ -34,15 +34,13 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         return await dbContext.Desks.Include(d => d.Room).FirstOrDefaultAsync(d => d.CompanyId == companyId && d.Id == deskId);
     }
     
-    public async Task<Desk> CreateDeskAsync(Guid companyId, Desk desk)
+    public async Task<Desk> CreateDeskAsync(Guid companyId, CreateDeskDto dto)
     {
-        if (desk.RoomId == Guid.Empty)
+        if (dto.RoomId == Guid.Empty)
             throw new ArgumentException("Desk must have a valid room assigned.");
 
-        desk.CompanyId = companyId;
-        
         var room = await dbContext.Rooms
-            .FirstOrDefaultAsync(r => r.Id == desk.RoomId && r.CompanyId == companyId);
+            .FirstOrDefaultAsync(r => r.Id == dto.RoomId && r.CompanyId == companyId);
 
         if (room is null)
             throw new ArgumentException("Room not found.");
@@ -55,11 +53,23 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         }
         
         var desksCount = await dbContext.Desks
-            .CountAsync(d => d.CompanyId == companyId && d.RoomId == desk.RoomId);
+            .CountAsync(d => d.CompanyId == companyId && d.RoomId == dto.RoomId);
 
         var deskIndex = desksCount + 1;
         
-        desk.ReadableId = $"D-{roomNumber}{deskIndex:00}";
+        var desk = new Desk
+        {
+            MacAddress = dto.MacAddress,
+            RpiMacAddress = dto.RpiMacAddress ?? string.Empty,
+            RoomId = dto.RoomId,
+            CompanyId = companyId,
+            Height = dto.Height,
+            MaxHeight = dto.MaxHeight,
+            MinHeight = dto.MinHeight,
+            ReadableId = $"D-{roomNumber}{deskIndex:00}",
+            ReservationIds = [],
+            Metadata = new DeskMetadata()
+        };
         
         dbContext.Desks.Add(desk);
         await dbContext.SaveChangesAsync();
