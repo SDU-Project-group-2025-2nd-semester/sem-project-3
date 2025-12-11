@@ -24,7 +24,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
         var room = await roomService.GetRoomAsync(companyId, roomId);
         if (room is null)
             return NotFound();
-        
+
         return Ok(room);
     }
 
@@ -33,7 +33,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
     public async Task<ActionResult<Rooms>> CreateRoom(Guid companyId, [FromBody] Rooms room)
     {
         var created = await roomService.CreateRoomAsync(companyId, room);
-        return CreatedAtAction(nameof(GetRoom), new { companyId, room.Id }, created);
+        return CreatedAtAction(nameof(GetRoom), new { companyId, roomId = created.Id }, created);
     }
 
     [HttpPut("{roomId}")]
@@ -45,6 +45,17 @@ public class RoomsController(IRoomService roomService) : ControllerBase
             return NotFound();
 
         return NoContent();
+    }
+
+    [HttpPut("{roomId}/height")]
+    [RequireRole(UserRole.Admin, UserRole.Janitor)]
+    public async Task<IActionResult> SetRoomHeight(Guid companyId, Guid roomId, [FromBody] int newHeight)
+    {
+        var update = await roomService.SetRoomHeightAsync(companyId, roomId, newHeight);
+        if (!update)
+            return NotFound();
+
+        return Ok();
     }
 
     [HttpDelete("{roomId}")]
@@ -59,5 +70,5 @@ public class RoomsController(IRoomService roomService) : ControllerBase
     }
 
 
-    
+
 }

@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [currentCompany, setCurrentCompany] = useState(null);
-
+  const [isHydrating, setIsHydrating] = useState(true);
   const navigate = useNavigate();
 
   function initializeCompanies(me) {
@@ -40,10 +40,13 @@ export function AuthProvider({ children }) {
 
     // restore selected company from localStorage or pick first
     const savedId = localStorage.getItem("currentCompanyId");
-    const initial = mapped.find(c => c.id === savedId) ?? mapped[0] ?? null;
+    const initial = 
+      (savedId && mapped.find(c => String(c.id) === String(savedId))) ||
+      mapped[0] ||
+      null;
     if (initial) {
       setCurrentCompany(initial);
-      localStorage.setItem("currentCompanyId", initial.id);
+      localStorage.setItem("currentCompanyId", String(initial.id));
     } else {
       setCurrentCompany(null);
       localStorage.removeItem("currentCompanyId");
@@ -71,7 +74,10 @@ export function AuthProvider({ children }) {
 
       } catch {
         // no session
+      } finally {
+        if (mounted) setIsHydrating(false);
       }
+
     })();
     return () => { mounted = false; };
   }, []);
@@ -79,15 +85,20 @@ export function AuthProvider({ children }) {
   // Refresh current user from server (returns picked user or null)
   async function refreshCurrentUser() {
     try {
+      setIsHydrating(true);
       const me = await get("/Users/me");
       const user = pickUser(me);
       setCurrentUser(user);
+      initializeCompanies(me);
       return user;
     } catch (err) {
       // Not authenticated or error � clear local state
       setCurrentUser(null);
       return null;
+    } finally {
+      setIsHydrating(false);
     }
+
   }
 
   async function login({ email, password }) {
@@ -97,8 +108,6 @@ export function AuthProvider({ children }) {
     const user = await refreshCurrentUser();
 
     navigate(homepagePathForRole(user?.role));
-
-    initializeCompanies(me);
 
     return user;
   }
@@ -117,7 +126,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, companies, currentCompany, setCurrentCompany, login, logout, signup }}>
+    <AuthContext.Provider value={{ currentUser, companies, currentCompany, setCurrentCompany, login, logout, signup, isHydrating }}>
       {children}
     </AuthContext.Provider>
   );

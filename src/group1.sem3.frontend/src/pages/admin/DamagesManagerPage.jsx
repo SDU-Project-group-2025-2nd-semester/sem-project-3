@@ -148,6 +148,10 @@ export default function DamagesManagerPage() {
         {damage.desk?.readableId || damage.deskId || 'Unknown'}
       </td>
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+        <MobileLabel>Issue</MobileLabel>
+        {damage.issue || 'No issue'}
+      </td>
+      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
         <MobileLabel>Description</MobileLabel>
         {damage.description || 'No description'}
       </td>
@@ -231,6 +235,7 @@ export default function DamagesManagerPage() {
                 <TableHeader
                   columns={[
                     'Desk',
+                    'Issue',
                     'Description',
                     'Submitted',
                     'Resolved',
