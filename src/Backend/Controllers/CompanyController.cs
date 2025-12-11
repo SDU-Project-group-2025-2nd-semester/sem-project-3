@@ -15,6 +15,18 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
         return false;
     }
     
+    [HttpGet("{companyId:guid}/simulator")]
+    [RequireRole(UserRole.Admin)]
+    public async Task<IActionResult> GetSimulatorSettings(Guid companyId)
+    {
+        var company = await dbContext.Companies.FindAsync(companyId);
+
+        if (company is null)
+            return NotFound();
+
+        return Ok(new { SimulatorLink = company.SimulatorLink });
+    }
+    
     [HttpPut("{companyId:guid}/simulator")]
     [RequireRole(UserRole.Admin)]
     public async Task<IActionResult> UpdateSimulatorSettings(

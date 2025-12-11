@@ -28,6 +28,7 @@ export default function DesksManagerPage() {
     const [simulatorLink, setSimulatorLink] = useState('');
     const [simulatorApiKey, setSimulatorApiKey] = useState('');
     const [simulatorErrors, setSimulatorErrors] = useState({});
+    const [currentSimulatorLink, setCurrentSimulatorLink] = useState(null);
 
     const [editingHours, setEditingHours] = useState(false);
     const [openingTime, setOpeningTime] = useState('');
@@ -52,6 +53,12 @@ export default function DesksManagerPage() {
             fetchDesksForRoom(activeRoom);
         }
     }, [activeRoom, companyId]);
+
+    useEffect(() => {
+        if (companyId) {
+            fetchSimulatorSettings();
+        }
+    }, [companyId]);
 
     const fetchInitialData = async () => {
         try {
@@ -102,6 +109,18 @@ export default function DesksManagerPage() {
     };
 
     // Simulator
+    const fetchSimulatorSettings = async () => {
+        try {
+            const settings = await get(`/Company/${companyId}/simulator`);
+            setCurrentSimulatorLink(settings.simulatorLink || null);
+        } catch (error) {
+            if (error.status !== 404) {
+                console.error('Error fetching simulator settings:', error);
+            }
+            setCurrentSimulatorLink(null);
+        }
+    };
+
     const handleSaveSimulator = async (e) => {
         e.preventDefault();
 
@@ -136,6 +155,7 @@ export default function DesksManagerPage() {
             setSimulatorLink('');
             setSimulatorApiKey('');
             setSimulatorErrors({});
+            await fetchSimulatorSettings();
         } catch (error) {
             console.error('Error saving simulator:', error);
             alert('Failed to save simulator: ' + error.message);
@@ -398,7 +418,33 @@ export default function DesksManagerPage() {
         return (
             <div className="bg-white rounded-2xl overflow-hidden mb-6">
                 <h1 className="text-3xl font-semibold text-gray-800 py-6">Simulator Management</h1>
+                
+                {/* Current Settings Display */}
+                <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 mb-6 max-w-md">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Current Settings</h2>
+                    <div className="space-y-3">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">
+                                Simulator Link
+                            </label>
+                            <div className="text-sm text-gray-800 font-mono bg-white px-3 py-2 rounded border border-gray-300 break-all">
+                                {currentSimulatorLink || 'Not set'}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">
+                                API Key
+                            </label>
+                            <div className="text-sm text-gray-800 font-mono bg-white px-3 py-2 rounded border border-gray-300">
+                                {currentSimulatorLink ? '********************************' : 'Not set'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Update Form */}
                 <form onSubmit={handleSaveSimulator} className="bg-white rounded-2xl shadow-sm border border-gray-150 p-6 max-w-md">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Update Settings</h2>
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Link
