@@ -118,7 +118,9 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
 
     public async Task<List<string>> GetNotAdoptedDesks(Guid companyId)
     {
-        var desks = await deskApi.GetAllDesks();
+        // DeskApi will automatically get companyId from HttpContext route when called from controller
+        // Pass null to let it auto-detect, or pass companyId explicitly for background services
+        var desks = await deskApi.GetAllDesks(null);
 
         List<string> notAdoptedDesks = [];
 

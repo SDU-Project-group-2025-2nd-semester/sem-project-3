@@ -1,5 +1,5 @@
 const BASE = (() => {
-  return "https://localhost:8081/api";
+  return import.meta.env.VITE_API_BASE_URL || "https://localhost:8081/api";
 })();
 
 async function parseResponse(res) {
