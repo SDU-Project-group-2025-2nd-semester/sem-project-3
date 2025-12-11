@@ -833,6 +833,57 @@
         }
       }
     },
+    "/api/{companyId}/Desks/from-mac/{macAddress}": {
+      "get": {
+        "tags": [
+          "Desks"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "macAddress",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{companyId}/Reservation": {
       "get": {
         "tags": [
@@ -1665,13 +1716,16 @@
       },
       "CreateDamageReportDto": {
         "required": [
-          "description",
+          "issue",
           "deskId"
         ],
         "type": "object",
         "properties": {
           "description": {
             "maxLength": 512,
+            "type": "string"
+          },
+          "issue": {
             "type": "string"
           },
           "deskId": {
@@ -1706,6 +1760,9 @@
           },
           "description": {
             "maxLength": 512,
+            "type": "string"
+          },
+          "issue": {
             "type": "string"
           },
           "submitTime": {

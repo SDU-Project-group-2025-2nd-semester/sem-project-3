@@ -12,6 +12,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
 {
 
     [HttpGet]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<List<Rooms>>> GetRooms(Guid companyId)
     {
         var rooms = await roomService.GetAllRoomsAsync(companyId);
@@ -19,6 +20,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
     }
 
     [HttpGet("{roomId}")]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<Rooms>> GetRoom(Guid companyId, Guid roomId)
     {
         var room = await roomService.GetRoomAsync(companyId, roomId);
