@@ -779,75 +779,75 @@ export default function DesksManagerPage() {
                                     </table>
                                 </div>
                             </div>
-
-                            {/* New Room form*/}
-                            {showNewRoomForm && (
-                                <form onSubmit={handleSaveNewRoom} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">New Room</h3>
-
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Opening Time
-                                        </label>
-                                        <input
-                                            type="time"
-                                            required
-                                            value={newRoomOpeningTime}
-                                            onChange={(e) => setNewRoomOpeningTime(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                                        />
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Closing Time
-                                        </label>
-                                        <input
-                                            type="time"
-                                            required
-                                            value={newRoomClosingTime}
-                                            onChange={(e) => setNewRoomClosingTime(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                                        />
-                                    </div>
-
-                                    <div className="mb-6">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Days of Week
-                                        </label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                                                <label key={day} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={newRoomDays[day]}
-                                                        onChange={(e) => setNewRoomDays({ ...newRoomDays, [day]: e.target.checked })}
-                                                        className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
-                                                    />
-                                                    <span className="text-sm text-gray-700 capitalize">{day}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-3">
-                                        <button
-                                            type="submit"
-                                            className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
-                                        >
-                                            Save
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleCancelNewRoom}
-                                            className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
                         </>
+                    )}
+
+                    {/* New Room form */}
+                    {showNewRoomForm && (
+                        <form onSubmit={handleSaveNewRoom} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">New Room</h3>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Opening Time
+                                </label>
+                                <input
+                                    type="time"
+                                    required
+                                    value={newRoomOpeningTime}
+                                    onChange={(e) => setNewRoomOpeningTime(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
+                                />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Closing Time
+                                </label>
+                                <input
+                                    type="time"
+                                    required
+                                    value={newRoomClosingTime}
+                                    onChange={(e) => setNewRoomClosingTime(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
+                                />
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Days of Week
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                        <label key={day} className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={newRoomDays[day]}
+                                                onChange={(e) => setNewRoomDays({ ...newRoomDays, [day]: e.target.checked })}
+                                                className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
+                                            />
+                                            <span className="text-sm text-gray-700 capitalize">{day}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleCancelNewRoom}
+                                    className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
                     )}
                 </section>
             </main>
