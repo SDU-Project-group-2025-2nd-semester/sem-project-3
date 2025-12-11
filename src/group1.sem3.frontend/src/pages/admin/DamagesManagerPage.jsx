@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { get, put, del } from "../../context/apiClient";
+import { getDamageReports, updateDamageReportStatus, deleteDamageReport } from "../../services/damageService";
+import { getMyProfile } from "../../services/userService";
+import { getDeskById } from "../../services/deskService";
 
 export default function DamagesManagerPage() {
   const navigate = useNavigate();
@@ -18,16 +20,16 @@ export default function DamagesManagerPage() {
       setLoading(true);
       setError(null);
 
-      const me = await get('/Users/me');
+      const me = await getMyProfile();
 
-      if (!me?.companyMemberships || me.companyMemberships.length === 0) {
+      if (!me?.companyMemberships || me.companyMemberships.length ===0) {
         throw new Error('No company associated with current user');
       }
 
       const userCompanyId = me.companyMemberships[0].companyId;
       setCompanyId(userCompanyId);
 
-      const reports = await get(`/${userCompanyId}/DamageReport`);
+      const reports = await getDamageReports(userCompanyId);
 
 
       const reportsWithDesks = await Promise.all(
@@ -37,7 +39,7 @@ export default function DamagesManagerPage() {
 
           if (report.deskId) {
             try {
-              desk = await get(`/${userCompanyId}/Desks/${report.deskId}`);
+              desk = await getDeskById(userCompanyId, report.deskId);
             } catch (error) {
               console.error(`Error fetching desk ${report.deskId}:`, error);
             }
@@ -45,7 +47,7 @@ export default function DamagesManagerPage() {
 
           if (report.resolvedById) {
             try {
-              resolvedByUser = await get(`/Users/${report.resolvedById}`);
+              resolvedByUser = await getMyProfile(report.resolvedById);
             } catch (error) {
               console.error(`Error fetching user ${report.resolvedById}:`, error);
             }
@@ -60,7 +62,7 @@ export default function DamagesManagerPage() {
       console.error('Error fetching damage reports:', error);
       setError(error.message);
       if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-        setTimeout(() => navigate('/'), 2000);
+        setTimeout(() => navigate('/'),2000);
       }
     } finally {
       setLoading(false);
@@ -96,7 +98,7 @@ export default function DamagesManagerPage() {
     }
 
     try {
-      await put(`/${companyId}/DamageReport/${damageId}`, true);
+      await updateDamageReportStatus(companyId, damageId, true);
       await fetchDamageReports();
     } catch (error) {
       console.error('Error resolving damage report:', error);
@@ -110,7 +112,7 @@ export default function DamagesManagerPage() {
     }
 
     try {
-      await del(`/${companyId}/DamageReport/${damageId}`);
+      await deleteDamageReport(companyId, damageId);
       await fetchDamageReports();
     } catch (error) {
       console.error('Error removing damage report:', error);

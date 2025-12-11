@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { get, post, put, del } from "../../context/apiClient";
+import { getRooms, createRoom } from "../../services/roomService";
+import { getMyCompanies, updateSimulator } from "../../services/companyService";
+import { getDesksForRoom, deleteDesk } from "../../services/deskService";
+import { getReservations, cancelReservation } from "../../services/reservationService";
 
 export default function DesksManagerPage() {
     const DEFAULT_DESK_HEIGHT = 95;
@@ -38,7 +41,7 @@ export default function DesksManagerPage() {
             setLoading(true);
             setError(null);
 
-            const userCompanies = await get('/Users/me/companies');
+            const userCompanies = await getMyCompanies();
 
             if (!userCompanies || userCompanies.length === 0) {
                 throw new Error('No company associated with current user');
@@ -47,7 +50,7 @@ export default function DesksManagerPage() {
             const userCompanyId = userCompanies[0].companyId;
             setCompanyId(userCompanyId);
 
-            const roomsData = await get(`/${userCompanyId}/rooms`);
+            const roomsData = await getRooms(userCompanyId);
             setRooms(roomsData);
 
             if (roomsData.length > 0) {
@@ -64,8 +67,8 @@ export default function DesksManagerPage() {
     const fetchDesksForRoom = async (roomId) => {
         try {
             const [desksData, reservationsData] = await Promise.all([
-                get(`/${companyId}/desks/room/${roomId}`),
-                get(`/${companyId}/reservation`)
+                getDesksForRoom(companyId, roomId),
+                getReservations(companyId)
             ]);
 
             setDesks(desksData);
@@ -87,7 +90,7 @@ export default function DesksManagerPage() {
         }
 
         try {
-            await del(`/${companyId}/desks/${deskId}`);
+            await deleteDesk(companyId, deskId);
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
             console.error('Error deleting desk:', error);
@@ -109,16 +112,12 @@ export default function DesksManagerPage() {
                 alert('No active booking found for this desk');
                 return;
             }
-            // if (!activeReservation) {
-            //     alert('No active booking found for this desk');
-            //     return;
-            // }
 
             if (!confirm('Are you sure you want to cancel this booking?')) {
                 return;
             }
 
-            await del(`/${companyId}/reservation/${activeReservation.id}`);
+            await cancelReservation(companyId, activeReservation.id);
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
             console.error('Error canceling booking:', error);
@@ -157,7 +156,7 @@ export default function DesksManagerPage() {
                 simulatorApiKey: simulatorApiKey.trim()
             };
 
-            await put(`/Company/${companyId}/simulator`, simulatorSettings);
+            await updateSimulator(companyId, simulatorSettings);
             alert('Simulator settings saved successfully!');
             setSimulatorLink('');
             setSimulatorApiKey('');
@@ -178,7 +177,7 @@ export default function DesksManagerPage() {
                 floor: parseInt(newRoomFloor),
             };
 
-            const createdRoom = await post(`/${companyId}/rooms`, newRoom);
+            const createdRoom = await createRoom(companyId, newRoom);
             await fetchInitialData();
             handleCancelNewRoom();
             setActiveRoom(createdRoom.id);
@@ -226,7 +225,6 @@ export default function DesksManagerPage() {
             const start = new Date(r.start);
             const end = new Date(r.end);
             return start <= now;
-            // return start <= now && now <= end;
         });
 
         if (hasReservation) return 'booked';
