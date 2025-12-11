@@ -113,8 +113,8 @@ public class DatabaseMigrationHostedService(
             Name = "Tech Co-Working Space",
             SecretInviteCode = "TECH2024",
             Rooms = [],
-            SimulatorLink = null,
-            SimulatorApiKey = null
+            SimulatorLink = "https://s3-sproj-techcowork.michalvalko.eu",
+            SimulatorApiKey = "E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7"
         };
 
         var innovationHubCompany = new Company
@@ -123,8 +123,8 @@ public class DatabaseMigrationHostedService(
             Name = "Innovation Hub",
             SecretInviteCode = "INNOVATE",
             Rooms = [],
-            SimulatorLink = null,
-            SimulatorApiKey = null
+            SimulatorLink = "https://s3-sproj-innovationhub.michalvalko.eu",
+            SimulatorApiKey = "F7H1vM3kQ5rW8zT9xG2pJ6nY4dL0aZ3K"
         };
 
         var startupCenterCompany = new Company
@@ -133,8 +133,8 @@ public class DatabaseMigrationHostedService(
             Name = "Startup Center",
             SecretInviteCode = null, // Email verification required
             Rooms = [],
-            SimulatorLink = null,
-            SimulatorApiKey = null
+            SimulatorLink = "https://s3-sproj-startupcenter.michalvalko.eu",
+            SimulatorApiKey = "A3B5C7D9E1F2G4H6I8J0K2L4M6N8O0P2"
         };
 
         context.Companies.AddRange(techCoWorkingCompany, innovationHubCompany, startupCenterCompany);
