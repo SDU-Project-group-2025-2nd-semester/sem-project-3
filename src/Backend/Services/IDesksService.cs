@@ -78,6 +78,11 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         existing.MaxHeight = updated.MaxHeight;
         existing.RoomId = updated.RoomId;
         existing.ReservationIds = updated.ReservationIds;
+        
+        if (!string.IsNullOrEmpty(updated.RpiMacAddress))
+        {
+            existing.RpiMacAddress = updated.RpiMacAddress;
+        }
 
         await dbContext.SaveChangesAsync();
 
