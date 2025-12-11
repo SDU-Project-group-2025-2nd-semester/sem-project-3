@@ -151,11 +151,11 @@ public class DeskLedService(ILogger<DeskHeightPullingService> logger, IHubContex
 
                     if (isOccupied)
                     {
-                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/red");
+                        await mqttClient.SendMessage("red", $"{desk.RpiMacAddress}/led");
                     }
                     else
                     {
-                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/green");
+                        await mqttClient.SendMessage("green", $"{desk.RpiMacAddress}/led");
                     }
 
                 }
