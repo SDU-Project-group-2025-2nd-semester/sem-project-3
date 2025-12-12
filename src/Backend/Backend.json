@@ -136,17 +136,26 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicCompanyDto"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicCompanyDto"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublicCompanyDto"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
                 }
               }
             }
@@ -1678,13 +1687,16 @@
       },
       "CreateDamageReportDto": {
         "required": [
-          "description",
+          "issue",
           "deskId"
         ],
         "type": "object",
         "properties": {
           "description": {
             "maxLength": 512,
+            "type": "string"
+          },
+          "issue": {
             "type": "string"
           },
           "deskId": {
@@ -1719,6 +1731,9 @@
           },
           "description": {
             "maxLength": 512,
+            "type": "string"
+          },
+          "issue": {
             "type": "string"
           },
           "submitTime": {
@@ -1789,6 +1804,14 @@
           },
           "metadata": {
             "$ref": "#/components/schemas/DeskMetadata"
+          },
+          "lastHeightChangeTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "needsHealthReminder": {
+            "type": "boolean"
           },
           "roomId": {
             "type": "string",
