@@ -51,6 +51,19 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
 
 
     }
+    
+    [HttpGet("{companyId:guid}/simulator")]
+    [RequireRole(UserRole.Admin)]
+    public async Task<IActionResult> GetSimulatorSettings(Guid companyId)
+    {
+        var company = await dbContext.Companies.FindAsync(companyId);
+
+        if (company is null)
+            return NotFound();
+
+        return Ok(new { SimulatorLink = company.SimulatorLink });
+    }
+    
 
     [HttpGet("publiclyAccessible")]
     public async Task<ActionResult<List<PublicCompanyDto>>> GetPubliclyAccessibleCompanies()

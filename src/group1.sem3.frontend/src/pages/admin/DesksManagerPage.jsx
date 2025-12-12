@@ -28,6 +28,7 @@ export default function DesksManagerPage() {
     const [simulatorLink, setSimulatorLink] = useState('');
     const [simulatorApiKey, setSimulatorApiKey] = useState('');
     const [simulatorErrors, setSimulatorErrors] = useState({});
+    const [currentSimulatorLink, setCurrentSimulatorLink] = useState(null);
 
     const [editingHours, setEditingHours] = useState(false);
     const [openingTime, setOpeningTime] = useState('');
@@ -52,6 +53,12 @@ export default function DesksManagerPage() {
             fetchDesksForRoom(activeRoom);
         }
     }, [activeRoom, companyId]);
+
+    useEffect(() => {
+        if (companyId) {
+            fetchSimulatorSettings();
+        }
+    }, [companyId]);
 
     const fetchInitialData = async () => {
         try {
@@ -102,6 +109,18 @@ export default function DesksManagerPage() {
     };
 
     // Simulator
+    const fetchSimulatorSettings = async () => {
+        try {
+            const settings = await get(`/Company/${companyId}/simulator`);
+            setCurrentSimulatorLink(settings.simulatorLink || null);
+        } catch (error) {
+            if (error.status !== 404) {
+                console.error('Error fetching simulator settings:', error);
+            }
+            setCurrentSimulatorLink(null);
+        }
+    };
+
     const handleSaveSimulator = async (e) => {
         e.preventDefault();
 
@@ -136,6 +155,7 @@ export default function DesksManagerPage() {
             setSimulatorLink('');
             setSimulatorApiKey('');
             setSimulatorErrors({});
+            await fetchSimulatorSettings();
         } catch (error) {
             console.error('Error saving simulator:', error);
             alert('Failed to save simulator: ' + error.message);
@@ -396,52 +416,110 @@ export default function DesksManagerPage() {
     // Simulator
     const Simulator = () => {
         return (
-            <div className="bg-white rounded-2xl overflow-hidden mb-6">
-                <h1 className="text-3xl font-semibold text-gray-800 py-6">Simulator Management</h1>
-                <form onSubmit={handleSaveSimulator} className="bg-white rounded-2xl shadow-sm border border-gray-150 p-6 max-w-md">
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Link
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="https://simulator.example.com"
-                            value={simulatorLink}
-                            onChange={(e) => setSimulatorLink(e.target.value)}
-                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500' : 'border-gray-300'
-                                }`}
-                        />
-                        {simulatorErrors.link && (
-                            <p className="text-danger-600 text-sm mt-1">{simulatorErrors.link}</p>
-                        )}
-                    </div>
+            <div className="overflow-hidden mb-6">
+                <div className="px-6 pt-6 pb-4">
+                    <h1 className="text-2xl font-semibold text-gray-800">Simulator Management</h1>
+                </div>
+                
+                <div className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Current Settings Display */}
+                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="material-symbols-outlined text-gray-600">settings</span>
+                                <h2 className="text-lg font-semibold text-gray-800">Current Settings</h2>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                                        Simulator Link
+                                    </label>
+                                    <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 break-all shadow-sm">
+                                        {currentSimulatorLink ? (
+                                            <span className="text-accent-600">{currentSimulatorLink}</span>
+                                        ) : (
+                                            <span className="text-gray-400 italic">Not configured</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                                        API Key
+                                    </label>
+                                    <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-sm">
+                                        {currentSimulatorLink ? (
+                                            <span className="text-gray-600 select-none">********************************</span>
+                                        ) : (
+                                            <span className="text-gray-400 italic">Not configured</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Api Key
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Enter API key"
-                            value={simulatorApiKey}
-                            onChange={(e) => setSimulatorApiKey(e.target.value)}
-                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.apiKey ? 'border-danger-500' : 'border-gray-300'
-                                }`}
-                        />
-                        {simulatorErrors.apiKey && (
-                            <p className="text-danger-600 text-sm mt-1">{simulatorErrors.apiKey}</p>
-                        )}
+                        {/* Update Form */}
+                        <form onSubmit={handleSaveSimulator} className="bg-white rounded-xl border border-gray-200 p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="material-symbols-outlined text-gray-600">edit</span>
+                                <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Simulator Link
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="https://simulator.example.com"
+                                        value={simulatorLink}
+                                        onChange={(e) => setSimulatorLink(e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${
+                                            simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+                                        }`}
+                                    />
+                                    {simulatorErrors.link && (
+                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">error</span>
+                                            {simulatorErrors.link}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        API Key
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter 32-character API key"
+                                        value={simulatorApiKey}
+                                        onChange={(e) => setSimulatorApiKey(e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${
+                                            simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+                                        }`}
+                                    />
+                                    {simulatorErrors.apiKey && (
+                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">error</span>
+                                            {simulatorErrors.apiKey}
+                                        </p>
+                                    )}
+                                </div>
+                                
+                                <div className="pt-2">
+                                    <button
+                                        type="submit"
+                                        className="w-full px-6 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">save</span>
+                                        Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div className="flex gap-3">
-                        <button
-                            type="submit"
-                            className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
-                        >
-                            Save
-                        </button>
-                    </div>
-                </form>
-            </div >
+                </div>
+            </div>
         );
     };
 
