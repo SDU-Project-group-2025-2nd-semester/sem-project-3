@@ -46,7 +46,7 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
     }
 
     [HttpGet("publiclyAccessible")]
-    public async Task<ActionResult<PublicCompanyDto>> GetPubliclyAccessibleCompanies()
+    public async Task<ActionResult<List<PublicCompanyDto>>> GetPubliclyAccessibleCompanies()
     {
         var companies = await dbContext.Companies
             .Where(c => c.SecretInviteCode != null)
