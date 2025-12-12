@@ -2,12 +2,25 @@
 using Backend.Hubs;
 using Hangfire;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json.Serialization;
 
 namespace Backend.Services;
+
+// Custom exceptions for simulator-related errors
+public class SimulatorConfigurationException : Exception
+{
+    public SimulatorConfigurationException(string message) : base(message) { }
+}
+
+public class SimulatorConnectionException : Exception
+{
+    public SimulatorConnectionException(string message, Exception? innerException = null) 
+        : base(message, innerException) { }
+}
 
 public interface IReservationScheduler
 {
@@ -151,11 +164,11 @@ public class DeskLedService(ILogger<DeskHeightPullingService> logger, IHubContex
 
                     if (isOccupied)
                     {
-                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/red");
+                        await mqttClient.SendMessage("red", $"{desk.RpiMacAddress}/led");
                     }
                     else
                     {
-                        await mqttClient.SendMessage("led", $"{desk.RpiMacAddress}/green");
+                        await mqttClient.SendMessage("green", $"{desk.RpiMacAddress}/led");
                     }
 
                 }
@@ -193,7 +206,8 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
             {
                 try
                 {
-                    var currentState = await deskApi.GetDeskState(desk.MacAddress);
+                    // Pass companyId to DeskApi, which will fetch simulator settings from DB
+                    var currentState = await deskApi.GetDeskState(desk.MacAddress, desk.CompanyId);
 
                     desk.Metadata.IsOverloadProtectionDown = currentState.IsOverloadProtectionDown;
                     desk.Metadata.IsAntiCollision = currentState.IsAntiCollision;
@@ -205,8 +219,7 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
                     {
                         // Just for sake of testing - will be more complicated later
                         // Notify table
-
-                         await mqttClient.SendMessage("buzz", $"{desk.RpiMacAddress}/buzzer");
+                        await mqttClient.SendMessage("buzz", $"{desk.RpiMacAddress}/buzzer");
                     }
                     else
                     {
@@ -267,10 +280,11 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
 
         try
         {
+            // Pass companyId to DeskApi, which will fetch simulator settings from DB
             var newState = await deskApi.SetState(desk.MacAddress, new State()
             {
                 PositionMm = newHeight,
-            });
+            }, desk.CompanyId);
 
 
             // Update database
@@ -313,8 +327,18 @@ public class DeskControlService(BackendContext dbContext, ILogger<DeskControlSer
     {
         try
         {
-            var response = await deskApi.GetDeskState(macAddress);
+            // Find desk to get companyId
+            var desk = await dbContext.Desks
+                .FirstOrDefaultAsync(d => d.MacAddress == macAddress);
 
+            if (desk == null)
+            {
+                logger.LogWarning("Desk with MAC address {MacAddress} not found", macAddress);
+                return null;
+            }
+
+            // Pass companyId to DeskApi, which will fetch simulator settings from DB
+            var response = await deskApi.GetDeskState(macAddress, desk.CompanyId);
 
             return response.PositionMm;
         }
@@ -370,36 +394,145 @@ public static class Bullshit
 
 public interface IDeskApi
 {
-    Task<List<string>> GetAllDesks();
-    Task<DeskJsonElement> GetDeskStatus(string macAddress);
-    Task<Config> GetDeskConfig(string macAddress);
-    Task<State> GetDeskState(string macAddress);
-    Task<Usage> GetDeskUsage(string macAddress);
-    Task<List<LastError>> GetDeskLastErrors(string macAddress);
-    Task<Config> SetConfig(string macAddress, Config config);
-    Task<State> SetState(string macAddress, State state);
-    Task<Usage> SetUsage(string macAddress, Usage usage);
-    Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors);
+    Task<List<string>> GetAllDesks(Guid? companyId = null);
+    Task<DeskJsonElement> GetDeskStatus(string macAddress, Guid? companyId = null);
+    Task<Config> GetDeskConfig(string macAddress, Guid? companyId = null);
+    Task<State> GetDeskState(string macAddress, Guid? companyId = null);
+    Task<Usage> GetDeskUsage(string macAddress, Guid? companyId = null);
+    Task<List<LastError>> GetDeskLastErrors(string macAddress, Guid? companyId = null);
+    Task<Config> SetConfig(string macAddress, Config config, Guid? companyId = null);
+    Task<State> SetState(string macAddress, State state, Guid? companyId = null);
+    Task<Usage> SetUsage(string macAddress, Usage usage, Guid? companyId = null);
+    Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors, Guid? companyId = null);
 }
 
-public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
+public class DeskApi(IHttpClientFactory httpClientFactory, BackendContext dbContext, IHttpContextAccessor httpContextAccessor) : IDeskApi
 {
-    private readonly HttpClient httpClient = httpClientFactory.CreateClient("DeskApi");
+    private readonly HttpClient defaultHttpClient = httpClientFactory.CreateClient("DeskApi");
 
-    public async Task<List<string>> GetAllDesks()
+    private Guid? GetCompanyIdFromContext()
     {
-
-        var result = await httpClient.GetAsync("desks");
-
-        result.EnsureSuccessStatusCode();
-
-        var desks = await result.Content.ReadFromJsonAsync<List<string>>();
-
-        return desks ?? [];
+        // Try to get companyId from route data if available (controller calls)
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext?.Request.RouteValues.TryGetValue("companyId", out var routeValue) == true)
+        {
+            if (Guid.TryParse(routeValue?.ToString(), out var companyId))
+            {
+                return companyId;
+            }
+        }
+        return null;
     }
 
-    public async Task<DeskJsonElement> GetDeskStatus(string macAddress)
+    private async Task<HttpClient> GetHttpClientAsync(Guid? companyId)
     {
+        // If no companyId provided, try to get it from HttpContext (for controller calls)
+        if (companyId == null)
+        {
+            companyId = GetCompanyIdFromContext();
+        }
+
+        // If still no companyId, throw error
+        if (companyId == null)
+        {
+            throw new InvalidOperationException(
+                "CompanyId is required but could not be determined. " +
+                "Either provide companyId as a parameter or ensure the request is made from a controller with companyId in the route.");
+        }
+
+        // Fetch company to get simulator settings
+        var company = await dbContext.Companies
+            .FirstOrDefaultAsync(c => c.Id == companyId);
+
+        // If company not found, throw error
+        if (company == null)
+        {
+            throw new InvalidOperationException(
+                $"Company with ID {companyId} was not found in the database.");
+        }
+
+        // If company has no simulator settings, throw error
+        if (string.IsNullOrEmpty(company.SimulatorLink))
+        {
+            throw new SimulatorConfigurationException(
+                $"Company '{company.Name}' does not have a WiFi2BLE link configured. " +
+                "Please configure the simulator settings via the Company settings page.");
+        }
+
+        // If company has no API key, throw error
+        if (string.IsNullOrEmpty(company.SimulatorApiKey))
+        {
+            throw new SimulatorConfigurationException(
+                $"Company '{company.Name}' does not have a WiFi2BLE API key configured. " +
+                "Please configure the simulator settings via the Company settings page.");
+        }
+
+        // Create a new HttpClient with company-specific settings
+        var client = httpClientFactory.CreateClient();
+        
+        // Build base URL with API path prefix: <simulator_link>/api/v2/<api_key>/
+        // Simulator API expects: /api/v2/<api_key>/<endpoint>
+        var baseUrl = company.SimulatorLink.TrimEnd('/');
+        var fullBaseUrl = $"{baseUrl}/api/v2/{company.SimulatorApiKey}/";
+        client.BaseAddress = new Uri(fullBaseUrl);
+        client.Timeout = TimeSpan.FromSeconds(10);
+        
+        return client;
+    }
+
+    public async Task<List<string>> GetAllDesks(Guid? companyId = null)
+    {
+        try
+        {
+            var httpClient = await GetHttpClientAsync(companyId);
+            var result = await httpClient.GetAsync("desks");
+
+            if (!result.IsSuccessStatusCode)
+            {
+                await HandleHttpError(result, "Failed to retrieve desks from WiFi2BLE Box");
+            }
+
+            result.EnsureSuccessStatusCode();
+
+            var desks = await result.Content.ReadFromJsonAsync<List<string>>();
+
+            return desks ?? [];
+        }
+        catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
+        {
+            throw new SimulatorConnectionException(
+                "Unable to connect to the WiFi2BLE Box. Please check that the WiFi2BLE Box link is correct and the WiFi2BLE Box is running.",
+                ex);
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            throw new SimulatorConnectionException(
+                "Connection to the WiFi2BLE Box timed out. Please check that the WiFi2BLE Box is running and accessible.",
+                ex);
+        }
+    }
+
+    private async Task HandleHttpError(HttpResponseMessage response, string baseMessage)
+    {
+        var statusCode = response.StatusCode;
+        var content = await response.Content.ReadAsStringAsync();
+        
+        string errorMessage = statusCode switch
+        {
+            HttpStatusCode.Unauthorized => "Invalid API key. Please check your WiFi2BLE Box API key configuration.",
+            HttpStatusCode.Forbidden => "Access denied by the WiFi2BLE Box. Please check your API key permissions.",
+            HttpStatusCode.NotFound => "WiFi2BLE Box endpoint not found. Please check that the WiFi2BLE Box link is correct.",
+            HttpStatusCode.BadGateway => "Bad gateway to WiFi2BLE Box. The WiFi2BLE Box may be unreachable.",
+            HttpStatusCode.ServiceUnavailable => "WiFi2BLE Box service is unavailable. Please check that the WiFi2BLE Box is running.",
+            _ => $"{baseMessage}. Status: {statusCode}, Response: {content}"
+        };
+        
+        throw new SimulatorConnectionException(errorMessage);
+    }
+
+    public async Task<DeskJsonElement> GetDeskStatus(string macAddress, Guid? companyId = null)
+    {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desks/{macAddress}/status");
 
         result.EnsureSuccessStatusCode();
@@ -414,8 +547,9 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
         return desk;
     }
 
-    public async Task<Config> GetDeskConfig(string macAddress)
+    public async Task<Config> GetDeskConfig(string macAddress, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desks/{macAddress}/config");
         result.EnsureSuccessStatusCode();
         var config = await result.Content.ReadFromJsonAsync<Config>();
@@ -427,22 +561,44 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
         return config;
     }
 
-    public async Task<State> GetDeskState(string macAddress)
+    public async Task<State> GetDeskState(string macAddress, Guid? companyId = null)
     {
-        var result = await httpClient.GetAsync($"desks/{macAddress}/state");
-        result.EnsureSuccessStatusCode();
-
-        var state = await result.Content.ReadFromJsonAsync<State>();
-        if (state == null)
+        try
         {
-            throw new Exception("Failed to parse desk state");
-        }
+            var httpClient = await GetHttpClientAsync(companyId);
+            var result = await httpClient.GetAsync($"desks/{macAddress}/state");
+            
+            if (!result.IsSuccessStatusCode)
+            {
+                await HandleHttpError(result, $"Failed to retrieve desk state for {macAddress}");
+            }
+            
+            result.EnsureSuccessStatusCode();
+            var state = await result.Content.ReadFromJsonAsync<State>();
+            if (state == null)
+            {
+                throw new Exception("Failed to parse desk state");
+            }
 
-        return state;
+            return state;
+        }
+        catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
+        {
+            throw new SimulatorConnectionException(
+                "Unable to connect to the simulator. Please check that the simulator link is correct and the simulator is running.",
+                ex);
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            throw new SimulatorConnectionException(
+                "Connection to the simulator timed out. Please check that the simulator is running and accessible.",
+                ex);
+        }
     }
 
-    public async Task<Usage> GetDeskUsage(string macAddress)
+    public async Task<Usage> GetDeskUsage(string macAddress, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desks/{macAddress}/usage");
         result.EnsureSuccessStatusCode();
         var usage = await result.Content.ReadFromJsonAsync<Usage>();
@@ -454,8 +610,9 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
         return usage;
     }
 
-    public async Task<List<LastError>> GetDeskLastErrors(string macAddress)
+    public async Task<List<LastError>> GetDeskLastErrors(string macAddress, Guid? companyId = null)
     {
+        var httpClient = await GetHttpClientAsync(companyId);
         var result = await httpClient.GetAsync($"desks/{macAddress}/lastErrors");
         result.EnsureSuccessStatusCode();
         var lastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
@@ -467,9 +624,10 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
         return lastErrors;
     }
 
-    public async Task<Config> SetConfig(string macAddress, Config config)
+    public async Task<Config> SetConfig(string macAddress, Config config, Guid? companyId = null)
     {
-        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/config", config);
+        var httpClient = await GetHttpClientAsync(companyId);
+        var result = await httpClient.PutAsJsonAsync($"desks/{macAddress}/config", config);
         result.EnsureSuccessStatusCode();
         var updatedConfig = await result.Content.ReadFromJsonAsync<Config>();
         if (updatedConfig == null)
@@ -479,30 +637,44 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
         return updatedConfig;
     }
 
-    public async Task<State> SetState(string macAddress, State state)
+    public async Task<State> SetState(string macAddress, State state, Guid? companyId = null)
     {
-
-        var json = System.Text.Json.JsonSerializer.Serialize(state);
-
-        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-        var result = await httpClient.PutAsync($"desks/{macAddress}/state", content);
-        result.EnsureSuccessStatusCode();
-        var updatedState = await result.Content.ReadFromJsonAsync<State>();
-        if (updatedState == null)
+        try
         {
-            throw new Exception("Failed to parse updated desk state");
+            var httpClient = await GetHttpClientAsync(companyId);
+            var result = await httpClient.PutAsJsonAsync($"desks/{macAddress}/state", state);
+            
+            if (!result.IsSuccessStatusCode)
+            {
+                await HandleHttpError(result, $"Failed to set desk state for {macAddress}");
+            }
+            
+            result.EnsureSuccessStatusCode();
+            var updatedState = await result.Content.ReadFromJsonAsync<State>();
+            if (updatedState == null)
+            {
+                throw new Exception("Failed to parse updated desk state");
+            }
+            return updatedState;
         }
-        return updatedState;
+        catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
+        {
+            throw new SimulatorConnectionException(
+                "Unable to connect to the simulator. Please check that the simulator link is correct and the simulator is running.",
+                ex);
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            throw new SimulatorConnectionException(
+                "Connection to the simulator timed out. Please check that the simulator is running and accessible.",
+                ex);
+        }
     }
 
-    public async Task<Usage> SetUsage(string macAddress, Usage usage)
+    public async Task<Usage> SetUsage(string macAddress, Usage usage, Guid? companyId = null)
     {
-        var json = System.Text.Json.JsonSerializer.Serialize(usage);
-
-        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/usage", content);
+        var httpClient = await GetHttpClientAsync(companyId);
+        var result = await httpClient.PutAsJsonAsync($"desks/{macAddress}/usage", usage);
         result.EnsureSuccessStatusCode();
         var updatedUsage = await result.Content.ReadFromJsonAsync<Usage>();
         if (updatedUsage == null)
@@ -512,13 +684,10 @@ public class DeskApi(IHttpClientFactory httpClientFactory) : IDeskApi
         return updatedUsage;
     }
 
-    public async Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors)
+    public async Task<List<LastError>> SetLastErrors(string macAddress, List<LastError> lastErrors, Guid? companyId = null)
     {
-        var json = System.Text.Json.JsonSerializer.Serialize(lastErrors);
-
-        HttpContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-        var result = await httpClient.PostAsJsonAsync($"desks/{macAddress}/lastErrors", content);
+        var httpClient = await GetHttpClientAsync(companyId);
+        var result = await httpClient.PutAsJsonAsync($"desks/{macAddress}/lastErrors", lastErrors);
         result.EnsureSuccessStatusCode();
         var updatedLastErrors = await result.Content.ReadFromJsonAsync<List<LastError>>();
         if (updatedLastErrors == null)

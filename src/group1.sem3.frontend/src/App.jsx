@@ -45,7 +45,7 @@ export default function App() {
                         <Route path="/admin/desksManager" element={<DesksManagerPage />} />
                         <Route path="/admin/healthStatsManager" element={<HealthStatsManagerPage />} />
                         <Route path="/user/scan" element={<Scanning />} />
-                        <Route path="/user/desk" element={<DeskPage />} />
+                        <Route path="/user/reservation/:reservationId" element={<DeskPage />} />
                         <Route path="/staff/damagereport" element={<DamageReportPage />} />
                         <Route path="/user/damagereport" element={<DamageReportPage />} />
                     </Routes>
