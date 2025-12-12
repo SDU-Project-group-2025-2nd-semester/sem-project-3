@@ -21,7 +21,8 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
             return NotFound();
         }
 
-        if (company.SecretInviteCode != accessCode)
+        // Ensure the company has a SecretInviteCode set before allowing access
+        if (string.IsNullOrEmpty(company.SecretInviteCode) || company.SecretInviteCode != accessCode)
         {
             return Unauthorized();
         }
@@ -34,10 +35,16 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
             return NotFound();
         }
 
+        // Check if the user is already a member of the company
+        bool alreadyMember = await dbContext.UserCompanies
+            .AnyAsync(uc => uc.Company.Id == company.Id && uc.User.Id == user.Id);
+        if (alreadyMember)
+        {
+            return Conflict("User is already a member of this company.");
+        }
+
         var uc = new UserCompany() { Company = company, User = user, Role = UserRole.User };
-
         dbContext.UserCompanies.Add(uc);
-
         await dbContext.SaveChangesAsync();
 
         return Ok();
