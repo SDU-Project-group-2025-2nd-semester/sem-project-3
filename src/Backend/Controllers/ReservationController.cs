@@ -34,6 +34,7 @@ public class ReservationController(IReservationService reservationService, Backe
     } */
  
     [HttpGet("me")]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<List<ReservationViewDto>>> GetMyReservations(Guid companyId)
     {
         var userId = User.GetUserId();
@@ -58,6 +59,7 @@ public class ReservationController(IReservationService reservationService, Backe
 
     // Return ReservationViewDto for consistency ?
     [HttpGet("{reservationId}")]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<Reservation>> GetReservation(Guid reservationId)
     {
         var reservation = await reservationService.GetReservation(reservationId);

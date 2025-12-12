@@ -12,6 +12,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
 {
 
     [HttpGet]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<List<Desk>>> GetAll(Guid companyId)
     {
         var desks = await deskService.GetAllDesksAsync(companyId);
@@ -19,6 +20,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     }
 
     [HttpGet("room/{roomId:guid}")]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<List<Desk>>> GetDesks(Guid companyId, Guid roomId)
     {
         var desks = await deskService.GetDesksByRoomAsync(companyId, roomId);
@@ -31,6 +33,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     
     
     [HttpGet("{deskId}")]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<Desk>> GetDesk(Guid companyId, Guid deskId)
     {
         var desk = await deskService.GetDeskAsync(companyId, deskId);
@@ -63,6 +66,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     }
 
     [HttpPut("{deskId}/height")]
+    [RequireRole(UserRole.Admin, UserRole.Janitor)]
     public async Task<IActionResult> UpdateHeightDesk(Guid companyId, Guid deskId, [FromBody] int newHeight)
     {
         var updatedSuccessfully = await deskService.UpdateDeskHeightAsync(companyId, deskId, newHeight);
@@ -107,5 +111,17 @@ public class DesksController(IDeskService deskService) : ControllerBase
         {
             return StatusCode(502, new { error = ex.Message });
         }
+    }
+    
+    [HttpGet("from-mac/{macAddress}")]
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
+    public async Task<ActionResult<Guid>> GetDeskIdByMac(Guid companyId, string macAddress)
+    {
+        var desk = await deskService.GetDeskByMacAsync(companyId, macAddress);
+
+        if (desk is null)
+            return NotFound();
+
+        return Ok(desk.Id);
     }
 }
