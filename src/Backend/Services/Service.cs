@@ -249,6 +249,7 @@ public class DeskHeightPullingService(ILogger<DeskHeightPullingService> logger, 
                     {
                         // Height hasn't changed - check if we need to send health reminder
                         await CheckAndSendHealthReminder(desk, dbContext, mqttClient, stoppingToken);
+                        await dbContext.SaveChangesAsync(stoppingToken);
                     }
                 }
                 catch (Exception ex)

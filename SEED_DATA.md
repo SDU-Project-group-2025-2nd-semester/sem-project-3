@@ -218,7 +218,7 @@ To test:
 2. Wait for the next desk height check cycle (up to 1 minute)
 3. The system should send a buzz message to desk D-103's buzzer (70:9e:d5:e7:8c:98/buzzer)
 4. Change the desk height (via API or simulator) to reset the reminder cycle
-5. The buzzer should stop until another 30 minutes passes without height change
+5. The buzzer will continue to buzz every minute until the desk height is changed (due to a known bug; this will be fixed in a future update)
 
 **Other reservations remain unchanged for normal testing purposes.**
 
