@@ -135,11 +135,14 @@ All users have **email confirmed** and can log in immediately.
 
 | ID | User | Desk | Start | End | Status |
 |----|------|------|-------|-----|--------|
-| a1111111-1111-1111-1111-111111111111 | John Doe | AA:BB:CC:DD:EE:01 | 7 days ago, 09:00 | 7 days ago, 17:00 | Past |
-| b2222222-2222-2222-2222-222222222222 | John Doe | AA:BB:CC:DD:EE:01 | Today, 08:00 | Today, 16:00 | Active |
-| c3333333-3333-3333-3333-333333333333 | Jane Doe | AA:BB:CC:DD:EE:02 | Tomorrow, 09:00 | Tomorrow, 17:00 | Future |
-| d4444444-4444-4444-4444-444444444444 | John Doe | AA:BB:CC:DD:EE:03 | In 2 days, 10:00 | In 2 days, 15:00 | Future |
-| e5555555-5555-5555-5555-555555555555 | Bob Smith | BB:CC:DD:EE:FF:01 | In 3 days, 09:00 | In 3 days, 18:00 | Future |
+| a1111111-1111-1111-1111-111111111111 | John Doe | ee:62:5b:b8:73:1d (D-102) | 3 hours ago | In 3 hours | Active |
+| b2222222-2222-2222-2222-222222222222 | John Doe | cd:fb:1a:53:fb:e6 (D-101) | Today, 08:00 | Today, 16:00 | Active |
+| c3333333-3333-3333-3333-333333333333 | Jane Doe | ee:62:5b:b8:73:1d (D-102) | Tomorrow, 09:00 | Tomorrow, 17:00 | Future |
+| d4444444-4444-4444-4444-444444444444 | John Doe | 70:9e:d5:e7:8c:98 (D-103) | In 2 days, 10:00 | In 2 days, 15:00 | Future |
+| e5555555-5555-5555-5555-555555555555 | Bob Smith | ce:38:a6:30:af:1d (D-101) | In 3 days, 09:00 | In 3 days, 18:00 | Future |
+| f6666666-6666-6666-6666-666666666666 | Jane Doe | 70:9e:d5:e7:8c:98 (D-103) | 35 minutes ago | In 2 hours | **Active - Needs Health Reminder** |
+
+**Note:** The last reservation (f6666666...) is specifically set up to trigger a health reminder on the next system check (every minute). Jane Doe has a Medium health reminder frequency (30 minutes), and her desk (D-103) has `LastHeightChangeTime` set to 35 minutes ago, which exceeds the reminder threshold.
 
 ---
 
@@ -198,5 +201,25 @@ POST /api/company/join
 - All heights are in millimeters (mm)
 - All times are in UTC
 - Secret invite codes are optional (Startup Center doesn't have one)
+
+## Health Reminder Testing
+
+The seed data includes a test scenario for the health reminder feature:
+
+- **User:** Jane Doe (Medium frequency = 30 minutes between reminders)
+- **Desk:** D-103 (MAC: 70:9e:d5:e7:8c:98)
+- **Reservation ID:** f6666666-6666-6666-6666-666666666666
+- **Reservation:** Started 35 minutes ago, ends in 2 hours
+- **Status:** Desk `LastHeightChangeTime` is set to 35 minutes ago
+- **Expected Behavior:** On the next system check (every minute), a buzz reminder will be sent via MQTT to the desk's buzzer because the time since last height change (35 minutes) exceeds Jane's reminder threshold (30 minutes)
+
+To test:
+1. Start the application
+2. Wait for the next desk height check cycle (up to 1 minute)
+3. The system should send a buzz message to desk D-103's buzzer (70:9e:d5:e7:8c:98/buzzer)
+4. Change the desk height (via API or simulator) to reset the reminder cycle
+5. The buzzer should stop until another 30 minutes passes without height change
+
+**Other reservations remain unchanged for normal testing purposes.**
 
 ---
