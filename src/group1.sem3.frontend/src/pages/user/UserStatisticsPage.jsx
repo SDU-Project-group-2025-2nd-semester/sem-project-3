@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { get } from "../../context/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell
 } from 'recharts';
 
 
@@ -62,6 +62,17 @@ export default function UserStatisticsPage() {
             setLoading(false);
         }
     };
+
+    const getSittingStandingData = () => {
+        const sittingMinutes = userProfile?.sittingTime || 0;
+        const standingMinutes = userProfile?.standingTime || 0;
+
+        return [
+            { name: 'Sitting', value: sittingMinutes, color: '#1cafaf' },
+            { name: 'Standing', value: standingMinutes, color: '#ff6b6b' }
+        ];
+    };
+
 
     const processChartData = () => {
         const now = new Date();
@@ -233,29 +244,33 @@ export default function UserStatisticsPage() {
                     <h1 className="text-3xl font-semibold text-gray-800">Desk Statistics</h1>
                 </div>
 
-                {/*  Info card  */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                            <span className="text-gray-600">Total Desk Time:</span>
-                            <span className="ml-2 font-semibold">
-                                {formatTime(totalDeskTime())}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Total Sitting Time</span>
-                            <span className={`ml-2 font-semibold capitalize`}>
-                                {formatTime(userProfile?.sittingTime)}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Total Standing Time:</span>
-                            <span className="ml-2 font-semibold">
-                                {formatTime(userProfile?.standingTime)}
-                            </span>
-                        </div>
+                {/* Pie chart - Sitting/Standing time */}
+                <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                        Sitting vs Standing Time
+                    </h2>
+                    <div className="flex gap-4 text-sm mb-4">
+                        <span className="text-gray-600 ">Total Desk Time:</span>
+                        <span className="ml-2 font-semibold">
+                            {formatTime(totalDeskTime())}
+                        </span>
                     </div>
-                </div>
+                    {userProfile && (userProfile.sittingTime >= 0 || userProfile.standingTime >= 0) ? (
+                        <PieChart width="100%" height={300}>
+                            <Pie
+                                data={getSittingStandingData()}
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${formatTime(value)}`}
+                            >
+                                {getSittingStandingData().map((entry, index) => (
+                                    <Cell fill={entry.color} />
+                                ))}
+                            </Pie>
+                        </PieChart>
+                    ) : (
+                        <p className="text-gray-500 text-center py-12">No sitting/standing data available</p>
+                    )}
+                </section>
 
                 {/* Time tabs */}
                 <div className="flex gap-3">
