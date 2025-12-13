@@ -98,7 +98,7 @@ export default function UserStatisticsPage() {
 
                 data.push({
                     name: date.toLocaleDateString('en-GB', { day: 'numeric', weekday: 'short', month: 'short' }),
-                    total: Math.round(totalHours * 100) / 100
+                    total: totalHours
                 });
             }
         } else if (viewMode === 'weekly') {
@@ -122,7 +122,7 @@ export default function UserStatisticsPage() {
 
                 data.push({
                     name: `${weekStart.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}`,
-                    total: Math.round(totalHours * 100) / 100
+                    total: totalHours
                 });
             }
         } else if (viewMode === 'monthly') {
@@ -147,7 +147,7 @@ export default function UserStatisticsPage() {
 
                 data.push({
                     name: monthStart.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
-                    total: Math.round(totalHours * 100) / 100
+                    total: totalHours
                 });
             }
         }
@@ -177,7 +177,7 @@ export default function UserStatisticsPage() {
 
         return Object.values(deskStats).map(stat => ({
             name: stat.name,
-            total: Math.round((stat.total / 60) * 100) / 100
+            total: stat.total
         }));
     };
 
@@ -290,14 +290,18 @@ export default function UserStatisticsPage() {
                                 <CartesianGrid strokeDasharray="1 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis label={{ value: 'Hours', angle: -90, position: 'insideLeft' }} />
-                                <Tooltip />
+                                <Tooltip
+                                    formatter={(value) => {
+                                        return formatTime(value * 60)
+                                    }}
+                                />
                                 <Legend />
                                 <Area
                                     type="monotone"
                                     dataKey="total"
                                     stroke="#1cafafff"
                                     fill="#1cafaf8f"
-                                    name="hours"
+                                    name="Duration"
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -317,9 +321,13 @@ export default function UserStatisticsPage() {
                                 <CartesianGrid strokeDasharray="1 3" />
                                 <XAxis dataKey="name" />
                                 <YAxis label={{ value: 'Hours', angle: -90, position: 'insideLeft' }} />
-                                <Tooltip />
+                                <Tooltip
+                                    formatter={(value) => {
+                                        return formatTime(value)
+                                    }}
+                                />
                                 <Legend />
-                                <Bar dataKey="total" fill="#1cafaf8f" name="hours" />
+                                <Bar dataKey="total" fill="#1cafaf8f" name="Duration" />
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (
