@@ -1,5 +1,5 @@
 const BASE = (() => {
-    return "https://s3-be-dev.michalvalko.eu/api";
+  return import.meta.env.VITE_API_BASE_URL || "https://localhost:8081/api";
 })();
 
 let refreshInProgress = null;

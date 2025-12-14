@@ -44,9 +44,9 @@ public class DesksController(IDeskService deskService) : ControllerBase
 
     [HttpPost]
     [RequireRole(UserRole.Admin)]
-    public async Task<ActionResult<Desk>> CreateDesk(Guid companyId, [FromBody] Desk desk)
+    public async Task<ActionResult<Desk>> CreateDesk(Guid companyId, [FromBody] CreateDeskDto dto)
     {
-        var createdDesk = await deskService.CreateDeskAsync(companyId, desk);
+        var createdDesk = await deskService.CreateDeskAsync(companyId, dto);
         return CreatedAtAction(nameof(GetDesk), new { companyId, deskId = createdDesk.Id }, createdDesk);
     }
 
@@ -94,7 +94,18 @@ public class DesksController(IDeskService deskService) : ControllerBase
     [RequireRole(UserRole.Admin, UserRole.Janitor)]
     public async Task<ActionResult<List<string>>> GetNotAdoptedDesks(Guid companyId)
     {
-        var desks = await deskService.GetNotAdoptedDesks(companyId);
-        return Ok(desks);
+        try
+        {
+            var desks = await deskService.GetNotAdoptedDesks(companyId);
+            return Ok(desks);
+        }
+        catch (SimulatorConfigurationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (SimulatorConnectionException ex)
+        {
+            return StatusCode(502, new { error = ex.Message });
+        }
     }
 }

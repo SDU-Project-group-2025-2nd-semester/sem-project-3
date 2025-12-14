@@ -113,8 +113,8 @@ public class DatabaseMigrationHostedService(
             Name = "Tech Co-Working Space",
             SecretInviteCode = "TECH2024",
             Rooms = [],
-            SimulatorLink = null,
-            SimulatorApiKey = null
+            SimulatorLink = "https://s3-sproj-techcowork.michalvalko.eu",
+            SimulatorApiKey = "E9Y2LxT4g1hQZ7aD8nR3mWx5P0qK6pV7"
         };
 
         var innovationHubCompany = new Company
@@ -123,8 +123,8 @@ public class DatabaseMigrationHostedService(
             Name = "Innovation Hub",
             SecretInviteCode = "INNOVATE",
             Rooms = [],
-            SimulatorLink = null,
-            SimulatorApiKey = null
+            SimulatorLink = "https://s3-sproj-innovationhub.michalvalko.eu",
+            SimulatorApiKey = "F7H1vM3kQ5rW8zT9xG2pJ6nY4dL0aZ3K"
         };
 
         var startupCenterCompany = new Company
@@ -133,8 +133,8 @@ public class DatabaseMigrationHostedService(
             Name = "Startup Center",
             SecretInviteCode = null, // Email verification required
             Rooms = [],
-            SimulatorLink = null,
-            SimulatorApiKey = null
+            SimulatorLink = "https://s3-sproj-startupcenter.michalvalko.eu",
+            SimulatorApiKey = "A3B5C7D9E1F2G4H6I8J0K2L4M6N8O0P2"
         };
 
         context.Companies.AddRange(techCoWorkingCompany, innovationHubCompany, startupCenterCompany);
@@ -548,18 +548,26 @@ public class DatabaseMigrationHostedService(
                 DeskId = desks[5].Id,
                 CompanyId = innovationHubCompany.Id
             },
-            //new Reservation
-            //{
-            //    Id = Guid.Parse("f6666666-6666-6666-6666-666666666666"),
-            //    Start = now.AddDays(5).Date.AddHours(8),
-            //    End = now.AddDays(5).Date.AddHours(12),
-            //    UserId = aliceJohnson.Id,
-            //    DeskId = desks[7].Id,
-            //    CompanyId = startupCenterCompany.Id
-            //}
+            // NEW: Health reminder test reservation
+            // Jane Doe (Medium frequency = 30 min) has been at desk D-103 for 35+ minutes without changing height
+            new Reservation
+            {
+                Id = Guid.Parse("f6666666-6666-6666-6666-666666666666"),
+                Start = now.AddMinutes(-35), // Started 35 minutes ago
+                End = now.AddHours(2), // Ends in 2 hours
+                UserId = janeDoe.Id,
+                DeskId = desks[2].Id, // D-103
+                CompanyId = techCoWorkingCompany.Id
+            }
         };
 
         context.Reservations.AddRange(reservations);
+        await context.SaveChangesAsync();
+        
+        // Set LastHeightChangeTime for the desk with active health reminder test reservation
+        // Jane Doe has Medium frequency (30 min), so set it to 35 minutes ago to trigger reminder on next check
+        desks[2].LastHeightChangeTime = now.AddMinutes(-35);
+        desks[2].NeedsHealthReminder = false; // Not yet sent, will be sent on next check
         await context.SaveChangesAsync();
 
         // Create Damage Reports

@@ -4,6 +4,7 @@ import SignUpPage from "./pages/auth/SignUpPage";
 import UserHomePage from "./pages/user/UserHomePage";
 import StaffHomePage from "./pages/staff/StaffHomePage";
 import UserSettingsPage from "./pages/user/UserSettingsPage";
+import UserStatisticsPage from "./pages/user/UserStatisticsPage";
 import StaffSettingsPage from "./pages/staff/StaffSettingsPage";
 import AdminSettingsPage from "./pages/staff/StaffSettingsPage";
 import BookingPage from "./pages/user/BookingPage";
@@ -47,6 +48,8 @@ export default function App() {
                         <Route path="/user/desk" element={<ProtectedRoute><DeskPage /></ProtectedRoute>} />
                         <Route path="/staff/damagereport" element={<ProtectedRoute roles={[1,2]}><DamageReportPage /></ProtectedRoute>} />
                         <Route path="/user/damagereport" element={<ProtectedRoute><DamageReportPage /></ProtectedRoute>} />
+                        <Route path="/user/statistics" element={<ProtectedRoute><UserStatisticsPage /></ProtectedRoute>} />
+                        <Route path="/user/reservation/:reservationId" element={<ProtectedRoute><DeskPage /></ProtectedRoute>} />
                     </Routes>
                 </main>
             </div>

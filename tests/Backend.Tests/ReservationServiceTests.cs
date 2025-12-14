@@ -15,7 +15,9 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _reservationService = new ReservationService(fixture.DbContext);
+        // Create a mock scheduler that does nothing for tests
+        var mockScheduler = new MockReservationScheduler();
+        _reservationService = new ReservationService(fixture.DbContext, mockScheduler);
 
         // Setup test data
         _testCompany = new Company
@@ -70,6 +72,7 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             MaxHeight = 120,
             MinHeight = 60,
             MacAddress = "AA:BB:CC:DD:EE:01",
+            RpiMacAddress = "FF:FF:FF:FF:FF:01",
             RoomId = _testRoom.Id,
             CompanyId = _testCompany.Id,
             ReservationIds = [],
@@ -406,5 +409,19 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
         // Assert
         var result = await fixture.DbContext.Reservations.FindAsync(reservation.Id);
         Assert.Null(result);
+    }
+}
+
+// Mock implementation of IReservationScheduler for testing
+internal class MockReservationScheduler : IReservationScheduler
+{
+    public Task ScheduleDeskAdjustment(Reservation reservation)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task CancelScheduledAdjustment(Guid reservationId)
+    {
+        return Task.CompletedTask;
     }
 }

@@ -53,24 +53,20 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-// Add Hangfire services
+builder.Services.AddHttpContextAccessor();
 
+// Add Hangfire services
 if (!Bullshit.IsGeneratingOpenApiDocument())
 {
-
-
     builder.Services.AddHangfire(config => config
         .UseSimpleAssemblyNameTypeSerializer()
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
         .UseRecommendedSerializerSettings()
         .UseInMemoryStorage()
-
     );
 
-builder.Services.AddHangfireServer();
-
+    builder.Services.AddHangfireServer();
 }
-
 
 builder.Services
     .AddTransient<IDamageReportService, DamageReportService>()
