@@ -6,6 +6,122 @@ import { getRooms } from "../../services/roomService";
 import { getDesksForRoom } from "../../services/deskService";
 import { getReservations } from "../../services/reservationService";
 
+function Simulator({
+    currentSimulatorLink,
+    simulatorLink,
+    setSimulatorLink,
+    simulatorApiKey,
+    setSimulatorApiKey,
+    simulatorErrors,
+    handleSaveSimulator
+}) {
+    return (
+        <div className="overflow-hidden mb-6">
+            <div className="px-6 pt-6 pb-4">
+                <h1 className="text-2xl font-semibold text-gray-800">Simulator Management</h1>
+            </div>
+
+            <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Current Settings Display */}
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="material-symbols-outlined text-gray-600">settings</span>
+                            <h2 className="text-lg font-semibold text-gray-800">Current Settings</h2>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                                    Simulator Link
+                                </label>
+                                <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 break-all shadow-sm">
+                                    {currentSimulatorLink ? (
+                                        <span className="text-accent-600">{currentSimulatorLink}</span>
+                                    ) : (
+                                        <span className="text-gray-400 italic">Not configured</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                                    API Key
+                                </label>
+                                <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-sm">
+                                    {currentSimulatorLink ? (
+                                        <span className="text-gray-600 select-none">********************************</span>
+                                    ) : (
+                                        <span className="text-gray-400 italic">Not configured</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Update Form */}
+                    <form onSubmit={handleSaveSimulator} className="bg-white rounded-xl border border-gray-200 p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="material-symbols-outlined text-gray-600">edit</span>
+                            <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Simulator Link
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="https://simulator.example.com"
+                                    value={simulatorLink}
+                                    onChange={(e) => setSimulatorLink(e.target.value)}
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+                                        }`}
+                                />
+                                {simulatorErrors.link && (
+                                    <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-sm">error</span>
+                                        {simulatorErrors.link}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    API Key
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter 32-character API key"
+                                    value={simulatorApiKey}
+                                    onChange={(e) => setSimulatorApiKey(e.target.value)}
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+                                        }`}
+                                />
+                                {simulatorErrors.apiKey && (
+                                    <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-sm">error</span>
+                                        {simulatorErrors.apiKey}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    className="w-full px-6 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">save</span>
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
 export default function DesksManagerPage() {
     const navigate = useNavigate();
 
@@ -69,30 +185,22 @@ export default function DesksManagerPage() {
     }, [companyId]);
 
     const fetchInitialData = async () => {
-        try {
-            setError(null);
+        setError(null);
 
-            const userCompanies = await getMyCompanies();
+        const userCompanies = await getMyCompanies();
 
-            if (!userCompanies || userCompanies.length === 0) {
-                throw new Error('No company associated with current user');
-            }
+        if (!userCompanies || userCompanies.length === 0) {
+            throw new Error('No company associated with current user');
+        }
 
-            const userCompanyId = userCompanies[0].companyId;
-            setCompanyId(userCompanyId);
+        const userCompanyId = userCompanies[0].companyId;
+        setCompanyId(userCompanyId);
 
-            const roomsData = await getRooms(userCompanyId);
-            setRooms(roomsData);
+        const roomsData = await getRooms(userCompanyId);
+        setRooms(roomsData);
 
-            if (roomsData.length > 0) {
-                setActiveRoom(roomsData[0].id);
-            }
-        } catch (error) {
-            console.error('Error fetching initial data:', error);
-            setError(error.message);
-            if (error.status === 401 || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
-                navigate('/');
-            }
+        if (roomsData.length > 0) {
+            setActiveRoom(roomsData[0].id);
         }
     };
 
@@ -118,7 +226,7 @@ export default function DesksManagerPage() {
 
     const fetchUnadoptedDesks = async () => {
         if (!companyId) return;
-        
+
         try {
             setLoadingUnadopted(true);
             setError(null);
@@ -466,116 +574,6 @@ export default function DesksManagerPage() {
         );
     }
 
-    // Simulator
-    const Simulator = () => {
-        return (
-            <div className="overflow-hidden mb-6">
-                <div className="px-6 pt-6 pb-4">
-                    <h1 className="text-2xl font-semibold text-gray-800">Simulator Management</h1>
-                </div>
-                
-                <div className="p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Current Settings Display */}
-                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="material-symbols-outlined text-gray-600">settings</span>
-                                <h2 className="text-lg font-semibold text-gray-800">Current Settings</h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                                        Simulator Link
-                                    </label>
-                                    <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 break-all shadow-sm">
-                                        {currentSimulatorLink ? (
-                                            <span className="text-accent-600">{currentSimulatorLink}</span>
-                                        ) : (
-                                            <span className="text-gray-400 italic">Not configured</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                                        API Key
-                                    </label>
-                                    <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-sm">
-                                        {currentSimulatorLink ? (
-                                            <span className="text-gray-600 select-none">********************************</span>
-                                        ) : (
-                                            <span className="text-gray-400 italic">Not configured</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Update Form */}
-                        <form onSubmit={handleSaveSimulator} className="bg-white rounded-xl border border-gray-200 p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="material-symbols-outlined text-gray-600">edit</span>
-                                <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Simulator Link
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="https://simulator.example.com"
-                                        value={simulatorLink}
-                                        onChange={(e) => setSimulatorLink(e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${
-                                            simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-                                        }`}
-                                    />
-                                    {simulatorErrors.link && (
-                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm">error</span>
-                                            {simulatorErrors.link}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        API Key
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Enter 32-character API key"
-                                        value={simulatorApiKey}
-                                        onChange={(e) => setSimulatorApiKey(e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${
-                                            simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-                                        }`}
-                                    />
-                                    {simulatorErrors.apiKey && (
-                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm">error</span>
-                                            {simulatorErrors.apiKey}
-                                        </p>
-                                    )}
-                                </div>
-                                
-                                <div className="pt-2">
-                                    <button
-                                        type="submit"
-                                        className="w-full px-6 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                                    >
-                                        <span className="material-symbols-outlined text-sm">save</span>
-                                        Save Settings
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
     const currentRoom = rooms.find(r => r.id === activeRoom);
     const isUnadoptedView = activeRoom === 'unadopted';
 
@@ -596,7 +594,15 @@ export default function DesksManagerPage() {
                             Create First Room
                         </button>
                     </div>
-                    <Simulator />
+                    <Simulator
+                        currentSimulatorLink={currentSimulatorLink}
+                        simulatorLink={simulatorLink}
+                        setSimulatorLink={setSimulatorLink}
+                        simulatorApiKey={simulatorApiKey}
+                        setSimulatorApiKey={setSimulatorApiKey}
+                        simulatorErrors={simulatorErrors}
+                        handleSaveSimulator={handleSaveSimulator}
+                    />
                 </main>
             </div>
         );
@@ -606,7 +612,15 @@ export default function DesksManagerPage() {
     return (
         <div className="relative bg-background min-h-screen px-4 mt-20">
             <main className="w-full max-w-7xl mx-auto flex flex-col gap-8 pb-32">
-                <Simulator />
+                <Simulator
+                    currentSimulatorLink={currentSimulatorLink}
+                    simulatorLink={simulatorLink}
+                    setSimulatorLink={setSimulatorLink}
+                    simulatorApiKey={simulatorApiKey}
+                    setSimulatorApiKey={setSimulatorApiKey}
+                    simulatorErrors={simulatorErrors}
+                    handleSaveSimulator={handleSaveSimulator}
+                />
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-semibold text-gray-800">Room Management</h1>
                 </div>
