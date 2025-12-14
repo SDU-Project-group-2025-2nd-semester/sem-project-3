@@ -1,7 +1,6 @@
 ## Desk Simulator 
 
-- **For use in local environment it is exposed to localhost:8000**
-- **For the deployment to the server only accessible through the local docker network (e.g. simulator-develop:8000)**
+- **Company based - every company will have its own simulator with a link and an api key.** (in progress)
 
 ## 🌐 Deployment Links
 
