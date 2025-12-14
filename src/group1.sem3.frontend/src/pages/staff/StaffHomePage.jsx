@@ -1,31 +1,89 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { putDeskHeight } from "../../services/deskService";
+import { get } from "../../context/apiClient";
+import { useAuth } from "../../context/AuthContext";
 
 export default function StaffHomePage() {
-    const [selectedRoom, setSelectedRoom] = useState("Room A");
 
-    const [rooms, setRooms] = useState({
-        "Room A": [
-            { id: 1, name: "Table 1", status: "normal", isDamaged: false },
-            { id: 2, name: "Table 2", status: "normal", isDamaged: false },
-            { id: 3, name: "Table 3", status: "normal", isDamaged: false },
-        ],
-        "Room B": [
-            { id: 4, name: "Table 1", status: "normal", isDamaged: false },
-            { id: 5, name: "Table 2", status: "normal", isDamaged: false },
-        ],
-        "Room C": [
-            { id: 6, name: "Table 1", status: "normal", isDamaged: false },
-            { id: 7, name: "Table 2", status: "normal", isDamaged: false },
-            { id: 8, name: "Table 3", status: "normal", isDamaged: false },
-            { id: 9, name: "Table 4", status: "normal", isDamaged: false },
-        ],
-    });
+    const { currentCompany } = useAuth();
+    const companyId = typeof currentCompany === "string" ? currentCompany : currentCompany?.id;
+
+    const [rooms, setRooms] = useState({});
+
+    const [roomsMeta, setRoomsMeta] = useState({});
+
+    const [selectedRoom, setSelectedRoom] = useState(null);
+
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const location = useLocation();
+    const navigate = useNavigate();
+    
+    // Load rooms list and all desks on mount -> populate roomsMeta and rooms
+    useEffect(() => {
+        if (!companyId) return;
 
-    // Set the isDamaged flag to true after submitting a report
-    // NOTE: The flag does not persist after reload
+        let mounted = true;
+        const controller = new AbortController();
+
+        (async () => {
+            try {
+                const apiRooms = await get(`/${companyId}/Rooms`, { signal: controller.signal });
+                if (!mounted || !Array.isArray(apiRooms)) return;
+
+                // Load all desks for the company (single request)
+                const apiDesks = await get(`/${companyId}/Desks`, { signal: controller.signal });
+                const allDesks = Array.isArray(apiDesks) ? apiDesks : [];
+
+                const meta = {};
+                const initialRooms = {};
+
+                apiRooms.forEach((r) => {
+                    const key = r.readableId ?? r.id;
+                    meta[key] = { id: r.id, readableId: r.readableId };
+
+                    // Filter desks by roomId (matches API response)
+                    const desksForRoom = allDesks.filter(d => String(d.roomId) === String(r.id));
+                    // keep full desk fields that backend expects
+                    initialRooms[key] = desksForRoom.map((d, i) => {
+                        const fallbackReadable = d.readableId ?? (d.macAddress ? `Desk ${d.macAddress}` : `Desk ${i + 1}`);
+                        return {
+                            id: d.id,
+                            name: d.readableId ?? (d.macAddress ? `Desk ${d.macAddress}` : `Desk ${i + 1}`),
+                            readableId: fallbackReadable,
+                            status: "normal",
+                            isDamaged: false,
+                            height: d.height,
+                            minHeight: d.minHeight,
+                            maxHeight: d.maxHeight,
+                            macAddress: d.macAddress,
+                            roomId: d.roomId,
+                            companyId: d.companyId,
+                            reservationIds: Array.isArray(d.reservationIds) ? d.reservationIds : []
+                        };
+                    });
+                });
+
+                setRoomsMeta(meta);
+                setRooms(initialRooms);
+
+                // set default selected room to first available
+                const firstKey = Object.keys(meta)[0] ?? null;
+                if (firstKey) setSelectedRoom(firstKey);
+            } catch (err) {
+                if (err?.name === "AbortError") return;
+                console.error("Failed to load rooms or desks:", err);
+            }
+        })();
+
+        return () => {
+            mounted = false;
+            controller.abort();
+        };
+    }, [companyId]);
+
+    // Handle damaged flag passed via navigation state
     useEffect(() => {
         const damagedId = location.state?.damagedTableId;
         if (damagedId) {
@@ -41,28 +99,56 @@ export default function StaffHomePage() {
         }
     }, [location.state]);
 
-    const currentTables = rooms[selectedRoom];
+    const currentTables = rooms[selectedRoom] ?? [];
 
-    const handleAllTables = (action) => {
-        setRooms((prev) => ({
+    // action: "raise" -> set to maxHeight, "lower" -> set to minHeight
+    const handleAllTables = async (action) => {
+        if (!selectedRoom) return;
+        if (!companyId) return;
+        const desks = rooms[selectedRoom] ?? [];
+        if (desks.length === 0) return;
+
+        const targetField = action === "raise" ? "maxHeight" : "minHeight";
+        const targetStatus = action === "raise" ? "raised" : "lowered";
+
+        setIsUpdating(true);
+        // optimistic: mark updating
+        setRooms(prev => ({
             ...prev,
-            [selectedRoom]: prev[selectedRoom].map((table) => ({
-                ...table,
-                status: action === "raise" ? "raised" : "lowered",
-            })),
+            [selectedRoom]: (prev[selectedRoom] ?? []).map(t => ({ ...t, status: "updating" }))
         }));
+
+        // build promises using putDeskHeight service
+        const promises = desks.map((d) => {
+            const height = d[targetField] ?? d.height;
+            // backend expects a raw integer in the body, not an object
+            return putDeskHeight(companyId, d.id, height);
+        });
+
+        const results = await Promise.allSettled(promises);
+
+        // apply results to UI
+        setRooms(prev => ({
+            ...prev,
+            [selectedRoom]: (prev[selectedRoom] ?? []).map((t, i) => {
+                const res = results[i];
+                if (res.status === "fulfilled") {
+                    const newHeight = t[targetField] ?? t.height;
+                    return { ...t, status: targetStatus, height: newHeight };
+                } else {
+                    return { ...t, status: "error" };
+                }
+            })
+        }));
+
+        const failed = results.filter(r => r.status === "rejected");
+        if (failed.length > 0) {
+            alert(`${failed.length} desks could not be updated. Look into the console to see details.`);
+            console.error("Desk update errors:", results.map((r, idx) => r.status === "rejected" ? { index: idx, reason: r.reason } : null));
+        }
+
+        setIsUpdating(false);
     };
-
-    /* const reportDamage = (id) => {
-        setRooms((prev) => ({
-            ...prev,
-            [selectedRoom]: prev[selectedRoom].map((table) =>
-                table.id === id ? { ...table, isDamaged: true } : table
-            ),
-        }));
-    }; */ 
-
-    const navigate = useNavigate();
 
     const reportDamage = (id) => {
         navigate("/staff/damagereport", { state: { tableId: id } });
@@ -79,13 +165,13 @@ export default function StaffHomePage() {
                     Select Room
                 </label>
                 <select
-                    value={selectedRoom}
+                    value={selectedRoom ?? ""}
                     onChange={(e) => setSelectedRoom(e.target.value)}
                     className="w-full border border-secondary rounded-lg px-3 py-2 bg-white text-primary focus:ring-2 focus:ring-accent outline-none"
                 >
-                    {Object.keys(rooms).map((room) => (
-                        <option key={room} value={room}>
-                            {room}
+                    {Object.keys(roomsMeta).map((roomKey) => (
+                        <option key={roomKey} value={roomKey}>
+                            {roomKey}
                         </option>
                     ))}
                 </select>
@@ -95,12 +181,14 @@ export default function StaffHomePage() {
                 <button
                     onClick={() => handleAllTables("raise")}
                     className="bg-accent text-white px-6 py-2 rounded-lg shadow hover:bg-secondary transition-colors"
+                    disabled={isUpdating}
                 >
                     Lift All Tables
                 </button>
                 <button
                     onClick={() => handleAllTables("lower")}
                     className="bg-secondary text-white px-6 py-2 rounded-lg shadow hover:bg-accent transition-colors"
+                    disabled={isUpdating}
                 >
                     Lower All Tables
                 </button>
@@ -126,6 +214,10 @@ export default function StaffHomePage() {
                                     ? "text-accent"
                                     : table.status === "lowered"
                                     ? "text-primary"
+                                    : table.status === "updating"
+                                    ? "text-yellow-600"
+                                    : table.status === "error"
+                                    ? "text-red-600"
                                     : "text-black"
                             }`}
                         >

@@ -9,7 +9,7 @@ public interface IDeskService
     public Task<List<Desk>> GetAllDesksAsync(Guid companyId);
     public Task<List<Desk>> GetDesksByRoomAsync(Guid companyId, Guid roomId);
     public Task<Desk?> GetDeskAsync(Guid companyId, Guid deskId);
-    Task<Desk> CreateDeskAsync(Guid companyId, Desk desk);
+    Task<Desk> CreateDeskAsync(Guid companyId, CreateDeskDto dto);
     Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, UpdateDeskDto updated);
     Task<bool> UpdateDeskHeightAsync(Guid companyId, Guid deskId, int newHeight);
     Task<bool> DeleteDeskAsync(Guid companyId, Guid deskId);
@@ -34,18 +34,56 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         return await dbContext.Desks.Include(d => d.Room).FirstOrDefaultAsync(d => d.CompanyId == companyId && d.Id == deskId);
     }
     
-    public async Task<Desk> CreateDeskAsync(Guid companyId, Desk desk)
+    public async Task<Desk> CreateDeskAsync(Guid companyId, CreateDeskDto dto)
     {
-        if (desk.RoomId == Guid.Empty)
+        if (dto.RoomId == Guid.Empty)
             throw new ArgumentException("Desk must have a valid room assigned.");
 
-        desk.CompanyId = companyId;
-        
         var room = await dbContext.Rooms
-            .FirstOrDefaultAsync(r => r.Id == desk.RoomId && r.CompanyId == companyId);
+            .FirstOrDefaultAsync(r => r.Id == dto.RoomId && r.CompanyId == companyId);
 
         if (room is null)
             throw new ArgumentException("Room not found.");
+        
+        // Sync with simulator first to get current desk state
+        DeskMetadata metadata;
+        // Default height limits (matching simulator defaults: 680-1320mm)
+        const int defaultMinHeight = 680;
+        const int defaultMaxHeight = 1320;
+        int height = defaultMinHeight;
+        int maxHeight = defaultMaxHeight;
+        int minHeight = defaultMinHeight;
+
+        try
+        {
+            // Fetch desk status from simulator (includes config, state, usage, lastErrors)
+            var deskStatus = await deskApi.GetDeskStatus(dto.MacAddress, companyId);
+            
+            // Populate metadata from simulator
+            metadata = new DeskMetadata
+            {
+                Config = deskStatus.Config ?? new Config(),
+                Usage = deskStatus.Usage ?? new Usage(),
+                LastErrors = deskStatus.LastErrors ?? [],
+                Status = deskStatus.State?.Status ?? "",
+                IsPositionLost = deskStatus.State?.IsPositionLost ?? false,
+                IsOverloadProtectionUp = deskStatus.State?.IsOverloadProtectionUp ?? false,
+                IsOverloadProtectionDown = deskStatus.State?.IsOverloadProtectionDown ?? false,
+                IsAntiCollision = deskStatus.State?.IsAntiCollision ?? false
+            };
+
+            // Sync height from simulator - use actual position from simulator
+            if (deskStatus.State != null)
+            {
+                height = deskStatus.State.PositionMm > 0 ? deskStatus.State.PositionMm : defaultMinHeight;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to sync desk {MacAddress} with simulator, using default values", dto.MacAddress);
+            // If sync fails, use default metadata
+            metadata = new DeskMetadata();
+        }
         
         var roomNumber = 1;
 
@@ -55,11 +93,23 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         }
         
         var desksCount = await dbContext.Desks
-            .CountAsync(d => d.CompanyId == companyId && d.RoomId == desk.RoomId);
+            .CountAsync(d => d.CompanyId == companyId && d.RoomId == dto.RoomId);
 
         var deskIndex = desksCount + 1;
         
-        desk.ReadableId = $"D-{roomNumber}{deskIndex:00}";
+        var desk = new Desk
+        {
+            MacAddress = dto.MacAddress,
+            RpiMacAddress = dto.RpiMacAddress ?? string.Empty,
+            RoomId = dto.RoomId,
+            CompanyId = companyId,
+            Height = height,
+            MaxHeight = maxHeight,
+            MinHeight = minHeight,
+            ReadableId = $"D-{roomNumber}{deskIndex:00}",
+            ReservationIds = [],
+            Metadata = metadata
+        };
         
         dbContext.Desks.Add(desk);
         await dbContext.SaveChangesAsync();
@@ -78,6 +128,11 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         existing.MaxHeight = updated.MaxHeight;
         existing.RoomId = updated.RoomId;
         existing.ReservationIds = updated.ReservationIds;
+        
+        if (!string.IsNullOrEmpty(updated.RpiMacAddress))
+        {
+            existing.RpiMacAddress = updated.RpiMacAddress;
+        }
 
         await dbContext.SaveChangesAsync();
 

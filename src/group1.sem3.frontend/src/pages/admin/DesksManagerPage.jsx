@@ -8,6 +8,8 @@ export default function DesksManagerPage() {
     const [activeRoom, setActiveRoom] = useState(null);
     const [showNewRoomForm, setShowNewRoomForm] = useState(false);
     const [desks, setDesks] = useState([]);
+    const [unadoptedDesks, setUnadoptedDesks] = useState([]); // Array of MAC addresses
+    const [loadingUnadopted, setLoadingUnadopted] = useState(false);
     const [rooms, setRooms] = useState([]);
     const [reservations, setReservations] = useState([]);
     const [error, setError] = useState(null);
@@ -28,6 +30,7 @@ export default function DesksManagerPage() {
     const [simulatorLink, setSimulatorLink] = useState('');
     const [simulatorApiKey, setSimulatorApiKey] = useState('');
     const [simulatorErrors, setSimulatorErrors] = useState({});
+    const [currentSimulatorLink, setCurrentSimulatorLink] = useState(null);
 
     const [editingHours, setEditingHours] = useState(false);
     const [openingTime, setOpeningTime] = useState('');
@@ -48,16 +51,24 @@ export default function DesksManagerPage() {
     }, []);
 
     useEffect(() => {
-        if (activeRoom && companyId) {
+        if (activeRoom && companyId && activeRoom !== 'unadopted') {
             fetchDesksForRoom(activeRoom);
+        } else if (activeRoom === 'unadopted' && companyId) {
+            fetchUnadoptedDesks();
         }
     }, [activeRoom, companyId]);
+
+    useEffect(() => {
+        if (companyId) {
+            fetchSimulatorSettings();
+        }
+    }, [companyId]);
 
     const fetchInitialData = async () => {
         try {
             setError(null);
 
-            const userCompanies = await get('/Users/me/companies');
+            const userCompanies = await getMyCompanies();
 
             if (!userCompanies || userCompanies.length === 0) {
                 throw new Error('No company associated with current user');
@@ -66,7 +77,7 @@ export default function DesksManagerPage() {
             const userCompanyId = userCompanies[0].companyId;
             setCompanyId(userCompanyId);
 
-            const roomsData = await get(`/${userCompanyId}/rooms`);
+            const roomsData = await getRooms(userCompanyId);
             setRooms(roomsData);
 
             if (roomsData.length > 0) {
@@ -84,8 +95,8 @@ export default function DesksManagerPage() {
     const fetchDesksForRoom = async (roomId) => {
         try {
             const [desksData, reservationsData] = await Promise.all([
-                get(`/${companyId}/desks/room/${roomId}`),
-                get(`/${companyId}/reservation`)
+                getDesksForRoom(companyId, roomId),
+                getReservations(companyId)
             ]);
 
             setDesks(desksData);
@@ -101,7 +112,64 @@ export default function DesksManagerPage() {
         }
     };
 
+    const fetchUnadoptedDesks = async () => {
+        if (!companyId) return;
+        
+        try {
+            setLoadingUnadopted(true);
+            setError(null);
+            const macAddresses = await get(`/${companyId}/desks/not-adopted`);
+            setUnadoptedDesks(macAddresses || []);
+        } catch (error) {
+            console.error('Error fetching unadopted desks:', error);
+            setError(error.message);
+            setUnadoptedDesks([]);
+        } finally {
+            setLoadingUnadopted(false);
+        }
+    };
+
+    const handleAdoptDesk = async (macAddress, rpiMacAddress, roomId) => {
+        if (!roomId || roomId === '') {
+            alert('Please select a room');
+            return;
+        }
+
+        try {
+            const newDesk = {
+                macAddress: macAddress,
+                roomId: roomId
+            };
+
+            // Only include rpiMacAddress if provided
+            if (rpiMacAddress && rpiMacAddress.trim() !== '') {
+                newDesk.rpiMacAddress = rpiMacAddress.trim();
+            }
+
+            await post(`/${companyId}/desks`, newDesk);
+            await fetchUnadoptedDesks(); // Refresh the list
+            alert('Desk adopted successfully!');
+        } catch (error) {
+            console.error('Error adopting desk:', error);
+            console.error('Error body:', error.body);
+            const errorMessage = error.body?.error || error.body?.message || error.message || 'Unknown error';
+            alert('Failed to adopt desk: ' + errorMessage);
+        }
+    };
+
     // Simulator
+    const fetchSimulatorSettings = async () => {
+        try {
+            const settings = await get(`/Company/${companyId}/simulator`);
+            setCurrentSimulatorLink(settings.simulatorLink || null);
+        } catch (error) {
+            if (error.status !== 404) {
+                console.error('Error fetching simulator settings:', error);
+            }
+            setCurrentSimulatorLink(null);
+        }
+    };
+
     const handleSaveSimulator = async (e) => {
         e.preventDefault();
 
@@ -131,11 +199,12 @@ export default function DesksManagerPage() {
                 simulatorApiKey: simulatorApiKey.trim()
             };
 
-            await put(`/Company/${companyId}/simulator`, simulatorSettings);
+            await updateSimulator(companyId, simulatorSettings);
             alert('Simulator settings saved successfully!');
             setSimulatorLink('');
             setSimulatorApiKey('');
             setSimulatorErrors({});
+            await fetchSimulatorSettings();
         } catch (error) {
             console.error('Error saving simulator:', error);
             alert('Failed to save simulator: ' + error.message);
@@ -396,56 +465,115 @@ export default function DesksManagerPage() {
     // Simulator
     const Simulator = () => {
         return (
-            <div className="bg-white rounded-2xl overflow-hidden mb-6">
-                <h1 className="text-3xl font-semibold text-gray-800 py-6">Simulator Management</h1>
-                <form onSubmit={handleSaveSimulator} className="bg-white rounded-2xl shadow-sm border border-gray-150 p-6 max-w-md">
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Link
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="https://simulator.example.com"
-                            value={simulatorLink}
-                            onChange={(e) => setSimulatorLink(e.target.value)}
-                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500' : 'border-gray-300'
-                                }`}
-                        />
-                        {simulatorErrors.link && (
-                            <p className="text-danger-600 text-sm mt-1">{simulatorErrors.link}</p>
-                        )}
-                    </div>
+            <div className="overflow-hidden mb-6">
+                <div className="px-6 pt-6 pb-4">
+                    <h1 className="text-2xl font-semibold text-gray-800">Simulator Management</h1>
+                </div>
+                
+                <div className="p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Current Settings Display */}
+                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="material-symbols-outlined text-gray-600">settings</span>
+                                <h2 className="text-lg font-semibold text-gray-800">Current Settings</h2>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                                        Simulator Link
+                                    </label>
+                                    <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 break-all shadow-sm">
+                                        {currentSimulatorLink ? (
+                                            <span className="text-accent-600">{currentSimulatorLink}</span>
+                                        ) : (
+                                            <span className="text-gray-400 italic">Not configured</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                                        API Key
+                                    </label>
+                                    <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-sm">
+                                        {currentSimulatorLink ? (
+                                            <span className="text-gray-600 select-none">********************************</span>
+                                        ) : (
+                                            <span className="text-gray-400 italic">Not configured</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Api Key
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Enter API key"
-                            value={simulatorApiKey}
-                            onChange={(e) => setSimulatorApiKey(e.target.value)}
-                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.apiKey ? 'border-danger-500' : 'border-gray-300'
-                                }`}
-                        />
-                        {simulatorErrors.apiKey && (
-                            <p className="text-danger-600 text-sm mt-1">{simulatorErrors.apiKey}</p>
-                        )}
+                        {/* Update Form */}
+                        <form onSubmit={handleSaveSimulator} className="bg-white rounded-xl border border-gray-200 p-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="material-symbols-outlined text-gray-600">edit</span>
+                                <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Simulator Link
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="https://simulator.example.com"
+                                        value={simulatorLink}
+                                        onChange={(e) => setSimulatorLink(e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${
+                                            simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+                                        }`}
+                                    />
+                                    {simulatorErrors.link && (
+                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">error</span>
+                                            {simulatorErrors.link}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        API Key
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter 32-character API key"
+                                        value={simulatorApiKey}
+                                        onChange={(e) => setSimulatorApiKey(e.target.value)}
+                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${
+                                            simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+                                        }`}
+                                    />
+                                    {simulatorErrors.apiKey && (
+                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">error</span>
+                                            {simulatorErrors.apiKey}
+                                        </p>
+                                    )}
+                                </div>
+                                
+                                <div className="pt-2">
+                                    <button
+                                        type="submit"
+                                        className="w-full px-6 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">save</span>
+                                        Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div className="flex gap-3">
-                        <button
-                            type="submit"
-                            className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
-                        >
-                            Save
-                        </button>
-                    </div>
-                </form>
-            </div >
+                </div>
+            </div>
         );
     };
 
     const currentRoom = rooms.find(r => r.id === activeRoom);
+    const isUnadoptedView = activeRoom === 'unadopted';
 
     // No room available
     if (!currentRoom && rooms.length === 0) {
@@ -486,6 +614,7 @@ export default function DesksManagerPage() {
                         {rooms.map(room => (
                             <RoomButton key={room.id} roomId={room.id} label={room.readableId || 'Unknown Room'} />
                         ))}
+                        <RoomButton roomId="unadopted" label="Unadopted" />
                         <button
                             onClick={() => setShowNewRoomForm(!showNewRoomForm)}
                             className="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-white hover:bg-accent-600 transition-all inline-flex items-center gap-2"
@@ -497,179 +626,241 @@ export default function DesksManagerPage() {
                         </button>
                     </div>
 
-                    {/* Info card */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm items-center">
-                            <div>
-                                <span className="text-gray-600">Desks:</span>
-                                <span className="ml-2 font-semibold">
-                                    {desks.filter(d => d.roomId === currentRoom?.id).length}
-                                </span>
-                            </div>
-                            {!editingHours ? (
-                                <>
-                                    <div>
-                                        <span className="text-gray-600">Opening:</span>
-                                        <span className="ml-2 font-semibold">
-                                            {currentRoom?.openingHours?.openingTime || 'Not set'}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-600">Closing:</span>
-                                        <span className="ml-2 font-semibold">
-                                            {currentRoom?.openingHours?.closingTime || 'Not set'}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-600">Open on</span>
-                                        <span className="ml-2 font-semibold">
-                                            {decodeDaysOfTheWeek(currentRoom?.openingHours?.daysOfTheWeek)}
-                                        </span>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div>
-                                        <label className="text-gray-600 text-xs block mb-1">Opening:</label>
-                                        <input
-                                            type="time"
-                                            value={openingTime}
-                                            onChange={(e) => setOpeningTime(e.target.value)}
-                                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-gray-600 text-xs block mb-1">Closing:</label>
-                                        <input
-                                            type="time"
-                                            value={closingTime}
-                                            onChange={(e) => setClosingTime(e.target.value)}
-                                            className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-gray-600 text-xs block mb-1">Set open days:</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                                                <label key={day} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={!!DaysOpen[day]}
-                                                        onChange={e => setDaysOpen({ ...DaysOpen, [day]: e.target.checked })}
-                                                        className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
-                                                    />
-                                                    <span className="text-sm text-gray-700 capitalize">{day}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        <div className="mt-3 flex gap-2">
-                            {!editingHours ? (
+                    {isUnadoptedView ? (
+                        /* Unadopted Desks View */
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+                            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                                <h3 className="text-lg font-semibold text-gray-700">
+                                    Unadopted Desks
+                                </h3>
                                 <button
-                                    onClick={handleEditHours}
-                                    className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
+                                    onClick={fetchUnadoptedDesks}
+                                    className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors inline-flex items-center gap-2"
+                                    disabled={loadingUnadopted}
                                 >
-                                    Edit Schedule
+                                    <span className="material-symbols-outlined text-base">
+                                        refresh
+                                    </span>
+                                    <span>Refresh</span>
                                 </button>
+                            </div>
+
+                            {loadingUnadopted ? (
+                                <div className="p-8 text-center text-gray-500">
+                                    Loading unadopted desks...
+                                </div>
                             ) : (
-                                <>
-                                    <button
-                                        onClick={handleSaveHours}
-                                        className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
-                                    >
-                                        Save
-                                    </button>
-                                    <button
-                                        onClick={handleCancelEditHours}
-                                        className="px-4 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                </>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full table-auto max-lg:block">
+                                        <thead className="bg-gray-50 max-lg:hidden">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">MAC Address</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">RPI MAC Address</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Room</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="max-lg:block divide-y divide-gray-100">
+                                            {unadoptedDesks.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="4" className="px-4 py-6 text-center text-sm text-gray-500">
+                                                        No unadopted desks found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                unadoptedDesks.map((macAddress) => (
+                                                    <UnadoptedDeskRow
+                                                        key={macAddress}
+                                                        macAddress={macAddress}
+                                                        rooms={rooms}
+                                                        companyId={companyId}
+                                                        onAdopt={handleAdoptDesk}
+                                                    />
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* Desks table*/}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-                        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                            <h3 className="text-lg font-semibold text-gray-700">
-                                Desks
-                            </h3>
-                        </div>
-
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full table-auto max-lg:block">
-                                <thead className="bg-gray-50 max-lg:hidden">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Current Height</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">MAC Address</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="max-lg:block divide-y divide-gray-100">
-                                    {desks.map((desk) => {
-                                        const status = getDeskStatus(desk);
-
-                                        return (
-                                            <tr key={desk.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
-                                                <td className="px-4 py-3 text-sm font-medium max-lg:w-full">
-                                                    <span className="font-semibold lg:hidden">Name: </span>
-                                                    <span className="font-semibold">{desk.readableId || 'Unknown Desk'}</span>
-                                                </td>
-                                                <td className="px-4 py-3 text-sm max-lg:w-full">
-                                                    <span className="font-semibold lg:hidden">Status: </span>
-                                                    <span className={`font-medium ${getStatusColor(status)}`}>
-                                                        {getStatusText(status)}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3 text-sm max-lg:w-full">
-                                                    <span className="font-semibold lg:hidden">Current Height: </span>
-                                                    {((desk.height ?? 0) / 10).toFixed(1)} cm
-                                                </td>
-                                                <td className="px-4 py-3 text-sm max-lg:w-full">
-                                                    <span className="font-semibold lg:hidden">MAC Address: </span>
-                                                    {desk.macAddress || 'Not set'}
-                                                </td>
-                                                <td className="px-4 py-3 text-sm max-lg:w-full">
-                                                    <button
-                                                        onClick={() => handleDeleteDesk(desk.id)}
-                                                        className="bg-danger text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1"
-                                                        title="Delete desk"
-                                                    >
-                                                        <span className="material-symbols-outlined text-sm leading-none">delete</span>
-                                                        <span className="lg:hidden">Delete</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeskUnBook(desk.id)}
-                                                        className="bg-accent text-white px-3 py-1.5 ml-2 rounded-lg text-xs hover:bg-accent-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        title="Cancel desk booking"
-                                                        disabled={status !== 'booked'}
-                                                    >
-                                                        <span>Cancel Booking</span>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                    {desks.length === 0 && (
-                                        <tr>
-                                            <td colSpan="5" className="px-4 py-6 text-center text-sm text-gray-500">
-                                                No desks found in this room
-                                            </td>
-                                        </tr>
+                    ) : (
+                        /* Regular Room View */
+                        <>
+                            {/* Info card */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm items-center">
+                                    <div>
+                                        <span className="text-gray-600">Desks:</span>
+                                        <span className="ml-2 font-semibold">
+                                            {desks.filter(d => d.roomId === currentRoom?.id).length}
+                                        </span>
+                                    </div>
+                                    {!editingHours ? (
+                                        <>
+                                            <div>
+                                                <span className="text-gray-600">Opening:</span>
+                                                <span className="ml-2 font-semibold">
+                                                    {currentRoom?.openingHours?.openingTime || 'Not set'}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-600">Closing:</span>
+                                                <span className="ml-2 font-semibold">
+                                                    {currentRoom?.openingHours?.closingTime || 'Not set'}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-600">Open on</span>
+                                                <span className="ml-2 font-semibold">
+                                                    {decodeDaysOfTheWeek(currentRoom?.openingHours?.daysOfTheWeek)}
+                                                </span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div>
+                                                <label className="text-gray-600 text-xs block mb-1">Opening:</label>
+                                                <input
+                                                    type="time"
+                                                    value={openingTime}
+                                                    onChange={(e) => setOpeningTime(e.target.value)}
+                                                    className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-gray-600 text-xs block mb-1">Closing:</label>
+                                                <input
+                                                    type="time"
+                                                    value={closingTime}
+                                                    onChange={(e) => setClosingTime(e.target.value)}
+                                                    className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-gray-600 text-xs block mb-1">Set open days:</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                                        <label key={day} className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={!!DaysOpen[day]}
+                                                                onChange={e => setDaysOpen({ ...DaysOpen, [day]: e.target.checked })}
+                                                                className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
+                                                            />
+                                                            <span className="text-sm text-gray-700 capitalize">{day}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </>
                                     )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                </div>
+                                <div className="mt-3 flex gap-2">
+                                    {!editingHours ? (
+                                        <button
+                                            onClick={handleEditHours}
+                                            className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
+                                        >
+                                            Edit Schedule
+                                        </button>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={handleSaveHours}
+                                                className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
+                                            >
+                                                Save
+                                            </button>
+                                            <button
+                                                onClick={handleCancelEditHours}
+                                                className="px-4 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
 
-                    {/* New Room form*/}
+                            {/* Desks table*/}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+                                <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                                    <h3 className="text-lg font-semibold text-gray-700">
+                                        Desks
+                                    </h3>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full table-auto max-lg:block">
+                                        <thead className="bg-gray-50 max-lg:hidden">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Current Height</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">MAC Address</th>
+                                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="max-lg:block divide-y divide-gray-100">
+                                            {desks.map((desk) => {
+                                                const status = getDeskStatus(desk);
+
+                                                return (
+                                                    <tr key={desk.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
+                                                        <td className="px-4 py-3 text-sm font-medium max-lg:w-full">
+                                                            <span className="font-semibold lg:hidden">Name: </span>
+                                                            <span className="font-semibold">{desk.readableId || 'Unknown Desk'}</span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm max-lg:w-full">
+                                                            <span className="font-semibold lg:hidden">Status: </span>
+                                                            <span className={`font-medium ${getStatusColor(status)}`}>
+                                                                {getStatusText(status)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm max-lg:w-full">
+                                                            <span className="font-semibold lg:hidden">Current Height: </span>
+                                                            {((desk.height ?? 0) / 10).toFixed(1)} cm
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm max-lg:w-full">
+                                                            <span className="font-semibold lg:hidden">MAC Address: </span>
+                                                            {desk.macAddress || 'Not set'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm max-lg:w-full">
+                                                            <button
+                                                                onClick={() => handleDeleteDesk(desk.id)}
+                                                                className="bg-danger text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1"
+                                                                title="Delete desk"
+                                                            >
+                                                                <span className="material-symbols-outlined text-sm leading-none">delete</span>
+                                                                <span className="lg:hidden">Delete</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeskUnBook(desk.id)}
+                                                                className="bg-accent text-white px-3 py-1.5 ml-2 rounded-lg text-xs hover:bg-accent-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                title="Cancel desk booking"
+                                                                disabled={status !== 'booked'}
+                                                            >
+                                                                <span>Cancel Booking</span>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            {desks.length === 0 && (
+                                                <tr>
+                                                    <td colSpan="5" className="px-4 py-6 text-center text-sm text-gray-500">
+                                                        No desks found in this room
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* New Room form */}
                     {showNewRoomForm && (
                         <form onSubmit={handleSaveNewRoom} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">New Room</h3>
@@ -739,5 +930,84 @@ export default function DesksManagerPage() {
                 </section>
             </main>
         </div>
+    );
+}
+
+// Component for unadopted desk row
+function UnadoptedDeskRow({ macAddress, rooms, companyId, onAdopt }) {
+    const [rpiMacAddress, setRpiMacAddress] = useState('');
+    const [selectedRoomId, setSelectedRoomId] = useState('');
+    const [isAdopting, setIsAdopting] = useState(false);
+
+    const handleAdopt = async () => {
+        if (!selectedRoomId) {
+            alert('Please select a room');
+            return;
+        }
+
+        setIsAdopting(true);
+        try {
+            await onAdopt(macAddress, rpiMacAddress, selectedRoomId);
+            setRpiMacAddress('');
+            setSelectedRoomId('');
+        } catch (error) {
+            console.error('Error in adopt handler:', error);
+        } finally {
+            setIsAdopting(false);
+        }
+    };
+
+    return (
+        <tr className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
+            <td className="px-4 py-3 text-sm font-medium max-lg:w-full">
+                <span className="font-semibold lg:hidden">MAC Address: </span>
+                <span className="font-mono">{macAddress}</span>
+            </td>
+            <td className="px-4 py-3 text-sm max-lg:w-full">
+                <span className="font-semibold lg:hidden">RPI MAC Address: </span>
+                <input
+                    type="text"
+                    placeholder="XX:XX:XX:XX:XX:XX"
+                    value={rpiMacAddress}
+                    onChange={(e) => setRpiMacAddress(e.target.value)}
+                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none font-mono max-w-xs"
+                    maxLength={17}
+                />
+            </td>
+            <td className="px-4 py-3 text-sm max-lg:w-full">
+                <span className="font-semibold lg:hidden">Room: </span>
+                <select
+                    value={selectedRoomId}
+                    onChange={(e) => setSelectedRoomId(e.target.value)}
+                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                >
+                    <option value="">Select a room</option>
+                    {rooms.map(room => (
+                        <option key={room.id} value={room.id}>
+                            {room.readableId || 'Unknown Room'}
+                        </option>
+                    ))}
+                </select>
+            </td>
+            <td className="px-4 py-3 text-sm max-lg:w-full">
+                <button
+                    onClick={handleAdopt}
+                    disabled={!selectedRoomId || isAdopting}
+                    className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-600 transition-all inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isAdopting ? (
+                        <>
+                            <span className="material-symbols-outlined text-base animate-spin">sync</span>
+                            <span>Adopting...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span className="material-symbols-outlined text-base">add</span>
+                            <span>Adopt</span>
+                        </>
+                    )}
+                </button>
+            </td>
+        </tr>
     );
 }

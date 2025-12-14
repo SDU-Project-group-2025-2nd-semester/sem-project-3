@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { get, post, put, del } from "../../context/apiClient";
+import { getMyReservations, cancelReservation } from "../../services/reservationService";
+import { getMyProfile } from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
 
 export default function UserHomePage() {
