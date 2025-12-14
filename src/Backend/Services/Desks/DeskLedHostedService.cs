@@ -3,7 +3,7 @@ using Backend.Services.Mqtt;
 
 namespace Backend.Services.Desks;
 
-public class DeskLedHostedService(ILogger<DeskHeightPullingService> logger, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
+public class DeskLedHostedService(IServiceProvider serviceProvider) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
