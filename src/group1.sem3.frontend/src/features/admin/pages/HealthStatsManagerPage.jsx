@@ -1,195 +1,14 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { getReservations, getAllDesks, getRooms } from "../admin.services";
-import { useAuth } from "@features/auth/AuthContext";
+import { useState } from "react";
+import { useHealthStatsManager } from "../hooks/useHealthStatsManager";
+import Card from "@shared/ui/Card";
+import Button from "@shared/ui/Button";
+import NotificationBanner from "@shared/ui/NotificationBanner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
 
 export default function HealthStatsManagerPage() {
-    const navigate = useNavigate();
-    const { currentCompany } = useAuth();
     const [viewMode, setViewMode] = useState('daily');
     const [viewType, setViewType] = useState('company');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [reservations, setReservations] = useState([]);
-    const [desks, setDesks] = useState([]);
-    const [rooms, setRooms] = useState([]);
-    const [chartData, setChartData] = useState([]);
-
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            if (loading) {
-                setLoading(false);
-                setError('Request timeout - please try again');
-            }
-        }, 10000);
-
-        return () => clearTimeout(timeout);
-    }, [loading]);
-
-    useEffect(() => {
-        if (currentCompany?.id) {
-            fetchData();
-        }
-    }, [currentCompany]);
-
-    useEffect(() => {
-        if (reservations.length >= 0) {
-            processChartData();
-        }
-    }, [reservations, viewMode, viewType]);
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            if (!currentCompany?.id) {
-                throw new Error('No company selected');
-            }
-
-            const [reservationsData, desksData, roomsData] = await Promise.all([
-                getReservations(currentCompany.id),
-                getAllDesks(currentCompany.id),
-                getRooms(currentCompany.id)
-            ]);
-
-            setReservations(reservationsData || []);
-            setDesks(desksData || []);
-            setRooms(roomsData || []);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            setError(error.message);
-            if (error.message?.includes('401') || error.message?.includes('Unauthorized') || error.message?.includes('company')) {
-                setTimeout(() => navigate('/'), 2000);
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const processChartData = () => {
-        const data = [];
-
-        if (viewType === 'company') {
-            if (viewMode === 'daily') {
-                for (let i = 6; i >= 0; i--) {
-                    const date = new Date();
-                    date.setDate(date.getDate() - i);
-                    date.setHours(0, 0, 0, 0);
-
-                    const dayReservations = reservations.filter(r => {
-                        const resDate = new Date(r.start);
-                        return resDate.toDateString() === date.toDateString();
-                    });
-
-                    const totalHours = dayReservations.reduce((sum, r) => {
-                        const duration = (new Date(r.end) - new Date(r.start)) / (1000 * 60 * 60);
-                        return sum + duration;
-                    }, 0);
-
-                    data.push({
-                        name: date.toLocaleDateString('en-GB', { day: 'numeric', weekday: 'short', month: 'short' }),
-                        total: Math.round(totalHours * 100) / 100,
-                        reservations: dayReservations.length
-                    });
-                }
-            } else if (viewMode === 'weekly') {
-                for (let i = 3; i >= 0; i--) {
-                    const weekStart = new Date();
-                    weekStart.setDate(weekStart.getDate() - (i * 7) - weekStart.getDay());
-                    weekStart.setHours(0, 0, 0, 0);
-
-                    const weekEnd = new Date(weekStart);
-                    weekEnd.setDate(weekEnd.getDate() + 7);
-
-                    const weekReservations = reservations.filter(r => {
-                        const resDate = new Date(r.start);
-                        return resDate >= weekStart && resDate < weekEnd;
-                    });
-
-                    const totalHours = weekReservations.reduce((sum, r) => {
-                        const duration = (new Date(r.end) - new Date(r.start)) / (1000 * 60 * 60);
-                        return sum + duration;
-                    }, 0);
-
-                    data.push({
-                        name: `${weekStart.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}`,
-                        total: Math.round(totalHours * 100) / 100,
-                        reservations: weekReservations.length
-                    });
-                }
-            } else if (viewMode === 'monthly') {
-                for (let i = 5; i >= 0; i--) {
-                    const monthStart = new Date();
-                    monthStart.setMonth(monthStart.getMonth() - i);
-                    monthStart.setDate(1);
-                    monthStart.setHours(0, 0, 0, 0);
-
-                    const monthEnd = new Date(monthStart);
-                    monthEnd.setMonth(monthEnd.getMonth() + 1);
-
-                    const monthReservations = reservations.filter(r => {
-                        const resDate = new Date(r.start);
-                        return resDate >= monthStart && resDate < monthEnd;
-                    });
-
-                    const totalHours = monthReservations.reduce((sum, r) => {
-                        const duration = (new Date(r.end) - new Date(r.start)) / (1000 * 60 * 60);
-                        return sum + duration;
-                    }, 0);
-
-                    data.push({
-                        name: monthStart.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
-                        total: Math.round(totalHours * 100) / 100,
-                        reservations: monthReservations.length
-                    });
-                }
-            }
-        } else if (viewType === 'room') {
-            rooms.forEach(room => {
-                const roomDesks = desks.filter(d => d.roomId === room.id);
-                const roomDeskIds = new Set(roomDesks.map(d => d.id));
-                const roomReservations = reservations.filter(r => roomDeskIds.has(r.deskId));
-
-                const totalHours = roomReservations.reduce((sum, r) => {
-                    const duration = (new Date(r.end) - new Date(r.start)) / (1000 * 60 * 60);
-                    return sum + duration;
-                }, 0);
-
-                data.push({
-                    name: room.readableId || `Room ${room.id}`,
-                    total: Math.round(totalHours * 100) / 100,
-                    reservations: roomReservations.length
-                });
-            });
-        } else if (viewType === 'desk') {
-            desks.forEach(desk => {
-                const deskReservations = reservations.filter(r => r.deskId === desk.id);
-
-                const totalHours = deskReservations.reduce((sum, r) => {
-                    const duration = (new Date(r.end) - new Date(r.start)) / (1000 * 60 * 60);
-                    return sum + duration;
-                }, 0);
-
-                data.push({
-                    name: desk.readableId || `Desk ${desk.id}`,
-                    total: Math.round(totalHours * 100) / 100,
-                    reservations: deskReservations.length
-                });
-            });
-        }
-
-        setChartData(data);
-    };
-
-    const getTotalDeskTime = () => {
-        return reservations
-            .reduce((sum, r) => {
-                const duration = (new Date(r.end) - new Date(r.start)) / (1000 * 60 * 60);
-                return sum + duration;
-            }, 0);
-    };
+    const { loading, error, reservations, desks, rooms, chartData, fetchData, getTotalDeskTime } = useHealthStatsManager(viewMode, viewType);
 
     const ViewButton = ({ mode, label }) => (
         <button
@@ -214,14 +33,11 @@ export default function HealthStatsManagerPage() {
     if (error) {
         return (
             <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-lg text-red-600">Error: {error}</div>
-                    <button
-                        onClick={fetchData}
-                        className="mt-4 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-600"
-                    >
-                        Retry
-                    </button>
+                <div className="w-full max-w-md">
+                    <NotificationBanner type="error">{String(error)}</NotificationBanner>
+                    <div className="mt-4 text-center">
+                        <Button onClick={fetchData} variant="primary">Retry</Button>
+                    </div>
                 </div>
             </div>
         );
@@ -235,7 +51,7 @@ export default function HealthStatsManagerPage() {
                 </div>
 
                 {/* Info cards */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <Card>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                             <span className="text-gray-600">Total Desks:</span>
@@ -250,7 +66,7 @@ export default function HealthStatsManagerPage() {
                             <span className="ml-2 font-semibold">{Math.round(getTotalDeskTime())}h</span>
                         </div>
                     </div>
-                </div>
+                </Card>
 
                 {/* View type and time tabs */}
                 <div className="flex flex-col gap-3">
@@ -300,7 +116,7 @@ export default function HealthStatsManagerPage() {
                     {chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <AreaChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
+                                <CartesianGrid strokeDasharray="33" />
                                 <XAxis dataKey="name" />
                                 <YAxis label={{ value: 'Hours', angle: -90, position: 'insideLeft' }} />
                                 <Tooltip />
@@ -325,7 +141,7 @@ export default function HealthStatsManagerPage() {
                     {chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
+                                <CartesianGrid strokeDasharray="33" />
                                 <XAxis dataKey="name" />
                                 <YAxis label={{ value: 'Reservations', angle: -90, position: 'insideLeft' }} />
                                 <Tooltip />

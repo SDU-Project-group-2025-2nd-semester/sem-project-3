@@ -1,129 +1,20 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  getDamageReports,
-  updateDamageReportStatus,
-  deleteDamageReport,
-  getMyProfile,
-  getDeskById,
-  getUserById
-} from "../admin.services";
+import { useDamagesManager } from "../hooks/useDamagesManager";
+import Card from "@shared/ui/Card";
+import Button from "@shared/ui/Button";
+import NotificationBanner from "@shared/ui/NotificationBanner";
 
 export default function DamagesManagerPage() {
-  const navigate = useNavigate();
-  const [damages, setDamages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [companyId, setCompanyId] = useState(null);
-
-  useEffect(() => {
-    fetchDamageReports();
-  }, []);
-
-  const fetchDamageReports = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const me = await getMyProfile();
-
-      if (!me?.companyMemberships || me.companyMemberships.length ===0) {
-        throw new Error('No company associated with current user');
-      }
-
-      const userCompanyId = me.companyMemberships[0].companyId;
-      setCompanyId(userCompanyId);
-
-      const reports = await getDamageReports(userCompanyId);
-
-
-      const reportsWithDesks = await Promise.all(
-        (reports || []).map(async (report) => {
-          let desk = null;
-          let resolvedByUser = null;
-
-          if (report.deskId) {
-            try {
-              desk = await getDeskById(userCompanyId, report.deskId);
-            } catch (error) {
-              console.error(`Error fetching desk ${report.deskId}:`, error);
-            }
-          }
-
-          if (report.resolvedById) {
-            try {
-              resolvedByUser = await getUserById(report.resolvedById);
-            } catch (error) {
-              console.error(`Error fetching user ${report.resolvedById}:`, error);
-            }
-          }
-
-          return { ...report, desk, resolvedByUser };
-        })
-      );
-
-      setDamages(reportsWithDesks);
-    } catch (error) {
-      console.error('Error fetching damage reports:', error);
-      setError(error.message);
-      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-        setTimeout(() => navigate('/'),2000);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (iso) => {
-    if (!iso) return '_'
-    try {
-      return new Date(iso).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return iso;
-    }
-  }
-
-  const getStatusColor = (isResolved) => {
-    return isResolved ? 'text-success-600' : 'text-warning-600';
-  }
-
-  const getStatusText = (isResolved) => {
-    return isResolved ? 'Resolved' : 'Open';
-  };
-
-  const handleResolveIssue = async (damageId) => {
-    if (!confirm('Mark this damage report as resolved?')) {
-      return;
-    }
-
-    try {
-      await updateDamageReportStatus(companyId, damageId, true);
-      await fetchDamageReports();
-    } catch (error) {
-      console.error('Error resolving damage report:', error);
-      alert('Failed to resolve damage report: ' + error.message);
-    }
-  };
-
-  const handleRemoveDamage = async (damageId) => {
-    if (!confirm('Are you sure you want to remove this damage report?')) {
-      return;
-    }
-
-    try {
-      await deleteDamageReport(companyId, damageId);
-      await fetchDamageReports();
-    } catch (error) {
-      console.error('Error removing damage report:', error);
-      alert('Failed to remove damage report: ' + error.message);
-    }
-  };
+  const {
+    damages,
+    loading,
+    error,
+    formatDate,
+    getStatusColor,
+    getStatusText,
+    handleResolveIssue,
+    handleRemoveDamage,
+    fetchDamageReports,
+  } = useDamagesManager();
 
   const TableHeader = ({ columns }) => (
     <thead className="bg-gray-50 max-lg:hidden">
@@ -150,7 +41,7 @@ export default function DamagesManagerPage() {
   );
 
   const DamageRow = ({ damage }) => (
-    < tr key={damage.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2" >
+    <tr key={damage.id} className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
       <td className="pl-4 pr-2 py-2 text-sm font-medium max-lg:w-3/4 max-lg:pl-2 max-lg:text-lg">
         {damage.desk?.readableId || damage.deskId || 'Unknown'}
       </td>
@@ -181,24 +72,26 @@ export default function DamagesManagerPage() {
         </span>
       </td>
       <td className="px-4 py-3 text-sm w-full flex flex-row gap-2 mt-2">
-        <button
-          className="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
+        <Button
+          variant="primary"
           disabled={damage.isResolved}
           onClick={() => handleResolveIssue(damage.id)}
+          className="px-3 py-1.5 text-xs"
           title="Mark as resolved"
         >
           Resolve
-        </button>
-        <button
-          className="bg-danger-500 text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center justify-center gap-1 max-lg:flex-1"
+        </Button>
+        <Button
+          variant="danger"
           onClick={() => handleRemoveDamage(damage.id)}
+          className="px-3 py-1.5 text-xs inline-flex items-center justify-center gap-1"
           title="Remove damage report"
         >
           <span className="material-symbols-outlined text-sm leading-none">delete</span>
           <span>Remove</span>
-        </button>
+        </Button>
       </td>
-    </tr >
+    </tr>
   );
 
   if (loading) {
@@ -214,14 +107,11 @@ export default function DamagesManagerPage() {
   if (error) {
     return (
       <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg text-red-600">Error: {error}</div>
-          <button
-            onClick={fetchDamageReports}
-            className="mt-4 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-600"
-          >
-            Retry
-          </button>
+        <div className="w-full max-w-md">
+          <NotificationBanner type="error">{String(error)}</NotificationBanner>
+          <div className="mt-4 text-center">
+            <Button onClick={fetchDamageReports} variant="primary">Retry</Button>
+          </div>
         </div>
       </div>
     );
@@ -233,10 +123,10 @@ export default function DamagesManagerPage() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold text-secondary">
-              Reported malfunctions
+              Reported Damages
             </h2>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <Card>
             <div className="overflow-x-auto">
               <table className="min-w-full table-auto max-lg:block">
                 <TableHeader
@@ -260,7 +150,7 @@ export default function DamagesManagerPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
         </section>
       </main>
     </div>
