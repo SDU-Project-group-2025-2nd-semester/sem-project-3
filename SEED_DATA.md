@@ -6,23 +6,35 @@ This document contains information about the seeded data in the development data
 
 All users have **email confirmed** and can log in immediately.
 
-| Email | Password | First Name | Last Name | User ID | Company |
-|-------|----------|------------|-----------|---------|---------|
-| admin@techcoworking.com | `Admin123!` | Admin | User | a1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
-| john.doe@techcoworking.com | `JohnDoe123!` | John | Doe | b1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
-| jane.doe@techcoworking.com | `JaneDoe123!` | Jane | Doe | c1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
-| bob.smith@innovationhub.com | `BobSmith123!` | Bob | Smith | d1111111-1111-1111-1111-111111111111 | Innovation Hub |
-| alice.johnson@startupcenter.com | `AliceJohnson123!` | Alice | Johnson | e1111111-1111-1111-1111-111111111111 | Startup Center |
-| staff@techcoworking.com | `Staff123!` | Staff | Staffy | f1111111-1111-1111-1111-111111111111 | Tech Co-Working Space |
+| Email | Password | First Name | Last Name | User ID | Company | Role |
+|-------|----------|------------|-----------|---------|---------|------|
+| admin@techcoworking.com | `Admin123!` | Admin | User | a1111111-1111-1111-1111-111111111111 | Tech Co-Working Space | Admin |
+| staff@techcoworking.com | `Staff123!` | Staff | Staffy | f1111111-1111-1111-1111-111111111111 | Tech Co-Working Space | Janitor |
+| john.doe@techcoworking.com | `JohnDoe123!` | John | Doe | b1111111-1111-1111-1111-111111111111 | Tech Co-Working Space | User |
+| jane.doe@techcoworking.com | `JaneDoe123!` | Jane | Doe | c1111111-1111-1111-1111-111111111111 | Tech Co-Working Space | User |
+| multiuser1@example.com | `MultiUser123!` | Multi | User1 | k1111111-1111-1111-1111-111111111111 | Tech Co-Working Space, Innovation Hub | User |
+| multiuser3@example.com | `MultiUser123!` | Multi | User3 | m1111111-1111-1111-1111-111111111111 | Tech Co-Working Space, Innovation Hub, Startup Center | User |
+| admin@innovationhub.com | `Admin123!` | Admin | Innovation | g1111111-1111-1111-1111-111111111111 | Innovation Hub | Admin |
+| staff@innovationhub.com | `Staff123!` | Staff | Innovation | i1111111-1111-1111-1111-111111111111 | Innovation Hub | Janitor |
+| bob.smith@innovationhub.com | `BobSmith123!` | Bob | Smith | d1111111-1111-1111-1111-111111111111 | Innovation Hub | User |
+| multiuser1@example.com | `MultiUser123!` | Multi | User1 | k1111111-1111-1111-1111-111111111111 | Tech Co-Working Space, Innovation Hub | User |
+| multiuser2@example.com | `MultiUser123!` | Multi | User2 | l1111111-1111-1111-1111-111111111111 | Innovation Hub, Startup Center | User |
+| multiuser3@example.com | `MultiUser123!` | Multi | User3 | m1111111-1111-1111-1111-111111111111 | Tech Co-Working Space, Innovation Hub, Startup Center | User |
+| admin@startupcenter.com | `Admin123!` | Admin | Startup | h1111111-1111-1111-1111-111111111111 | Startup Center | Admin |
+| staff@startupcenter.com | `Staff123!` | Staff | Startup | j1111111-1111-1111-1111-111111111111 | Startup Center | Janitor |
+| alice.johnson@startupcenter.com | `AliceJohnson123!` | Alice | Johnson | e1111111-1111-1111-1111-111111111111 | Startup Center | User |
+| multiuser2@example.com | `MultiUser123!` | Multi | User2 | l1111111-1111-1111-1111-111111111111 | Innovation Hub, Startup Center | User |
+| multiuser3@example.com | `MultiUser123!` | Multi | User3 | m1111111-1111-1111-1111-111111111111 | Tech Co-Working Space, Innovation Hub, Startup Center | User |
 
 ### User Details
 
-#### Admin User
+#### Admin User (Tech Co-Working Space)
 - **Standing Height**: 750mm
 - **Sitting Height**: 650mm
 - **Health Reminders**: Medium
 - **Sitting Time**: 30 min
 - **Standing Time**: 15 min
+- **Role**: Admin
 
 #### John Doe
 - **Standing Height**: 720mm
@@ -56,12 +68,71 @@ All users have **email confirmed** and can log in immediately.
 - **Standing Time**: 10 min
 - **Has Reservations**: Yes (future)
 
-#### Staff Staffy
+#### Staff Staffy (Tech Co-Working Space)
 - **Standing Height**: 750mm
 - **Sitting Height**: 650mm
 - **Health Reminders**: Medium
 - **Sitting Time**: 30 min
 - **Standing Time**: 15 min
+- **Has Reservations**: No
+
+#### Admin Innovation (Innovation Hub)
+- **Standing Height**: 750mm
+- **Sitting Height**: 650mm
+- **Health Reminders**: Medium
+- **Sitting Time**: 30 min
+- **Standing Time**: 15 min
+- **Role**: Admin
+
+#### Admin Startup (Startup Center)
+- **Standing Height**: 750mm
+- **Sitting Height**: 650mm
+- **Health Reminders**: Medium
+- **Sitting Time**: 30 min
+- **Standing Time**: 15 min
+- **Role**: Admin
+
+#### Staff Innovation (Innovation Hub)
+- **Standing Height**: 750mm
+- **Sitting Height**: 650mm
+- **Health Reminders**: Medium
+- **Sitting Time**: 30 min
+- **Standing Time**: 15 min
+- **Role**: Janitor
+
+#### Staff Startup (Startup Center)
+- **Standing Height**: 750mm
+- **Sitting Height**: 650mm
+- **Health Reminders**: Medium
+- **Sitting Time**: 30 min
+- **Standing Time**: 15 min
+- **Role**: Janitor
+
+#### Multi User1
+- **Standing Height**: 720mm
+- **Sitting Height**: 630mm
+- **Health Reminders**: High
+- **Sitting Time**: 25 min
+- **Standing Time**: 10 min
+- **Companies**: Tech Co-Working Space, Innovation Hub
+- **Has Reservations**: No
+
+#### Multi User2
+- **Standing Height**: 700mm
+- **Sitting Height**: 620mm
+- **Health Reminders**: Medium
+- **Sitting Time**: 30 min
+- **Standing Time**: 15 min
+- **Companies**: Innovation Hub, Startup Center
+- **Has Reservations**: No
+
+#### Multi User3
+- **Standing Height**: 680mm
+- **Sitting Height**: 600mm
+- **Health Reminders**: Low
+- **Sitting Time**: 45 min
+- **Standing Time**: 20 min
+- **Companies**: Tech Co-Working Space, Innovation Hub, Startup Center
 - **Has Reservations**: No
 
 ---
@@ -201,6 +272,8 @@ POST /api/company/join
 - All heights are in millimeters (mm)
 - All times are in UTC
 - Secret invite codes are optional (Startup Center doesn't have one)
+- **Each company has an Admin and Janitor (Staff) user**
+- **Some users belong to multiple companies** (Multi User1, Multi User2, Multi User3) - these users can access resources from all their associated companies
 
 ## Health Reminder Testing
 

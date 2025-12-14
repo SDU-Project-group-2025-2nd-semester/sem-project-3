@@ -249,11 +249,141 @@ public class DatabaseMigrationHostedService(
         };
         await userManager.CreateAsync(staffUser, "Staff123!");
 
+        // Create admin users for each company
+        var adminInnovationHub = new User
+        {
+            Id = "g1111111-1111-1111-1111-111111111111",
+            UserName = "admin@innovationhub.com",
+            Email = "admin@innovationhub.com",
+            EmailConfirmed = true,
+            FirstName = "Admin",
+            LastName = "Innovation",
+            StandingHeight = 750,
+            SittingHeight = 650,
+            HealthRemindersFrequency = HealthRemindersFrequency.Medium,
+            SittingTime = 30,
+            StandingTime = 15,
+            AccountCreation = DateTime.UtcNow.AddMonths(-6),
+            Reservations = []
+        };
+        await userManager.CreateAsync(adminInnovationHub, "Admin123!");
+
+        var adminStartupCenter = new User
+        {
+            Id = "h1111111-1111-1111-1111-111111111111",
+            UserName = "admin@startupcenter.com",
+            Email = "admin@startupcenter.com",
+            EmailConfirmed = true,
+            FirstName = "Admin",
+            LastName = "Startup",
+            StandingHeight = 750,
+            SittingHeight = 650,
+            HealthRemindersFrequency = HealthRemindersFrequency.Medium,
+            SittingTime = 30,
+            StandingTime = 15,
+            AccountCreation = DateTime.UtcNow.AddMonths(-6),
+            Reservations = []
+        };
+        await userManager.CreateAsync(adminStartupCenter, "Admin123!");
+
+        // Create staff (Janitor) users for each company
+        var staffInnovationHub = new User
+        {
+            Id = "i1111111-1111-1111-1111-111111111111",
+            UserName = "staff@innovationhub.com",
+            Email = "staff@innovationhub.com",
+            EmailConfirmed = true,
+            FirstName = "Staff",
+            LastName = "Innovation",
+            StandingHeight = 750,
+            SittingHeight = 650,
+            HealthRemindersFrequency = HealthRemindersFrequency.Medium,
+            SittingTime = 30,
+            StandingTime = 15,
+            AccountCreation = DateTime.UtcNow.AddMonths(-6),
+            Reservations = []
+        };
+        await userManager.CreateAsync(staffInnovationHub, "Staff123!");
+
+        var staffStartupCenter = new User
+        {
+            Id = "j1111111-1111-1111-1111-111111111111",
+            UserName = "staff@startupcenter.com",
+            Email = "staff@startupcenter.com",
+            EmailConfirmed = true,
+            FirstName = "Staff",
+            LastName = "Startup",
+            StandingHeight = 750,
+            SittingHeight = 650,
+            HealthRemindersFrequency = HealthRemindersFrequency.Medium,
+            SittingTime = 30,
+            StandingTime = 15,
+            AccountCreation = DateTime.UtcNow.AddMonths(-6),
+            Reservations = []
+        };
+        await userManager.CreateAsync(staffStartupCenter, "Staff123!");
+
+        // Create users that belong to multiple companies
+        var multiCompanyUser1 = new User
+        {
+            Id = "k1111111-1111-1111-1111-111111111111",
+            UserName = "multiuser1@example.com",
+            Email = "multiuser1@example.com",
+            EmailConfirmed = true,
+            FirstName = "Multi",
+            LastName = "User1",
+            StandingHeight = 720,
+            SittingHeight = 630,
+            HealthRemindersFrequency = HealthRemindersFrequency.High,
+            SittingTime = 25,
+            StandingTime = 10,
+            AccountCreation = DateTime.UtcNow.AddMonths(-2),
+            Reservations = []
+        };
+        await userManager.CreateAsync(multiCompanyUser1, "MultiUser123!");
+
+        var multiCompanyUser2 = new User
+        {
+            Id = "l1111111-1111-1111-1111-111111111111",
+            UserName = "multiuser2@example.com",
+            Email = "multiuser2@example.com",
+            EmailConfirmed = true,
+            FirstName = "Multi",
+            LastName = "User2",
+            StandingHeight = 700,
+            SittingHeight = 620,
+            HealthRemindersFrequency = HealthRemindersFrequency.Medium,
+            SittingTime = 30,
+            StandingTime = 15,
+            AccountCreation = DateTime.UtcNow.AddMonths(-3),
+            Reservations = []
+        };
+        await userManager.CreateAsync(multiCompanyUser2, "MultiUser123!");
+
+        var multiCompanyUser3 = new User
+        {
+            Id = "m1111111-1111-1111-1111-111111111111",
+            UserName = "multiuser3@example.com",
+            Email = "multiuser3@example.com",
+            EmailConfirmed = true,
+            FirstName = "Multi",
+            LastName = "User3",
+            StandingHeight = 680,
+            SittingHeight = 600,
+            HealthRemindersFrequency = HealthRemindersFrequency.Low,
+            SittingTime = 45,
+            StandingTime = 20,
+            AccountCreation = DateTime.UtcNow.AddMonths(-1),
+            Reservations = []
+        };
+        await userManager.CreateAsync(multiCompanyUser3, "MultiUser123!");
+
         await context.SaveChangesAsync();
 
         // Create Users-Company Relations
 
         context.UserCompanies.AddRange(
+            // Tech Co-Working Space users
             new UserCompany
             {
                 UserId = adminUser.Id,
@@ -278,15 +408,86 @@ public class DatabaseMigrationHostedService(
                 CompanyId = techCoWorkingCompany.Id,
                 Role = UserRole.User
             },
+            // Innovation Hub users
+            new UserCompany
+            {
+                UserId = adminInnovationHub.Id,
+                CompanyId = innovationHubCompany.Id,
+                Role = UserRole.Admin
+            },
+            new UserCompany
+            {
+                UserId = staffInnovationHub.Id,
+                CompanyId = innovationHubCompany.Id,
+                Role = UserRole.Janitor
+            },
             new UserCompany
             {
                 UserId = bobSmith.Id,
                 CompanyId = innovationHubCompany.Id,
                 Role = UserRole.User
             },
+            // Startup Center users
+            new UserCompany
+            {
+                UserId = adminStartupCenter.Id,
+                CompanyId = startupCenterCompany.Id,
+                Role = UserRole.Admin
+            },
+            new UserCompany
+            {
+                UserId = staffStartupCenter.Id,
+                CompanyId = startupCenterCompany.Id,
+                Role = UserRole.Janitor
+            },
             new UserCompany
             {
                 UserId = aliceJohnson.Id,
+                CompanyId = startupCenterCompany.Id,
+                Role = UserRole.User
+            },
+            // Multi-company users - User1 belongs to Tech Co-Working and Innovation Hub
+            new UserCompany
+            {
+                UserId = multiCompanyUser1.Id,
+                CompanyId = techCoWorkingCompany.Id,
+                Role = UserRole.User
+            },
+            new UserCompany
+            {
+                UserId = multiCompanyUser1.Id,
+                CompanyId = innovationHubCompany.Id,
+                Role = UserRole.User
+            },
+            // Multi-company users - User2 belongs to Innovation Hub and Startup Center
+            new UserCompany
+            {
+                UserId = multiCompanyUser2.Id,
+                CompanyId = innovationHubCompany.Id,
+                Role = UserRole.User
+            },
+            new UserCompany
+            {
+                UserId = multiCompanyUser2.Id,
+                CompanyId = startupCenterCompany.Id,
+                Role = UserRole.User
+            },
+            // Multi-company users - User3 belongs to all three companies
+            new UserCompany
+            {
+                UserId = multiCompanyUser3.Id,
+                CompanyId = techCoWorkingCompany.Id,
+                Role = UserRole.User
+            },
+            new UserCompany
+            {
+                UserId = multiCompanyUser3.Id,
+                CompanyId = innovationHubCompany.Id,
+                Role = UserRole.User
+            },
+            new UserCompany
+            {
+                UserId = multiCompanyUser3.Id,
                 CompanyId = startupCenterCompany.Id,
                 Role = UserRole.User
             }
@@ -628,7 +829,7 @@ public class DatabaseMigrationHostedService(
 
         logger.LogInformation("Database seeding completed successfully!");
         logger.LogInformation("Seeded {CompanyCount} companies, {UserCount} users, {RoomCount} rooms, {DeskCount} desks, {ReservationCount} reservations, {DamageReportCount} damage reports",
-            3, 5, 4, desks.Count, reservations.Count, damageReports.Count);
+            3, 13, 4, desks.Count, reservations.Count, damageReports.Count);
     }
 
     private static bool IsGeneratingOpenApiDocument()
