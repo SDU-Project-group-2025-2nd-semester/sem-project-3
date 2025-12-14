@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { get, post, put, del } from "../../context/apiClient";
+import { getMyCompanies } from "../../services/companyService";
+import { getRooms } from "../../services/roomService";
+import { getDesksForRoom } from "../../services/deskService";
+import { getReservations } from "../../services/reservationService";
 
 export default function DesksManagerPage() {
     const navigate = useNavigate();
