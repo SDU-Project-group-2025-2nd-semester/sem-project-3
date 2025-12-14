@@ -6,7 +6,6 @@ namespace Backend.Services.DeskApis;
 
 public class DeskApi(IHttpClientFactory httpClientFactory, BackendContext dbContext, IHttpContextAccessor httpContextAccessor) : IDeskApi
 {
-    private readonly HttpClient defaultHttpClient = httpClientFactory.CreateClient("DeskApi");
 
     private Guid? GetCompanyIdFromContext()
     {

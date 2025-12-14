@@ -79,11 +79,12 @@ builder.Services
     .AddTransient<IUserService, UserService>()
     .AddTransient<IStatisticsService, StatisticsService>()
     .AddTransient<IReservationScheduler, ReservationScheduler>()
+    .AddTransient<IDeskLedService,DeskLedService>()
     .AddSignalR();
 
 builder.Services.AddHostedService<MqttHostedService>()
     .AddHostedService<DeskHeightPullingService>()
-    .AddHostedService<DeskLedService>();
+    .AddHostedService<DeskLedHostedService>();
 
 builder.Services.AddHttpClient("DeskApi", client =>
 {

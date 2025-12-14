@@ -1,27 +1,12 @@
 ﻿using Backend.Data.Database;
-using Backend.Services.DeskApis;
 using Backend.Services.Mqtt;
 
-namespace Backend.Services.Desks;
-
-public class DeskLedService(ILogger<DeskHeightPullingService> logger, IServiceProvider serviceProvider, IBackendMqttClient mqttClient) : BackgroundService
+namespace Backend.Services.Desks
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public class DeskLedService(ILogger<DeskLedService> logger, BackendContext dbContext, IBackendMqttClient mqttClient) : IDeskLedService
     {
-        if (IsGeneratingOpenApiDocument())
+        public async Task Run(CancellationToken stoppingToken)
         {
-            return;
-        }
-
-        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // HACK: Wait a minute before starting to allow db migrations to complete
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            using var scope = serviceProvider.CreateScope();
-
-            var deskApi = scope.ServiceProvider.GetRequiredService<IDeskApi>();
-            var dbContext = scope.ServiceProvider.GetRequiredService<BackendContext>();
-
             var desks = await dbContext.Desks.ToListAsync(stoppingToken);
             foreach (var desk in desks)
             {
@@ -47,7 +32,6 @@ public class DeskLedService(ILogger<DeskHeightPullingService> logger, IServicePr
                     logger.LogError(ex, "Error setting LED for desk {DeskId}", desk.Id);
                 }
             }
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
 }
