@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
 import { post, get } from "./apiClient";
 import { registerAuthHandlers } from "./registerAuthHandlers";
@@ -8,13 +9,15 @@ const AuthContext = createContext(null);
 
 function pickUser(serverUser) {
 	if (!serverUser) return null;
+	// derive role: prefer top-level role, otherwise use first company membership's role
+	const derivedRole = serverUser.role ?? (Array.isArray(serverUser.companyMemberships) && serverUser.companyMemberships[0]?.role) ?? null;
 	return {
 		id: serverUser.id,
 		email: serverUser.email ?? serverUser.userName,
 		userName: serverUser.userName,
 		firstName: serverUser.firstName,
 		lastName: serverUser.lastName,
-		role: serverUser.role,
+		role: derivedRole,
 		standingHeight: serverUser.standingHeight,
 		sittingHeight: serverUser.sittingHeight,
 		healthRemindersFrequency: serverUser.healthRemindersFrequency,
@@ -52,6 +55,9 @@ export function AuthProvider({ children }) {
 			setCurrentCompany(null);
 			localStorage.removeItem("currentCompanyId");
 		}
+
+		// return the initially selected company so callers can derive role synchronously
+		return initial;
 	}
 
 	const location = useLocation();
@@ -66,11 +72,12 @@ export function AuthProvider({ children }) {
 				const user = pickUser(me);
 				setCurrentUser(user);
 
-				initializeCompanies(me);
+				const initialCompany = initializeCompanies(me);
 
 				// navigate to homepage only from login/signup pages
 				if (location.pathname === "/" || location.pathname === "/signuppage") {
-					navigate(homepagePathForRole(user?.role));
+					// prefer role from selected company membership when available
+					navigate(homepagePathForRole(initialCompany?.role ?? user?.role));
 				}
 			} catch {
 				// no session
@@ -83,19 +90,20 @@ export function AuthProvider({ children }) {
 		};
 	}, []);
 
-	// Refresh current user from server (returns picked user or null)
+	// Refresh current user from server (returns picked user or null).
+	// Returns an object { user, initial } where `initial` is the selected company.
 	async function refreshCurrentUser() {
 		try {
 			setIsHydrating(true);
 			const me = await get("/Users/me");
 			const user = pickUser(me);
+			const initial = initializeCompanies(me);
 			setCurrentUser(user);
-			initializeCompanies(me);
-			return user;
+			return { user, initial };
 		} catch {
 			// Not authenticated or error – clear local state
 			setCurrentUser(null);
-			return null;
+			return { user: null, initial: null };
 		} finally {
 			setIsHydrating(false);
 		}
@@ -105,9 +113,11 @@ export function AuthProvider({ children }) {
 		await post("/auth/login", { email, password });
 
 		// Refresh user state after successful login
-		const user = await refreshCurrentUser();
+		const result = await refreshCurrentUser();
+		const user = result?.user;
+		const initial = result?.initial;
 
-		navigate(homepagePathForRole(user?.role));
+		navigate(homepagePathForRole(initial?.role ?? user?.role));
 
 		return user;
 	}
@@ -131,8 +141,8 @@ export function AuthProvider({ children }) {
 
 	// Named handlers for apiClient registration
 	async function authRefreshHandler() {
-		const u = await refreshCurrentUser();
-		return Boolean(u);
+		const res = await refreshCurrentUser();
+		return Boolean(res?.user);
 	}
 	function authLogoutHandler() {
 		logout();

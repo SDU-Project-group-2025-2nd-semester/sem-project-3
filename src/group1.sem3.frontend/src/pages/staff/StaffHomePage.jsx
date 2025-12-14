@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { get, put } from "../../context/apiClient";
+import { putDeskHeight } from "../../services/deskService";
+import { get } from "../../context/apiClient";
+import { useAuth } from "../../context/AuthContext";
 
 export default function StaffHomePage() {
-    const currentCompany = '33333333-3333-3333-3333-333333333333'; // Company ID (no spaces)
+
+    const { currentCompany } = useAuth();
+    const companyId = typeof currentCompany === "string" ? currentCompany : currentCompany?.id;
 
     const [rooms, setRooms] = useState({});
 
@@ -18,16 +22,18 @@ export default function StaffHomePage() {
     
     // Load rooms list and all desks on mount -> populate roomsMeta and rooms
     useEffect(() => {
+        if (!companyId) return;
+
         let mounted = true;
         const controller = new AbortController();
 
         (async () => {
             try {
-                const apiRooms = await get(`/${currentCompany}/Rooms`, { signal: controller.signal });
+                const apiRooms = await get(`/${companyId}/Rooms`, { signal: controller.signal });
                 if (!mounted || !Array.isArray(apiRooms)) return;
 
                 // Load all desks for the company (single request)
-                const apiDesks = await get(`/${currentCompany}/Desks`, { signal: controller.signal });
+                const apiDesks = await get(`/${companyId}/Desks`, { signal: controller.signal });
                 const allDesks = Array.isArray(apiDesks) ? apiDesks : [];
 
                 const meta = {};
@@ -75,9 +81,9 @@ export default function StaffHomePage() {
             mounted = false;
             controller.abort();
         };
-    }, [currentCompany]);
+    }, [companyId]);
 
-    // Handle damaged flag passed via navigation state (keeps previous behavior)
+    // Handle damaged flag passed via navigation state
     useEffect(() => {
         const damagedId = location.state?.damagedTableId;
         if (damagedId) {
@@ -98,6 +104,7 @@ export default function StaffHomePage() {
     // action: "raise" -> set to maxHeight, "lower" -> set to minHeight
     const handleAllTables = async (action) => {
         if (!selectedRoom) return;
+        if (!companyId) return;
         const desks = rooms[selectedRoom] ?? [];
         if (desks.length === 0) return;
 
@@ -111,25 +118,11 @@ export default function StaffHomePage() {
             [selectedRoom]: (prev[selectedRoom] ?? []).map(t => ({ ...t, status: "updating" }))
         }));
 
-        const promises = desks.map(d => {
+        // build promises using putDeskHeight service
+        const promises = desks.map((d) => {
             const height = d[targetField] ?? d.height;
-
-            // construct full payload with all relevant fields (backend expects complete desk model)
-            const payload = {
-                id: d.id,
-                readableId: d.readableId ?? (d.macAddress ? `Desk ${d.macAddress}` : null),
-                height: height,
-                minHeight: d.minHeight ?? null,
-                maxHeight: d.maxHeight ?? null,
-                macAddress: d.macAddress ?? null,
-                roomId: d.roomId ?? roomsMeta[selectedRoom]?.id ?? null,
-                companyId: d.companyId ?? currentCompany,
-                reservationIds: Array.isArray(d.reservationIds) ? d.reservationIds : []
-                // KEINE Room / Company Objekte
-            };
-
-            // Use PUT for updating existing desk
-            return put(`/${currentCompany}/Desks/${d.id}`, payload);
+            // backend expects a raw integer in the body, not an object
+            return putDeskHeight(companyId, d.id, height);
         });
 
         const results = await Promise.allSettled(promises);

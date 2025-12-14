@@ -1,5 +1,5 @@
 const BASE = (() => {
-    return "https://s3-be-int.michalvalko.eu/api";
+    return "https://s3-be-dev.michalvalko.eu/api";
 })();
 
 let refreshInProgress = null;
