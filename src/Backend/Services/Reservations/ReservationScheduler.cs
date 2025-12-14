@@ -1,6 +1,7 @@
 ﻿using Backend.Data.Database;
 using Backend.Services.Desks;
 using Hangfire;
+using Hangfire.States;
 
 namespace Backend.Services.Reservations;
 
@@ -48,7 +49,7 @@ public class ReservationScheduler(
             return;
         }
 
-        BackgroundJob.Delete(reservation.JobId);
+        backgroundJobClient.ChangeState(reservation.JobId, new DeletedState());
 
         reservation.JobId = null;
 

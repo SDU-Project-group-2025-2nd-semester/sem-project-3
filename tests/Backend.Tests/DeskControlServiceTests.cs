@@ -103,7 +103,17 @@ public class DeskControlServiceTests(DatabaseFixture fixture) : IAsyncLifetime
         await fixture.DbContext.SaveChangesAsync();
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
+    public async Task DisposeAsync()
+    {
+        // Clean up test data to avoid interference with other tests
+        fixture.DbContext.Desks.RemoveRange(
+            fixture.DbContext.Desks.Where(d => d.CompanyId == _testCompany.Id));
+        fixture.DbContext.Rooms.RemoveRange(
+            fixture.DbContext.Rooms.Where(r => r.CompanyId == _testCompany.Id));
+        fixture.DbContext.Companies.RemoveRange(
+            fixture.DbContext.Companies.Where(c => c.Id == _testCompany.Id));
+        await fixture.DbContext.SaveChangesAsync();
+    }
 
     [Fact]
     public async Task GetCurrentDeskHeightAsync_ShouldReturnHeight_WhenDeskExists()
