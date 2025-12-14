@@ -142,6 +142,6 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         return await dbContext.Desks
             .FirstOrDefaultAsync(d =>
                 d.CompanyId == companyId &&
-                d.MacAddress == macAddress);
+                d.RpiMacAddress == macAddress);
     }
 }    
