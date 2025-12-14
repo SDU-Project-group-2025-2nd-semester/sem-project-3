@@ -1,15 +1,22 @@
-using Backend.Data;
+using Backend;
+using Backend.Auth;
+using Backend.Data.Database;
 using Backend.Hubs;
 using Backend.Services;
+using Backend.Services.DamageReports;
+using Backend.Services.DeskApis;
+using Backend.Services.Desks;
+using Backend.Services.Mqtt;
+using Backend.Services.Reservations;
+using Backend.Services.Rooms;
+using Backend.Services.Statistics;
+using Backend.Services.Users;
 using Hangfire;
-using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Reflection.Metadata;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,7 +63,7 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddHttpContextAccessor();
 
 // Add Hangfire services
-if (!Bullshit.IsGeneratingOpenApiDocument())
+if (IsGeneratingOpenApiDocument())
 {
     builder.Services.AddHangfire(config => config
         .UseSimpleAssemblyNameTypeSerializer()
@@ -72,14 +79,14 @@ builder.Services
     .AddTransient<IDamageReportService, DamageReportService>()
     .AddTransient<IReservationService, ReservationService>()
     .AddTransient<IDeskApi, DeskApi>()
-    .AddSingleton<IBackendMqttClient,BackendMqttClient>()
+    .AddSingleton<IBackendMqttClient, BackendMqttClient>()
     .AddTransient<IRoomService, RoomService>()
-    .AddTransient<IDeskControlService,DeskControlService>()
+    .AddTransient<IDeskControlService, DeskControlService>()
     .AddTransient<IDeskService, DeskService>()
-    .AddTransient<IUserService,UserService>()
+    .AddTransient<IUserService, UserService>()
     .AddTransient<IStatisticsService, StatisticsService>()
-    .AddTransient<IReservationScheduler,ReservationScheduler>()
-    .AddSignalR();;
+    .AddTransient<IReservationScheduler, ReservationScheduler>()
+    .AddSignalR(); ;
 
 builder.Services.AddHostedService<MqttHostedService>()
     .AddHostedService<DeskHeightPullingService>()
@@ -107,7 +114,8 @@ builder.Services.AddCors(options =>
         // Get allowed origins from configuration (environment variables)
         var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?
             .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            ?? new[] { "https://s3-fe-main.michalvalko.eu", "https://s3-fe-int.michalvalko.eu", "https://s3-fe-dev.michalvalko.eu", "http://localhost:5173" };
+            ?? ["https://s3-fe-main.michalvalko.eu", "https://s3-fe-int.michalvalko.eu", "https://s3-fe-dev.michalvalko.eu", "http://localhost:5173"
+            ];
 
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
@@ -141,19 +149,15 @@ builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
 var app = builder.Build();
 
-if (!Bullshit.IsGeneratingOpenApiDocument())
+if (IsGeneratingOpenApiDocument())
 {
-    
+    // Add Hangfire dashboard (optional, for monitoring)
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new AllowAllAuthorizationFilter()]
+    });
 
-// Add Hangfire dashboard (optional, for monitoring)
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
-{
-    Authorization = new[] { new MyAuthorizationFilter() }
-});
-
-
-BackgroundJob.Enqueue(() => Console.WriteLine("Simple!"));
-
+    BackgroundJob.Enqueue(() => Console.WriteLine("Simple!"));
 }
 
 if (app.Environment.IsDevelopment())
@@ -181,16 +185,3 @@ app.MapControllers();
 app.MapHub<DeskHub>("/deskHub");
 
 app.Run();
-
-
-
-public class MyAuthorizationFilter : IDashboardAuthorizationFilter
-{
-    public bool Authorize(DashboardContext context)
-    {
-        var httpContext = context.GetHttpContext();
-
-        // Allow all authenticated users to see the Dashboard (potentially dangerous).
-        return true;
-    }
-}

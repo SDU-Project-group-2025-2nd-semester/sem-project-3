@@ -1,8 +1,8 @@
-﻿using Backend.Data;
-using Backend.Services;
+﻿using Backend.Auth;
+using Backend.Data.Database;
+using Backend.Services.Reservations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
 
@@ -23,15 +23,6 @@ public class ReservationController(IReservationService reservationService, Backe
     {
         return Ok(await reservationService.GetReservations(companyId, userId, deskId, startDate, endDate));
     }
-
-    /* [HttpGet("me")]
-    public async Task<ActionResult<List<Reservation>>> GetMyReservations(Guid companyId)
-    {
-
-        var userId = User.GetUserId();
-
-        return Ok(await reservationService.GetReservations(companyId, userId));
-    } */
  
     [HttpGet("me")]
     [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]

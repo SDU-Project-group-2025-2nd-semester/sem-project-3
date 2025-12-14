@@ -1,8 +1,8 @@
-﻿using Backend.Data;
+﻿using Backend.Auth;
+using Backend.Data.Database;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Controllers;
 

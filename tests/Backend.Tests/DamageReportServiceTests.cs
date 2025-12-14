@@ -1,5 +1,6 @@
 using Backend.Data;
-using Backend.Services;
+using Backend.Data.Database;
+using Backend.Services.DamageReports;
 
 namespace Backend.Tests;
 
@@ -12,7 +13,7 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
     private User _testUser = null!;
     private User _testResolver = null!;
     private Desk _testDesk = null!;
-    private Rooms _testRoom = null!;
+    private Room _testRoom = null!;
 
 
     public async Task InitializeAsync()
@@ -78,7 +79,7 @@ public class DamageReportServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             Role = UserRole.Admin
         });
 
-        _testRoom = new Rooms
+        _testRoom = new Room
         {
             Id = Guid.NewGuid(),
             DeskIds = [],
