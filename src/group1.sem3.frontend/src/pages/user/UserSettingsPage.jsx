@@ -72,7 +72,6 @@ export default function UserSettingsPage() {
         }
     }, [userHeight]);
 
-    // If currentUser isn't present, fall back to fetching /Users/me once
     useEffect(() => {
         if (currentUser) {
             applyUserToState(currentUser);
@@ -82,7 +81,7 @@ export default function UserSettingsPage() {
         let mounted = true;
         (async () => {
             try {
-                const me = await get("/Users/me");
+                const me = await refreshCurrentUser();
                 if (!mounted || !me) return;
                 applyUserToState(me);
             } catch {
@@ -91,7 +90,7 @@ export default function UserSettingsPage() {
         })();
 
         return () => { mounted = false; };
-    }, [currentUser]);
+    }, [currentUser, refreshCurrentUser, applyUserToState]);
 
     async function handleSave() {
         try {
@@ -149,10 +148,10 @@ export default function UserSettingsPage() {
                 await refreshCurrentUser();
             }
 
-            alert("Profile gespeichert.");
+            alert("Profile saved.");
         } catch (err) {
             console.error(err);
-            alert("Fehler beim Speichern des Profils.");
+            alert("Error while saving changes.");
         }
     }
 

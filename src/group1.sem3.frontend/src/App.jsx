@@ -18,6 +18,7 @@ import DeskPage from "./pages/user/DeskPage";
 import DamageReportPage from "./pages/staff/DamageReportPage";
 import Sidebar from "./components/Sidebar";
 import { useState } from "react";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
 
@@ -32,22 +33,23 @@ export default function App() {
                     <Routes>
                         <Route path="/" element={<SignInPage />} />
                         <Route path="/signuppage" element={<SignUpPage />} />
-                        <Route path="/user/homepage" element={<UserHomePage />} />
-                        <Route path="/staff/homepage" element={<StaffHomePage />} />
-                        <Route path="/user/settings" element={<UserSettingsPage />} />
-                        <Route path="/staff/settings" element={<StaffSettingsPage />} />
-                        <Route path="/admin/settings" element={<AdminSettingsPage />} />
-                        <Route path="/user/statistics" element={<UserStatisticsPage />} />
-                        <Route path="/user/booking" element={<BookingPage />} />
-                        <Route path="/admin/homepage" element={<UsersManagerPage />} />
-                        <Route path="/admin/usersManager" element={<UsersManagerPage />} />
-                        <Route path="/admin/damagesManager" element={<DamagesManagerPage />} />
-                        <Route path="/admin/desksManager" element={<DesksManagerPage />} />
-                        <Route path="/admin/healthStatsManager" element={<HealthStatsManagerPage />} />
-                        <Route path="/user/scan" element={<Scanning />} />
-                        <Route path="/user/reservation/:reservationId" element={<DeskPage />} />
-                        <Route path="/staff/damagereport" element={<DamageReportPage />} />
-                        <Route path="/user/damagereport" element={<DamageReportPage />} />
+                        <Route path="/user/homepage" element={<ProtectedRoute><UserHomePage /></ProtectedRoute>} />
+                        <Route path="/staff/homepage" element={<ProtectedRoute roles={[1,2]}><StaffHomePage /></ProtectedRoute>} />
+                        <Route path="/user/settings" element={<ProtectedRoute><UserSettingsPage /></ProtectedRoute>} />
+                        <Route path="/staff/settings" element={<ProtectedRoute roles={[1,2]}><StaffSettingsPage /></ProtectedRoute>} />
+                        <Route path="/admin/settings" element={<ProtectedRoute roles={[2]}><AdminSettingsPage /></ProtectedRoute>} />
+                        <Route path="/user/booking" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+                        <Route path="/admin/homepage" element={<ProtectedRoute roles={[2]}><UsersManagerPage /></ProtectedRoute>} />
+                        <Route path="/admin/usersManager" element={<ProtectedRoute roles={[2]}><UsersManagerPage /></ProtectedRoute>} />
+                        <Route path="/admin/damagesManager" element={<ProtectedRoute roles={[2]}><DamagesManagerPage /></ProtectedRoute>} />
+                        <Route path="/admin/desksManager" element={<ProtectedRoute roles={[2]}><DesksManagerPage /></ProtectedRoute>} />
+                        <Route path="/admin/healthStatsManager" element={<ProtectedRoute roles={[2]}><HealthStatsManagerPage /></ProtectedRoute>} />
+                        <Route path="/user/scan" element={<ProtectedRoute><Scanning /></ProtectedRoute>} />
+                        <Route path="/user/desk" element={<ProtectedRoute><DeskPage /></ProtectedRoute>} />
+                        <Route path="/staff/damagereport" element={<ProtectedRoute roles={[1,2]}><DamageReportPage /></ProtectedRoute>} />
+                        <Route path="/user/damagereport" element={<ProtectedRoute><DamageReportPage /></ProtectedRoute>} />
+                        <Route path="/user/statistics" element={<ProtectedRoute><UserStatisticsPage /></ProtectedRoute>} />
+                        <Route path="/user/reservation/:reservationId" element={<ProtectedRoute><DeskPage /></ProtectedRoute>} />
                     </Routes>
                 </main>
             </div>

@@ -548,18 +548,26 @@ public class DatabaseMigrationHostedService(
                 DeskId = desks[5].Id,
                 CompanyId = innovationHubCompany.Id
             },
-            //new Reservation
-            //{
-            //    Id = Guid.Parse("f6666666-6666-6666-6666-666666666666"),
-            //    Start = now.AddDays(5).Date.AddHours(8),
-            //    End = now.AddDays(5).Date.AddHours(12),
-            //    UserId = aliceJohnson.Id,
-            //    DeskId = desks[7].Id,
-            //    CompanyId = startupCenterCompany.Id
-            //}
+            // NEW: Health reminder test reservation
+            // Jane Doe (Medium frequency = 30 min) has been at desk D-103 for 35+ minutes without changing height
+            new Reservation
+            {
+                Id = Guid.Parse("f6666666-6666-6666-6666-666666666666"),
+                Start = now.AddMinutes(-35), // Started 35 minutes ago
+                End = now.AddHours(2), // Ends in 2 hours
+                UserId = janeDoe.Id,
+                DeskId = desks[2].Id, // D-103
+                CompanyId = techCoWorkingCompany.Id
+            }
         };
 
         context.Reservations.AddRange(reservations);
+        await context.SaveChangesAsync();
+        
+        // Set LastHeightChangeTime for the desk with active health reminder test reservation
+        // Jane Doe has Medium frequency (30 min), so set it to 35 minutes ago to trigger reminder on next check
+        desks[2].LastHeightChangeTime = now.AddMinutes(-35);
+        desks[2].NeedsHealthReminder = false; // Not yet sent, will be sent on next check
         await context.SaveChangesAsync();
 
         // Create Damage Reports

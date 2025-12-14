@@ -93,7 +93,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -119,21 +120,42 @@
         },
         "responses": {
           "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Company/publiclyAccessible": {
+      "get": {
+        "tags": [
+          "Company"
+        ],
+        "responses": {
+          "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "boolean"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "boolean"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "boolean"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
                 }
               }
             }
@@ -1665,13 +1687,16 @@
       },
       "CreateDamageReportDto": {
         "required": [
-          "description",
+          "issue",
           "deskId"
         ],
         "type": "object",
         "properties": {
           "description": {
             "maxLength": 512,
+            "type": "string"
+          },
+          "issue": {
             "type": "string"
           },
           "deskId": {
@@ -1706,6 +1731,9 @@
           },
           "description": {
             "maxLength": 512,
+            "type": "string"
+          },
+          "issue": {
             "type": "string"
           },
           "submitTime": {
@@ -1776,6 +1804,14 @@
           },
           "metadata": {
             "$ref": "#/components/schemas/DeskMetadata"
+          },
+          "lastHeightChangeTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "needsHealthReminder": {
+            "type": "boolean"
           },
           "roomId": {
             "type": "string",
@@ -1866,6 +1902,18 @@
           },
           "daysOfTheWeek": {
             "$ref": "#/components/schemas/DaysOfTheWeek"
+          }
+        }
+      },
+      "PublicCompanyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
           }
         }
       },

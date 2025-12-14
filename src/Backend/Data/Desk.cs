@@ -51,6 +51,16 @@ public class Desk
     [Column(TypeName = "jsonb")]
     public DeskMetadata Metadata { get; set; } = new();
 
+    /// <summary>
+    /// Last time the desk height was changed significantly (for health reminder tracking)
+    /// </summary>
+    public DateTime? LastHeightChangeTime { get; set; }
+
+    /// <summary>
+    /// Indicates if a health reminder has been sent and user hasn't responded yet
+    /// </summary>
+    public bool NeedsHealthReminder { get; set; }
+
     public Guid RoomId { get; set; }
 
     public Guid CompanyId { get; set; }
