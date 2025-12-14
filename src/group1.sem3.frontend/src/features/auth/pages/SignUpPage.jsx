@@ -1,6 +1,10 @@
 ﻿import { useState } from "react";
 import { useAuth } from "../AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import Card from "@shared/ui/Card";
+import Input from "@shared/ui/Input";
+import Button from "@shared/ui/Button";
+import NotificationBanner from "@shared/ui/NotificationBanner";
 
 export default function SignUpPage() {
     const { signup } = useAuth();
@@ -10,7 +14,6 @@ export default function SignUpPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
 
     // Passwort-Regeln (aus Backend)
     const passwordRules = [
@@ -50,7 +53,6 @@ export default function SignUpPage() {
 
         setLoading(true);
         try {
-            setLoading(true);
             await signup({ firstName, lastName, email, password });
         } catch (err) {
             setError(err?.message || "Error on registration.");
@@ -73,65 +75,47 @@ export default function SignUpPage() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background px-4">
-            <div className="w-full max-w-md sm:max-w-lg md:max-w-xl p-4 sm:p-6 md:p-8 bg-white rounded-2xl shadow">
-
+            <Card>
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-6 text-primary">
                     Welcome!
                 </h2>
 
-                {error && <div className="text-red-500 mb-2 text-sm text-center">{error}</div>}
+                {error && <NotificationBanner type="error">{error}</NotificationBanner>}
 
                 <form className="space-y-3 sm:space-y-5 md:space-y-6" onSubmit={handleSubmit}>
-                    <InputField id="firstname" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" />
-                    <InputField id="lastname" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" />
-                    <InputField id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-                    <InputField id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+                    <div>
+                        <label className="block mb-1 text-sm font-semibold text-primary">First Name</label>
+                        <Input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" />
+                    </div>
+                    <div>
+                        <label className="block mb-1 text-sm font-semibold text-primary">Last Name</label>
+                        <Input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" />
+                    </div>
+                    <div>
+                        <label className="block mb-1 text-sm font-semibold text-primary">Email</label>
+                        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+                    </div>
+                    <div>
+                        <label className="block mb-1 text-sm font-semibold text-primary">Password</label>
+                        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+                    </div>
 
                     {/* Password requirements */}
                     <div className="text-xs text-gray-600 space-y-1">
                         {passwordRules.map(rule => renderRule(rule, lastChecks))}
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-accent text-white font-semibold py-2 sm:py-2.5 md:py-3 rounded disabled:opacity-60 transition-colors"
-                    >
+                    <Button type="submit" className="w-full" variant="primary" disabled={loading}>
                         {loading ? "Registering…" : "Register"}
-                    </button>
+                    </Button>
                 </form>
 
                 <div className="mt-3 sm:mt-4 text-center">
-                    <Link
-                        to="/"
-                        className="text-accent font-semibold text-sm sm:text-base hover:underline"
-                    >
+                    <Link to="/" className="text-accent font-semibold text-sm sm:text-base hover:underline">
                         Login
                     </Link>
                 </div>
-
-            </div>
+            </Card>
         </div>
     );
 }
-
-const InputField = ({ id, type, value, onChange, placeholder }) => (
-    <div>
-        <label className={labelClasses} htmlFor={id}>
-            {placeholder}
-        </label>
-        <input
-            id={id}
-            type={type}
-            className={inputClasses}
-            placeholder={placeholder}
-            value={value}
-            onChange={onChange}
-            required
-        />
-    </div>
-);
-
-
-const inputClasses = "w-full border border-secondary rounded px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 outline-none focus:ring-2 focus:ring-accent bg-background text-primary";
-const labelClasses = "block mb-1 text-sm font-semibold text-primary";

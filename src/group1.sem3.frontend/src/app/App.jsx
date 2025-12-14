@@ -1,5 +1,5 @@
-import Header from "../shared/Header";
-import Sidebar from "../shared/Sidebar";
+import Header from "../shared/ui/Header";
+import Sidebar from "../shared/ui/Sidebar";
 import { useState } from "react";
 import AppRoutes from "./routes";
 

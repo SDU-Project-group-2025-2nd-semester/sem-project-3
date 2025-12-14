@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../features/auth/AuthContext";
+import { useAuth } from "@features/auth/AuthContext";
 
 export default function ProtectedRoute({ children, roles } = {}) {
   const { isHydrating, isAuthenticated, currentUser } = useAuth();
@@ -10,7 +10,7 @@ export default function ProtectedRoute({ children, roles } = {}) {
     // show a minimal loading state instead of rendering nothing
     return (
       <div className="min-h-[200px] flex items-center justify-center py-8">
-        <div className="text-gray-600">Checking authentication…</div>
+        <div className="text-gray-600">Checking authentication...</div>
       </div>
     );
   }

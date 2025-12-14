@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../features/auth/AuthContext";
+import { useAuth } from "@features/auth/AuthContext";
 import Icon from "@reacticons/bootstrap-icons";
 
 export default function Sidebar({ isOpen, onClose }) {

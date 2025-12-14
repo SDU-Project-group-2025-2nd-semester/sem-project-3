@@ -15,7 +15,7 @@ import HealthStatsManagerPage from "@features/admin/pages/HealthStatsManagerPage
 import Scanning from "@features/user/pages/Scanning";
 import DeskPage from "@features/user/pages/DeskPage";
 import DamageReportPage from "@features/staff/pages/DamageReportPage";
-import ProtectedRoute from "@shared/ProtectedRoute";
+import ProtectedRoute from "@shared/ui/ProtectedRoute";
 
 export default function AppRoutes() {
  return (
