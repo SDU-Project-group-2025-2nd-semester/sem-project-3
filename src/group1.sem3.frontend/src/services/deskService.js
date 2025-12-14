@@ -1,4 +1,4 @@
-import { get, del, put } from "../context/apiClient";
+import { get, del, put, post } from "../context/apiClient";
 
 export async function getDeskById(companyId, deskId, opts) {
  return get(`/${companyId}/Desks/${deskId}`, opts);
@@ -18,4 +18,12 @@ export async function putDeskHeight(companyId, deskId, opts) {
 
 export async function deleteDesk(companyId, deskId) {
  return del(`/${companyId}/Desks/${deskId}`);
+}
+
+export async function createDesk(companyId, payload) {
+ return post(`/${companyId}/Desks`, payload);
+}
+
+export async function getNonAdoptedDesks(companyId) {
+ return get(`/${companyId}/desks/not-adopted`);
 }

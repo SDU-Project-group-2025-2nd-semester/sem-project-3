@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { get, post, put, del } from "../../context/apiClient";
-import { getMyCompanies } from "../../services/companyService";
-import { getRooms } from "../../services/roomService";
-import { getDesksForRoom } from "../../services/deskService";
-import { getReservations } from "../../services/reservationService";
+import { getMyCompanies, updateSimulator, getSimulator } from "../../services/companyService";
+import { getRooms, createRoom, updateRoom } from "../../services/roomService";
+import { getDesksForRoom, createDesk, deleteDesk, getNonAdoptedDesks } from "../../services/deskService";
+import { getReservations, cancelReservation } from "../../services/reservationService";
 
 function Simulator({
     currentSimulatorLink,
@@ -121,7 +120,6 @@ function Simulator({
     );
 }
 
-
 export default function DesksManagerPage() {
     const navigate = useNavigate();
 
@@ -230,7 +228,7 @@ export default function DesksManagerPage() {
         try {
             setLoadingUnadopted(true);
             setError(null);
-            const macAddresses = await get(`/${companyId}/desks/not-adopted`);
+            const macAddresses = await getNonAdoptedDesks(companyId);
             setUnadoptedDesks(macAddresses || []);
         } catch (error) {
             console.error('Error fetching unadopted desks:', error);
@@ -258,7 +256,7 @@ export default function DesksManagerPage() {
                 newDesk.rpiMacAddress = rpiMacAddress.trim();
             }
 
-            await post(`/${companyId}/desks`, newDesk);
+            await createDesk(companyId, newDesk);
             await fetchUnadoptedDesks(); // Refresh the list
             alert('Desk adopted successfully!');
         } catch (error) {
@@ -272,7 +270,7 @@ export default function DesksManagerPage() {
     // Simulator
     const fetchSimulatorSettings = async () => {
         try {
-            const settings = await get(`/Company/${companyId}/simulator`);
+            const settings = await getSimulator(companyId);
             setCurrentSimulatorLink(settings.simulatorLink || null);
         } catch (error) {
             if (error.status !== 404) {
@@ -369,7 +367,7 @@ export default function DesksManagerPage() {
                 CompanyId: companyId
             };
 
-            const createdRoom = await post(`/${companyId}/Rooms`, newRoom);
+            const createdRoom = await createRoom(companyId, newRoom);
             await fetchInitialData();
             handleCancelNewRoom();
             setActiveRoom(createdRoom.id);
@@ -449,7 +447,7 @@ export default function DesksManagerPage() {
                 Company: null
             };
 
-            await put(`/${companyId}/rooms/${currentRoom.id}`, updatedRoom);
+            await updateRoom(companyId, currentRoom.id, updatedRoom);
             await fetchInitialData();
             setEditingHours(false);
             alert('Room schedule updated successfully!');
@@ -535,7 +533,7 @@ export default function DesksManagerPage() {
                 return;
             }
 
-            await del(`/${companyId}/reservation/${activeReservation.id}`);
+            await cancelReservation(companyId, activeReservation.id);
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
             console.error('Error canceling booking:', error);
@@ -549,7 +547,7 @@ export default function DesksManagerPage() {
         }
 
         try {
-            await del(`/${companyId}/desks/${deskId}`);
+            await deleteDesk(companyId, deskId);
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
             console.error('Error deleting desk:', error);
