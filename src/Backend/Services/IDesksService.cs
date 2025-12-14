@@ -13,8 +13,8 @@ public interface IDeskService
     Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, UpdateDeskDto updated);
     Task<bool> UpdateDeskHeightAsync(Guid companyId, Guid deskId, int newHeight);
     Task<bool> DeleteDeskAsync(Guid companyId, Guid deskId);
-
     Task<List<string>> GetNotAdoptedDesks(Guid companyId);
+    Task<Desk?> GetDeskByMacAsync(Guid companyId, string macAddress);
 }
 
 class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskApi deskApi, IDeskControlService deskControlService) : IDeskService
@@ -190,5 +190,13 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         }
 
         return notAdoptedDesks;
+    }
+    
+    public async Task<Desk?> GetDeskByMacAsync(Guid companyId, string macAddress)
+    {
+        return await dbContext.Desks
+            .FirstOrDefaultAsync(d =>
+                d.CompanyId == companyId &&
+                d.RpiMacAddress == macAddress);
     }
 }    
