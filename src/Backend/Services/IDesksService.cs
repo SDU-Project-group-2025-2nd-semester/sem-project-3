@@ -1,5 +1,6 @@
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Backend.Services;
 
@@ -10,12 +11,13 @@ public interface IDeskService
     public Task<Desk?> GetDeskAsync(Guid companyId, Guid deskId);
     Task<Desk> CreateDeskAsync(Guid companyId, Desk desk);
     Task<bool> UpdateDeskAsync(Guid companyId, Guid deskId, UpdateDeskDto updated);
+    Task<bool> UpdateDeskHeightAsync(Guid companyId, Guid deskId, int newHeight);
     Task<bool> DeleteDeskAsync(Guid companyId, Guid deskId);
 
     Task<List<string>> GetNotAdoptedDesks(Guid companyId);
 }
 
-class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskApi deskApi) : IDeskService
+class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskApi deskApi, IDeskControlService deskControlService) : IDeskService
 {
     public async Task<List<Desk>> GetAllDesksAsync(Guid companyId)
     {
@@ -71,16 +73,37 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
         if (existing is null)
             return false;
 
-        existing.Height = updated.Height;
+        //existing.Height = updated.Height; It's updated via desk control service
         existing.MinHeight = updated.MinHeight;
         existing.MaxHeight = updated.MaxHeight;
         existing.RoomId = updated.RoomId;
         existing.ReservationIds = updated.ReservationIds;
 
         await dbContext.SaveChangesAsync();
+
+        if (existing.Height != updated.Height)
+        {
+            await deskControlService.SetDeskHeightAsync(deskId, updated.Height);
+        }
+
         return true;
     }
-    
+
+    public async Task<bool> UpdateDeskHeightAsync(Guid companyId, Guid deskId, int newHeight)
+    {
+        var existing = await dbContext.Desks.FirstOrDefaultAsync(d => d.CompanyId == companyId && d.Id == deskId);
+
+        if (existing is null)
+            return false;
+
+        if (existing.Height != newHeight)
+        {
+            await deskControlService.SetDeskHeightAsync(deskId, newHeight);
+        }
+
+        return true;
+    }
+
     public async Task<bool> DeleteDeskAsync(Guid companyId, Guid deskId)
     {
         var desk = await dbContext.Desks.FirstOrDefaultAsync(d => d.CompanyId == companyId && d.Id == deskId);
@@ -95,7 +118,9 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
 
     public async Task<List<string>> GetNotAdoptedDesks(Guid companyId)
     {
-        var desks = await deskApi.GetAllDesks();
+        // DeskApi will automatically get companyId from HttpContext route when called from controller
+        // Pass null to let it auto-detect, or pass companyId explicitly for background services
+        var desks = await deskApi.GetAllDesks(null);
 
         List<string> notAdoptedDesks = [];
 

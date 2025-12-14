@@ -6,7 +6,7 @@ namespace Backend.Data;
 public class Rooms
 {
     public Guid Id { get; set; }
-    
+
     public string ReadableId { get; set; } = default!;
 
     public List<Guid> DeskIds { get; set; }
@@ -19,10 +19,10 @@ public class Rooms
     #region Navigation Properties - Ignored in JSON
 
     [JsonIgnore]
-    public Company Company { get; set; }
+    public Company? Company { get; set; }
 
     [JsonIgnore]
-    public List<Desk> Desks { get; set; }
+    public List<Desk>? Desks { get; set; }
 
     #endregion
 }

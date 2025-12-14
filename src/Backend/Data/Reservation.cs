@@ -27,6 +27,11 @@ public class Reservation
     [JsonIgnore]
     public Desk Desk { get; set; }
 
+    /// <summary>
+    /// Automatic height adjustment job ID
+    /// </summary>
+    public string? JobId { get; set; }
+
     #endregion
 
     public static implicit operator Reservation(CreateReservationDto dto) =>

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Services;
 
-public class ReservationService(BackendContext dbContext) : IReservationService
+public class ReservationService(BackendContext dbContext, IReservationScheduler scheduler) : IReservationService
 {
     public async Task<object> GetReservations(Guid companyId, string? userId, Guid? deskId = null,
         DateTime? startDate = null, DateTime? endDate = null)
@@ -44,6 +44,8 @@ public class ReservationService(BackendContext dbContext) : IReservationService
 
     public async Task DeleteReservation(Reservation reservation)
     {
+        await scheduler.CancelScheduledAdjustment(reservation.Id);
+
         dbContext.Reservations.Remove(reservation);
 
         await dbContext.SaveChangesAsync();
@@ -68,6 +70,8 @@ public class ReservationService(BackendContext dbContext) : IReservationService
         reservation.UserId = userId;
 
         dbContext.Reservations.Add(reservation);
+
+        await scheduler.ScheduleDeskAdjustment(reservation);
 
         await dbContext.SaveChangesAsync();
 

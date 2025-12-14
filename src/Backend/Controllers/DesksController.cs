@@ -40,6 +40,8 @@ public class DesksController(IDeskService deskService) : ControllerBase
         return Ok(desk);
     }
 
+    
+
     [HttpPost]
     [RequireRole(UserRole.Admin)]
     public async Task<ActionResult<Desk>> CreateDesk(Guid companyId, [FromBody] Desk desk)
@@ -53,6 +55,17 @@ public class DesksController(IDeskService deskService) : ControllerBase
     public async Task<IActionResult> UpdateDesk(Guid companyId, Guid deskId, [FromBody] UpdateDeskDto updated)
     {
         var updatedSuccessfully = await deskService.UpdateDeskAsync(companyId, deskId, updated);
+
+        if (!updatedSuccessfully)
+            return NotFound();
+
+        return NoContent();
+    }
+
+    [HttpPut("{deskId}/height")]
+    public async Task<IActionResult> UpdateHeightDesk(Guid companyId, Guid deskId, [FromBody] int newHeight)
+    {
+        var updatedSuccessfully = await deskService.UpdateDeskHeightAsync(companyId, deskId, newHeight);
 
         if (!updatedSuccessfully)
             return NotFound();
@@ -81,7 +94,18 @@ public class DesksController(IDeskService deskService) : ControllerBase
     [RequireRole(UserRole.Admin, UserRole.Janitor)]
     public async Task<ActionResult<List<string>>> GetNotAdoptedDesks(Guid companyId)
     {
-        var desks = await deskService.GetNotAdoptedDesks(companyId);
-        return Ok(desks);
+        try
+        {
+            var desks = await deskService.GetNotAdoptedDesks(companyId);
+            return Ok(desks);
+        }
+        catch (SimulatorConfigurationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (SimulatorConnectionException ex)
+        {
+            return StatusCode(502, new { error = ex.Message });
+        }
     }
 }
