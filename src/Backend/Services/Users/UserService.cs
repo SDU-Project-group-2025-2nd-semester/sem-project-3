@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Backend.Services.Users;
 
-class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUserService
+public class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUserService
 {
     public async Task<User?> GetUserAsync(string userId)
     {

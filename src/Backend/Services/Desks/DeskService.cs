@@ -4,7 +4,7 @@ using Backend.Services.DeskApis;
 
 namespace Backend.Services.Desks;
 
-class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskApi deskApi, IDeskControlService deskControlService) : IDeskService
+public class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskApi deskApi, IDeskControlService deskControlService) : IDeskService
 {
     public async Task<List<Desk>> GetAllDesksAsync(Guid companyId)
     {
@@ -186,4 +186,4 @@ class DeskService(ILogger<DeskService> logger, BackendContext dbContext, IDeskAp
                 d.CompanyId == companyId &&
                 d.RpiMacAddress == macAddress);
     }
-}    
+}

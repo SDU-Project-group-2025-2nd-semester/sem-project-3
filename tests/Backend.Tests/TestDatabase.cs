@@ -1,5 +1,6 @@
 using Backend.Data.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
 
 namespace Backend.Tests;
@@ -25,6 +26,8 @@ public class DatabaseFixture : IAsyncLifetime
 
     public BackendDbContextFactory DbContextFactory { get; private set; } = null!;
 
+    public ILoggerFactory LoggerFactory { get; private set; } = null!;
+
     public async Task InitializeAsync()
     {
         await _postgreSqlContainer.StartAsync();
@@ -43,11 +46,17 @@ public class DatabaseFixture : IAsyncLifetime
         DbContextFactory = new BackendDbContextFactory(dbContextOptions);
         DbContext = DbContextFactory.CreateDbContext();
 
+        LoggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
+        {
+            builder.AddConsole();
+        });
+
         await EnsureDatabaseCreatedAsync(DbContext);
     }
 
     public async Task DisposeAsync()
     {
+        LoggerFactory?.Dispose();
         await _postgreSqlContainer.StopAsync();
     }
 

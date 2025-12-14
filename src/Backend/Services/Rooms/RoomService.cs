@@ -3,7 +3,7 @@ using Backend.Services.Desks;
 
 namespace Backend.Services.Rooms;
 
-class RoomService(ILogger<RoomService> logger, BackendContext dbContext, IDeskControlService deskControlService) : IRoomService
+public class RoomService(ILogger<RoomService> logger, BackendContext dbContext, IDeskControlService deskControlService) : IRoomService
 {
     public async Task<List<Room>> GetAllRoomsAsync(Guid companyId)
     {
