@@ -125,45 +125,28 @@
         }
       }
     },
-    "/api/Company/publiclyAccessible": {
+    "/api/Company/{companyId}/simulator": {
       "get": {
         "tags": [
           "Company"
         ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PublicCompanyDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PublicCompanyDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PublicCompanyDto"
-                  }
-                }
-              }
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
         }
-      }
-    },
-    "/api/Company/{companyId}/simulator": {
+      },
       "put": {
         "tags": [
           "Company"
@@ -202,6 +185,44 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Company/publiclyAccessible": {
+      "get": {
+        "tags": [
+          "Company"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -524,17 +545,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/CreateDeskDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/CreateDeskDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/CreateDeskDto"
               }
             }
           },
@@ -855,6 +876,57 @@
         }
       }
     },
+    "/api/{companyId}/Desks/from-mac/{macAddress}": {
+      "get": {
+        "tags": [
+          "Desks"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "macAddress",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/{companyId}/Reservation": {
       "get": {
         "tags": [
@@ -1148,7 +1220,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/Room"
                   }
                 }
               },
@@ -1156,7 +1228,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/Room"
                   }
                 }
               },
@@ -1164,7 +1236,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/Room"
                   }
                 }
               }
@@ -1191,17 +1263,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             }
           },
@@ -1213,17 +1285,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               }
             }
@@ -1262,17 +1334,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               }
             }
@@ -1307,17 +1379,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             }
           },
@@ -1411,6 +1483,192 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/{companyId}/Statistics/company": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyStatsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyStatsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyStatsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{companyId}/Statistics/rooms/{roomId}": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomStatsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomStatsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomStatsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{companyId}/Statistics/desks/{deskId}": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "deskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskStatsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskStatsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskStatsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{companyId}/Statistics/users/{userId}": {
+      "get": {
+        "tags": [
+          "Statistics"
+        ],
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStatsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStatsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStatsDto"
+                }
+              }
+            }
           }
         }
       }
@@ -1644,7 +1902,7 @@
           "rooms": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Rooms"
+              "$ref": "#/components/schemas/Room"
             }
           },
           "secretInviteCode": {
@@ -1674,6 +1932,48 @@
           }
         }
       },
+      "CompanyStatsDto": {
+        "required": [
+          "companyId",
+          "roomsCount",
+          "desksCount",
+          "occupiedDesksNow",
+          "activeReservationsNow",
+          "reservationsToday",
+          "openDamageReports"
+        ],
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "desksCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "occupiedDesksNow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeReservationsNow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reservationsToday": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "openDamageReports": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "Config": {
         "type": "object",
         "properties": {
@@ -1700,6 +2000,28 @@
             "type": "string"
           },
           "deskId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateDeskDto": {
+        "required": [
+          "macAddress",
+          "roomId"
+        ],
+        "type": "object",
+        "properties": {
+          "macAddress": {
+            "maxLength": 17,
+            "type": "string"
+          },
+          "rpiMacAddress": {
+            "maxLength": 17,
+            "type": "string",
+            "nullable": true
+          },
+          "roomId": {
             "type": "string",
             "format": "uuid"
           }
@@ -1830,6 +2152,33 @@
           }
         }
       },
+      "DeskActiveReservationDto": {
+        "required": [
+          "reservationId",
+          "userId",
+          "start",
+          "end"
+        ],
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "nullable": true
+      },
       "DeskMetadata": {
         "type": "object",
         "properties": {
@@ -1862,6 +2211,67 @@
           }
         }
       },
+      "DeskStatsDto": {
+        "required": [
+          "companyId",
+          "deskId",
+          "deskReadableId",
+          "roomId",
+          "height",
+          "minHeight",
+          "maxHeight",
+          "activationsCounter",
+          "sitStandCounter",
+          "reservationsTotal",
+          "activeReservationNow"
+        ],
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deskReadableId": {
+            "type": "string",
+            "nullable": true
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activationsCounter": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sitStandCounter": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reservationsTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeReservationNow": {
+            "$ref": "#/components/schemas/DeskActiveReservationDto"
+          }
+        }
+      },
       "HealthRemindersFrequency": {
         "type": "integer"
       },
@@ -1879,6 +2289,10 @@
         }
       },
       "LoginDto": {
+        "required": [
+          "email",
+          "password"
+        ],
         "type": "object",
         "properties": {
           "email": {
@@ -2008,7 +2422,7 @@
           }
         }
       },
-      "Rooms": {
+      "Room": {
         "type": "object",
         "properties": {
           "id": {
@@ -2031,6 +2445,43 @@
           "companyId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "RoomStatsDto": {
+        "required": [
+          "companyId",
+          "roomId",
+          "roomReadableId",
+          "desksCount",
+          "occupiedDesksNow",
+          "activeReservationsNow"
+        ],
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomReadableId": {
+            "type": "string",
+            "nullable": true
+          },
+          "desksCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "occupiedDesksNow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeReservationsNow": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2059,6 +2510,10 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "rpiMacAddress": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2181,6 +2636,13 @@
         }
       },
       "UserCompany": {
+        "required": [
+          "userId",
+          "user",
+          "companyId",
+          "company",
+          "role"
+        ],
         "type": "object",
         "properties": {
           "userId": {
@@ -2203,6 +2665,70 @@
       },
       "UserRole": {
         "type": "integer"
+      },
+      "UserStatsDto": {
+        "required": [
+          "companyId",
+          "userId",
+          "email",
+          "firstName",
+          "lastName",
+          "sittingHeight",
+          "standingHeight",
+          "sittingTime",
+          "standingTime",
+          "reservationsTotal",
+          "activeReservationsNow",
+          "uniqueDesksReserved"
+        ],
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "sittingHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "standingHeight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sittingTime": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "standingTime": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reservationsTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeReservationsNow": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uniqueDesksReserved": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -2237,6 +2763,9 @@
     },
     {
       "name": "Rooms"
+    },
+    {
+      "name": "Statistics"
     },
     {
       "name": "Users"
