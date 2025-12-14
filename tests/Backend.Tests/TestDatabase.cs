@@ -1,6 +1,5 @@
 using Backend.Data.Database;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Testcontainers.PostgreSql;
 
 namespace Backend.Tests;

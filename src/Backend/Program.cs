@@ -1,4 +1,3 @@
-using Backend;
 using Backend.Auth;
 using Backend.Data.Database;
 using Backend.Hubs;
@@ -12,11 +11,8 @@ using Backend.Services.Rooms;
 using Backend.Services.Statistics;
 using Backend.Services.Users;
 using Hangfire;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using System.Reflection.Metadata;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,18 +58,15 @@ builder.Services.AddOpenApi(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-// Add Hangfire services
-if (IsGeneratingOpenApiDocument())
-{
-    builder.Services.AddHangfire(config => config
-        .UseSimpleAssemblyNameTypeSerializer()
-        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-        .UseRecommendedSerializerSettings()
-        .UseInMemoryStorage()
-    );
 
-    builder.Services.AddHangfireServer();
-}
+builder.Services.AddHangfire(config => config
+    .UseSimpleAssemblyNameTypeSerializer()
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseRecommendedSerializerSettings()
+    .UseInMemoryStorage()
+);
+
+builder.Services.AddHangfireServer();
 
 builder.Services
     .AddTransient<IDamageReportService, DamageReportService>()
@@ -86,7 +79,7 @@ builder.Services
     .AddTransient<IUserService, UserService>()
     .AddTransient<IStatisticsService, StatisticsService>()
     .AddTransient<IReservationScheduler, ReservationScheduler>()
-    .AddSignalR(); ;
+    .AddSignalR();
 
 builder.Services.AddHostedService<MqttHostedService>()
     .AddHostedService<DeskHeightPullingService>()
@@ -149,16 +142,12 @@ builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
 var app = builder.Build();
 
-if (IsGeneratingOpenApiDocument())
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    // Add Hangfire dashboard (optional, for monitoring)
-    app.UseHangfireDashboard("/hangfire", new DashboardOptions
-    {
-        Authorization = [new AllowAllAuthorizationFilter()]
-    });
+    Authorization = [new AllowAllAuthorizationFilter()]
+});
 
-    BackgroundJob.Enqueue(() => Console.WriteLine("Simple!"));
-}
+BackgroundJob.Enqueue(() => Console.WriteLine("Simple!"));
 
 if (app.Environment.IsDevelopment())
 {

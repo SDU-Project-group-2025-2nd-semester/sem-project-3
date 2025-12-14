@@ -1,6 +1,4 @@
-﻿using MQTTnet.Server;
-
-namespace Backend.Services.Mqtt;
+﻿namespace Backend.Services.Mqtt;
 
 public class MqttHostedService(ILogger<MqttHostedService> logger, IBackendMqttClient mqttClient) : IHostedService, IDisposable
 {

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Backend.Data.Database;
+﻿using Backend.Data.Database;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 

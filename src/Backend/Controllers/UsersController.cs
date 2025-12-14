@@ -3,7 +3,6 @@ using Backend.Data.Database;
 using Backend.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Data.Common;
 using System.Security.Claims;
 
 namespace Backend.Controllers;

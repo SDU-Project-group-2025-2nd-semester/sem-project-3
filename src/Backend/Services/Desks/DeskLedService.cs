@@ -1,8 +1,6 @@
 ﻿using Backend.Data.Database;
-using Backend.Hubs;
 using Backend.Services.DeskApis;
 using Backend.Services.Mqtt;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Backend.Services.Desks;
 

@@ -1,7 +1,6 @@
 using Backend.Data.Database;
 using Backend.Data.DeskJsonApi;
 using Backend.Services.DeskApis;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Backend.Services.Desks;
 
