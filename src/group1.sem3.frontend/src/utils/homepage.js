@@ -1,4 +1,5 @@
 export function homepagePathForRole(role) {
+  if (role === null || role === undefined) return "/";
   const r = Number(role);
   if (r === 0) return "/user/homepage";
   if (r === 1) return "/staff/homepage";
