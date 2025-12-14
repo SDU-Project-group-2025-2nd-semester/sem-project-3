@@ -266,7 +266,7 @@ export default function UserStatisticsPage() {
                                         <Cell fill={entry.color} />
                                     ))}
                                 </Pie>
-                                <Tooltip>{({ name, value }) => `${name}: ${formatTime(value)}`}</Tooltip>
+                                <Tooltip></Tooltip>
                                 <Legend></Legend>
                             </PieChart>
                         </ResponsiveContainer>
