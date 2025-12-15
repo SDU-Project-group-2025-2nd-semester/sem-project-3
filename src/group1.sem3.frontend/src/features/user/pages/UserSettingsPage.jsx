@@ -1,22 +1,13 @@
-﻿import { useNavigate } from "react-router-dom";
-import Icon from "@reacticons/bootstrap-icons";
-import Card from "@shared/ui/Card";
+﻿import Card from "@shared/ui/Card";
 import Input from "@shared/ui/Input";
 import Button from "@shared/ui/Button";
 
-import { useAuth } from "@features/auth/AuthContext";
-import { useUserProfile } from "../hooks/useUserProfile";
-import { useUserHeight } from "../hooks/useUserHeight";
-import { useHealthReminder } from "../hooks/useHealthReminder";
+import { useUserSettings } from "../hooks/useUserSettings";
 
 export default function UserSettingsPage() {
-    const { logout } = useAuth();
-    const navigate = useNavigate();
-
-    // Feature hooks
-    const { profile, setProfile, updateProfile } = useUserProfile();
-
     const {
+        profile,
+        setProfile,
         userHeight,
         setUserHeight,
         sittingHeight,
@@ -26,41 +17,14 @@ export default function UserSettingsPage() {
         sittingChanged,
         standingChanged,
         resetRecommended,
-    } = useUserHeight(
-        profile.userHeight,
-        profile.sittingHeight,
-        profile.standingHeight
-    );
-
-    const {
         pillOption,
-        setPillOption,
         healthReminder,
-        setHealthReminder,
-    } = useHealthReminder(profile.pillOption, profile.healthReminder);
-
-    // Keep profile in sync when health reminder toggles or pill option changes
-    function handleToggleHealthReminder() {
-        const next = !healthReminder;
-        setHealthReminder(next);
-        setProfile((prev) => ({ ...prev, healthReminder: next }));
-    }
-
-    function handleSelectPillOption(option) {
-        setPillOption(option);
-        setProfile((prev) => ({ ...prev, pillOption: option }));
-    }
-
-    // Handlers
-    const handleSave = async () => {
-        const success = await updateProfile();
-        alert(success ? "Profile saved." : "Error while saving changes.");
-    };
-
-    const handleLogout = () => {
-        logout();
-        navigate("/");
-    };
+        handleToggleHealthReminder,
+        handleSelectPillOption,
+        handleSave,
+        handleLogout,
+        handleCancelUserHeight,
+    } = useUserSettings();
 
     return (
         <div className="relative bg-background min-h-screen px-4 pt-20 pb-12">
@@ -139,27 +103,27 @@ export default function UserSettingsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Height input and recommended reset */}
                         {profile.showUserHeight ? (
-                            <div className="flex gap-2 items-center">
-                                <Input
-                                    type="number"
-                                    min={100}
-                                    max={250}
-                                    value={userHeight}
-                                    onChange={(e) => setUserHeight(e.target.value)}
-                                    placeholder="e.g. 175"
-                                    className="flex-1"
-                                />
-                                <Button
-                                    variant="ghost"
-                                    onClick={() =>
-                                        setProfile((prev) => ({
-                                            ...prev,
-                                            showUserHeight: false,
-                                        }))
-                                    }
-                                >
-                                    Cancel
-                                </Button>
+                            <div>
+                                <label className="block mb-1 text-sm font-semibold text-primary">
+                                    Your Height (cm)
+                                </label>
+                                <div className="flex gap-2 items-center">
+                                    <Input
+                                        type="number"
+                                        min={100}
+                                        max={250}
+                                        value={userHeight}
+                                        onChange={(e) => setUserHeight(e.target.value)}
+                                        placeholder="e.g.175"
+                                        className="flex-1"
+                                    />
+                                    <Button
+                                        variant="ghost"
+                                        onClick={handleCancelUserHeight}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
                             </div>
                         ) : (
                             <Button
@@ -170,9 +134,13 @@ export default function UserSettingsPage() {
                                     }))
                                 }
                             >
-                                Calculate desk heights
+                                Calculate ergonomic heights
                             </Button>
                         )}
+
+                        <label className="block mb-1 text-sm font-semibold text-primary">
+                            Standing Height (cm)
+                        </label>
 
                         <Input
                             type="number"
@@ -180,6 +148,10 @@ export default function UserSettingsPage() {
                             onChange={(e) => setStandingHeight(e.target.value)}
                             placeholder="Standing Height"
                         />
+
+                        <label className="block mb-1 text-sm font-semibold text-primary">
+                            Sitting Height (cm)
+                        </label>
 
                         <Input
                             type="number"

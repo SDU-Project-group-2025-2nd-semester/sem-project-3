@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@features/auth/AuthContext";
-import { getMyProfile, getDeskById, getRoomById } from "../user.services";
+import { getMyProfile, getDeskById, getRoomById, putDeskHeight } from "../user.services";
 
 export function useDeskDetails({ reservationId }) {
     const { currentCompany } = useAuth();
@@ -25,13 +25,46 @@ export function useDeskDetails({ reservationId }) {
     const [err, setErr] = useState();
     const [loadingDetails, setLoadingDetails] = useState(true);
 
+    // reservation timing
+    const [reservationStart, setReservationStart] = useState(null);
+    const [reservationEnd, setReservationEnd] = useState(null);
+
     // Helpers
     const toCm = (mm) => (typeof mm === "number" && mm > 0 ? +(mm / 10).toFixed(1) : null);
     const fmtDate = (d) => new Date(d).toLocaleDateString([], { day: "2-digit", month: "2-digit" });
     const fmtTime = (d) => new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-    const setSittingHeight = () => setHeight(userSittingCm ?? 70);
-    const setStandingHeight = () => setHeight(userStandingCm ?? 110);
+    // Compute if reservation is currently active
+    const isReservationActive = reservationStart && reservationEnd ? (new Date() >= reservationStart && new Date() <= reservationEnd) : false;
+
+    // Replace local-only setters with API calls that persist the new height
+    const setSittingHeight = async () => {
+        if (!COMPANY_ID || !deskId) return;
+        if (!isReservationActive) return; // only allow when reservation is active
+        const newCm = userSittingCm ?? 70;
+        const newMm = Math.round(newCm * 10);
+        try {
+            setErr(undefined);
+            await putDeskHeight(COMPANY_ID, deskId, newMm);
+            setHeight(newCm);
+        } catch (e) {
+            setErr(e?.body?.message || e?.message || "Failed to set desk height");
+        }
+    };
+
+    const setStandingHeight = async () => {
+        if (!COMPANY_ID || !deskId) return;
+        if (!isReservationActive) return; // only allow when reservation is active
+        const newCm = userStandingCm ?? 110;
+        const newMm = Math.round(newCm * 10);
+        try {
+            setErr(undefined);
+            await putDeskHeight(COMPANY_ID, deskId, newMm);
+            setHeight(newCm);
+        } catch (e) {
+            setErr(e?.body?.message || e?.message || "Failed to set desk height");
+        }
+    };
 
     // --- Fetch user profile ---
     useEffect(() => {
@@ -63,6 +96,8 @@ export function useDeskDetails({ reservationId }) {
                 setDeskId(rsv.deskId);
                 setReservationDate(fmtDate(rsv.start));
                 setReservationTime(`${fmtTime(rsv.start)}-${fmtTime(rsv.end)}`);
+                setReservationStart(new Date(rsv.start));
+                setReservationEnd(new Date(rsv.end));
             } catch (e) {
                 if (e?.name !== "AbortError") setErr(e?.body?.message || e?.message || "Failed to load reservation.");
             } finally {
@@ -118,7 +153,9 @@ export function useDeskDetails({ reservationId }) {
 
     const reportDamage = () => {
         if (!deskId) return;
-        navigate("/user/damagereport", { state: { tableId: deskId, table: deskName, companyId: COMPANY_ID, reservationId } });
+        navigate("/user/damagereport", {
+            state: { tableId: deskId, table: deskName, companyId: COMPANY_ID, reservationId },
+        });
     };
 
     return {
@@ -137,5 +174,8 @@ export function useDeskDetails({ reservationId }) {
         loadingDetails,
         err,
         reportDamage,
+        isReservationActive,
+        reservationStart,
+        reservationEnd,
     };
 }

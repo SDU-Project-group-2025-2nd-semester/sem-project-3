@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@features/auth/AuthContext";
 import {
     getRooms,
@@ -88,6 +88,8 @@ export function useBooking() {
     const { currentCompany } = useAuth();
     const COMPANY_ID = currentCompany?.id;
     const navigate = useNavigate();
+    const location = useLocation();
+    const navState = location?.state || {};
 
     const todayStr = useMemo(() => toYmd(new Date()), []);
     const [selectedDate, setSelectedDate] = useState("");
@@ -98,6 +100,15 @@ export function useBooking() {
     }, [todayStr, selectedDate]);
 
     useEffect(() => setDateInput(selectedDate), [selectedDate]);
+
+    // allow presetting date from navigation state
+    useEffect(() => {
+        if (navState?.selectedDate || navState?.date) {
+            const d = navState.selectedDate || navState.date;
+            setSelectedDate(d);
+        }
+        // only run on mount/navigation state change
+    }, [navState?.selectedDate, navState?.date]);
 
     /* ---------------- rooms ---------------- */
 
@@ -128,6 +139,15 @@ export function useBooking() {
 
     const [selectedRoom, setSelectedRoom] = useState(null);
 
+    // preset selectedRoom from navigation state when rooms have loaded
+    useEffect(() => {
+        if (!navState?.roomId) return;
+        if (!rooms || !rooms.length) return;
+        if (selectedRoom) return;
+        const found = rooms.find((r) => String(r.id) === String(navState.roomId));
+        if (found) setSelectedRoom(found);
+    }, [rooms, navState?.roomId, selectedRoom]);
+
     /* ---------------- desks ---------------- */
 
     const [desks, setDesks] = useState([]);
@@ -144,6 +164,15 @@ export function useBooking() {
     }, [selectedRoom, COMPANY_ID]);
 
     const [selectedTable, setSelectedTable] = useState(null);
+
+    // preset selectedTable from navigation state when desks have loaded
+    useEffect(() => {
+        if (!navState?.deskId) return;
+        if (!desks || !desks.length) return;
+        if (selectedTable) return;
+        const found = desks.find((d) => String(d.id) === String(navState.deskId));
+        if (found) setSelectedTable(found);
+    }, [desks, navState?.deskId, selectedTable]);
 
     /* ---------------- reservations ---------------- */
 

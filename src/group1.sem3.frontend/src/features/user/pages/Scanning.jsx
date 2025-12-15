@@ -4,7 +4,7 @@ import Button from "@shared/ui/Button";
 import { useQrScanner } from "../hooks/useQrScanner";
 
 export default function Scanning() {
-    const { scannedCodes, handleScan, handleError } = useQrScanner();
+    const { handleScan, handleError } = useQrScanner();
 
     return (
         <div className="pt-24 pl-1 pr-1">

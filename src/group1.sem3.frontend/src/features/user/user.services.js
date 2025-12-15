@@ -21,6 +21,10 @@ export async function getRoomById(companyId, roomId, opts) {
  return get(`/${companyId}/Rooms/${roomId}`, opts);
 }
 
+export async function putDeskHeight(companyId, deskId, newHeight) {
+    return put(`/${companyId}/Desks/${deskId}/height`, newHeight);
+}
+
 // Reservations
 export async function getReservations(companyId, query = {}, opts) {
  // query: { startDate, endDate, userId, deskId }

@@ -13,6 +13,9 @@ export function useQrScanner() {
         });
 
         setScannedCodes(detectedCodes);
+        // call endpoint with mac
+        // get id
+        // call deskpage with id
     }, []);
 
     const handleError = useCallback((error) => {
