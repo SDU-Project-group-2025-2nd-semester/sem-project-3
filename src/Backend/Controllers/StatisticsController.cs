@@ -1,5 +1,6 @@
-using Backend.Data;
-using Backend.Services;
+using Backend.Auth;
+using Backend.Data.Database;
+using Backend.Services.Statistics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

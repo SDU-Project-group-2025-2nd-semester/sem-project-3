@@ -125,45 +125,28 @@
         }
       }
     },
-    "/api/Company/publiclyAccessible": {
+    "/api/Company/{companyId}/simulator": {
       "get": {
         "tags": [
           "Company"
         ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PublicCompanyDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PublicCompanyDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PublicCompanyDto"
-                  }
-                }
-              }
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
         }
-      }
-    },
-    "/api/Company/{companyId}/simulator": {
+      },
       "put": {
         "tags": [
           "Company"
@@ -202,6 +185,44 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Company/publiclyAccessible": {
+      "get": {
+        "tags": [
+          "Company"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCompanyDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -524,17 +545,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/CreateDeskDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/CreateDeskDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Desk"
+                "$ref": "#/components/schemas/CreateDeskDto"
               }
             }
           },
@@ -1199,7 +1220,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/Room"
                   }
                 }
               },
@@ -1207,7 +1228,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/Room"
                   }
                 }
               },
@@ -1215,7 +1236,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Rooms"
+                    "$ref": "#/components/schemas/Room"
                   }
                 }
               }
@@ -1242,17 +1263,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             }
           },
@@ -1264,17 +1285,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               }
             }
@@ -1313,17 +1334,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rooms"
+                  "$ref": "#/components/schemas/Room"
                 }
               }
             }
@@ -1358,17 +1379,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Rooms"
+                "$ref": "#/components/schemas/Room"
               }
             }
           },
@@ -1881,7 +1902,7 @@
           "rooms": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Rooms"
+              "$ref": "#/components/schemas/Room"
             }
           },
           "secretInviteCode": {
@@ -1979,6 +2000,28 @@
             "type": "string"
           },
           "deskId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateDeskDto": {
+        "required": [
+          "macAddress",
+          "roomId"
+        ],
+        "type": "object",
+        "properties": {
+          "macAddress": {
+            "maxLength": 17,
+            "type": "string"
+          },
+          "rpiMacAddress": {
+            "maxLength": 17,
+            "type": "string",
+            "nullable": true
+          },
+          "roomId": {
             "type": "string",
             "format": "uuid"
           }
@@ -2246,6 +2289,10 @@
         }
       },
       "LoginDto": {
+        "required": [
+          "email",
+          "password"
+        ],
         "type": "object",
         "properties": {
           "email": {
@@ -2375,7 +2422,7 @@
           }
         }
       },
-      "Rooms": {
+      "Room": {
         "type": "object",
         "properties": {
           "id": {
@@ -2463,6 +2510,10 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "rpiMacAddress": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2585,6 +2636,13 @@
         }
       },
       "UserCompany": {
+        "required": [
+          "userId",
+          "user",
+          "companyId",
+          "company",
+          "role"
+        ],
         "type": "object",
         "properties": {
           "userId": {
