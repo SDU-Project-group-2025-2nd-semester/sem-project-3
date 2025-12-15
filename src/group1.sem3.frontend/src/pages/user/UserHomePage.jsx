@@ -33,8 +33,8 @@ export default function UserHomePage() {
             setErr(undefined);
             try {                
                 const [myreservations, myprofile] = await Promise.all([
-                    get(`/${COMPANY_ID}/reservation/me`, { signal: ctrl.signal }),
-                    get(`/Users/me`, { signal: ctrl.signal }),
+                    getMyReservations(COMPANY_ID, { signal: ctrl.signal }),
+                    getMyProfile({signal: ctrl.signal}),
                 ]);
 
                 if (ctrl.signal.aborted) return; // don’t update state if aborted
@@ -117,7 +117,7 @@ export default function UserHomePage() {
             return;
         }
         try {
-            await del(`/${COMPANY_ID}/reservation/${id}`);
+            await cancelReservation(COMPANY_ID, id);
             setCurrentBookings(prev => prev.filter(b => b.id !== id));
         } catch (e) {
             setErr(e.body?.message || e.message);
