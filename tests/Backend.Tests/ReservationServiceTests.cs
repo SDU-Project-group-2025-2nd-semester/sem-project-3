@@ -1,6 +1,6 @@
 using Backend.Data;
-using Backend.Services;
-using Microsoft.EntityFrameworkCore;
+using Backend.Data.Database;
+using Backend.Services.Reservations;
 
 namespace Backend.Tests;
 
@@ -11,7 +11,7 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
     private Company _testCompany = null!;
     private User _testUser = null!;
     private Desk _testDesk = null!;
-    private Rooms _testRoom = null!;
+    private Room _testRoom = null!;
 
     public async Task InitializeAsync()
     {
@@ -54,7 +54,7 @@ public class ReservationServiceTests(DatabaseFixture fixture) : IAsyncLifetime
             Role = UserRole.User
         });
 
-        _testRoom = new Rooms
+        _testRoom = new Room
         {
             Id = Guid.NewGuid(),
             DeskIds = [],
