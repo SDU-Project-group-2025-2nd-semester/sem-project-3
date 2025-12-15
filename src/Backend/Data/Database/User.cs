@@ -24,6 +24,8 @@ public class User : IdentityUser
     public DateTime AccountCreation { get; set; } = new();
     
     public List<UserCompany> CompanyMemberships { get; set; } = [];
+
+    public List<Guid> CompanyMembershipsIds { get; set; } = [];
     
     // TODO: Implement time-series db for tracking user posture over time 
 }
