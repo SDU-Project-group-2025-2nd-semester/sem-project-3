@@ -1,4 +1,4 @@
-import { get, put } from "../context/apiClient";
+import { get, put, post } from "../context/apiClient";
 
 export async function getMyCompanies() {
  return get("/Users/me/companies");
@@ -8,6 +8,15 @@ export async function getCompany(companyId) {
  return get(`/${companyId}/Company`);
 }
 
+// The ones that can be joined with an invite code
+export async function getPublicCompanies() {
+ return get(`/Company/publiclyAccessible`);
+}
+
 export async function updateSimulator(companyId, payload) {
  return put(`/Company/${companyId}/simulator`, payload);
+}
+
+export async function enterCompany(companyId, accessCode) {
+ return post(`/Company/${companyId}/access`, accessCode);
 }
