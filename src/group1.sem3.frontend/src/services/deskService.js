@@ -1,5 +1,9 @@
 import { get, del, put } from "../context/apiClient";
 
+export async function getDesks(companyId) {
+ return get(`/${companyId}/Desks/`);
+}
+
 export async function getDeskById(companyId, deskId, opts) {
  return get(`/${companyId}/Desks/${deskId}`, opts);
 }
