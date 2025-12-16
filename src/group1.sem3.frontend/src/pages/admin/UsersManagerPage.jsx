@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getUsersByCompany, getMyProfile, deleteUser } from "../../services/userService";
 import { getReservations } from "../../services/reservationService";
 import { getDeskById } from "../../services/deskService";
+import { updateUserRole } from "../../services/companyService";
 
 export default function UsersManagerPage() {
   const navigate = useNavigate();
@@ -152,14 +153,15 @@ export default function UsersManagerPage() {
 
   const handleRoleChange = async (userId, newRole) => {
     const user = [...users, ...staff].find(u => u.id === userId);
-    const roleNames = { 0: 'User', 1: 'Janitor' };
+    const roleNames = { 0: 'User', 1: 'Janitor', 2: 'Admin' };
 
     if (!confirm(`Change ${user?.firstName} ${user?.lastName}'s role to ${roleNames[newRole]}?`)) {
       return;
     }
 
     try {
-      await put(`/Users/${userId}/role`, { companyId, newRole });
+      console.log(newRole);
+      await updateUserRole(companyId, userId, newRole);
       await fetchUserAndStaff();
     } catch (error) {
       console.error('Error changing role:', error);
@@ -242,6 +244,7 @@ export default function UsersManagerPage() {
           >
             <option value={0}>User</option>
             <option value={1}>Janitor</option>
+            <option value={2}>Admin</option>
           </select>
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:flex max-lg:flex-row max-lg:gap-2 max-lg:mt-2">
@@ -287,6 +290,7 @@ export default function UsersManagerPage() {
         >
           <option value={0}>User</option>
           <option value={1}>Janitor</option>
+          <option value={2}>Admin</option>
         </select>
       </td>
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:mt-2">
