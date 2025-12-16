@@ -1,16 +1,25 @@
 import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProtectedRoute({ children, roles } = {}) {
   const { isHydrating, isAuthenticated, currentUser } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (isHydrating) {
     // show a minimal loading state instead of rendering nothing
     return (
-      <div className="min-h-[200px] flex items-center justify-center py-8">
-        <div className="text-gray-600">Checking authentication…</div>
+      <div className="min-h-[200px] flex flex-col items-center justify-center py-20">
+        <div className="text-gray-600">Checking authenticationï¿½</div>
+        <div className="flex justify-center py-10">
+          <button
+            className="px-4 py-2 bg-accent text-white rounded-lg"
+            onClick={() => navigate("/")}
+          >
+            Login
+          </button>
+        </div>
       </div>
     );
   }
