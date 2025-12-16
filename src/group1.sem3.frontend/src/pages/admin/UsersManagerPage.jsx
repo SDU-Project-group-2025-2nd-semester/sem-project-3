@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { get, del, put } from "../../context/apiClient";
+import { getUsersByCompany, getMyProfile, deleteUser } from "../../services/userService";
+import { getReservations } from "../../services/reservationService";
+import { getDeskById } from "../../services/deskService";
 
 export default function UsersManagerPage() {
   const navigate = useNavigate();
@@ -21,7 +23,7 @@ export default function UsersManagerPage() {
       setLoading(true);
       setError(null);
 
-      const currentUser = await get('/Users/me');
+      const currentUser = await getMyProfile();
       setMe(currentUser);
 
       if (!currentUser?.companyMemberships || currentUser.companyMemberships.length === 0) {
@@ -31,7 +33,7 @@ export default function UsersManagerPage() {
       const userCompanyId = currentUser.companyMemberships[0].companyId;
       setCompanyId(userCompanyId);
 
-      const allUsers = await get(`/Users?companyId=${userCompanyId}`);
+      const allUsers = await getUsersByCompany(userCompanyId);
 
       const basicUsers = allUsers.filter(u => u.role === 0);
       const staffUsers = allUsers.filter(u => (u.role === 1 || u.role === 2) && u.id !== currentUser.id);
@@ -55,11 +57,11 @@ export default function UsersManagerPage() {
     try {
       if (!companyId) return;
 
-      const allReservations = await get(`/${companyId}/Reservation`);
+      const allReservations = await getReservations(companyId);
 
       const DeskIds = [...new Set(allReservations.map(r => r.deskId).filter(Boolean))];
       const deskPromises = DeskIds.map(deskId =>
-        get(`/${companyId}/Desks/${deskId}`).catch(err => {
+        getDeskById(companyId, deskId).catch(err => {
           console.error(`Error fetching desk ${deskId}:`, err);
           return { id: deskId, readableId: deskId };
         })
@@ -118,22 +120,14 @@ export default function UsersManagerPage() {
       return;
     }
 
-    const now = new Date();
-    const start = new Date(latestReservation.start);
-    const end = new Date(latestReservation.end);
-    // const isActive = start <= now && now <= end;
-
-    // if (!isActive) {
-    //   alert('No active reservation to cancel');
-    //   return;
-    // }
-
     if (!confirm('Are you sure you want to cancel this reservation?')) {
       return;
     }
 
     try {
-      await del(`/${companyId}/Reservation/${latestReservation.id}`);
+      // use reservationService.cancelReservation
+      const { cancelReservation } = await import('../../services/reservationService');
+      await cancelReservation(companyId, latestReservation.id);
 
       await fetchUserAndStaff();
     } catch (error) {
@@ -148,7 +142,7 @@ export default function UsersManagerPage() {
       return;
     }
     try {
-      await del(`/Users/${userId}`);
+      await deleteUser(userId);
       await fetchUserAndStaff();
     } catch (error) {
       console.error(`Error removing user: `, error);

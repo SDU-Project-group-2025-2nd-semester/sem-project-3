@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { get, post, put, del } from "../../context/apiClient";
+import { getMyCompanies } from "../../services/companyService";
+import { getRooms } from "../../services/roomService";
+import { getDesksForRoom } from "../../services/deskService";
+import { getReservations } from "../../services/reservationService";
 
 export default function DesksManagerPage() {
     const navigate = useNavigate();
@@ -68,7 +72,7 @@ export default function DesksManagerPage() {
         try {
             setError(null);
 
-            const userCompanies = await get('/Users/me/companies');
+            const userCompanies = await getMyCompanies();
 
             if (!userCompanies || userCompanies.length === 0) {
                 throw new Error('No company associated with current user');
@@ -77,7 +81,7 @@ export default function DesksManagerPage() {
             const userCompanyId = userCompanies[0].companyId;
             setCompanyId(userCompanyId);
 
-            const roomsData = await get(`/${userCompanyId}/rooms`);
+            const roomsData = await getRooms(userCompanyId);
             setRooms(roomsData);
 
             if (roomsData.length > 0) {
@@ -95,8 +99,8 @@ export default function DesksManagerPage() {
     const fetchDesksForRoom = async (roomId) => {
         try {
             const [desksData, reservationsData] = await Promise.all([
-                get(`/${companyId}/desks/room/${roomId}`),
-                get(`/${companyId}/reservation`)
+                getDesksForRoom(companyId, roomId),
+                getReservations(companyId)
             ]);
 
             setDesks(desksData);
@@ -199,7 +203,7 @@ export default function DesksManagerPage() {
                 simulatorApiKey: simulatorApiKey.trim()
             };
 
-            await put(`/Company/${companyId}/simulator`, simulatorSettings);
+            await updateSimulator(companyId, simulatorSettings);
             alert('Simulator settings saved successfully!');
             setSimulatorLink('');
             setSimulatorApiKey('');
