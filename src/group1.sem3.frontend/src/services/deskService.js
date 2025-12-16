@@ -20,6 +20,7 @@ export async function putDeskHeight(companyId, deskId, opts) {
  return put(`/${companyId}/Desks/${deskId}/height`, opts)
 }
 
-export async function deleteDesk(companyId, deskId) {
- return del(`/${companyId}/Desks/${deskId}`);
+
+export async function unadoptDesk(companyId, deskId) {
+ return del(`/${companyId}/Desks/unadopt/${deskId}`);
 }

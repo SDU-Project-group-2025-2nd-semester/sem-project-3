@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { get, post, put, del } from "../../context/apiClient";
 import { getMyCompanies } from "../../services/companyService";
 import { getRooms, deleteRoom } from "../../services/roomService";
-import { getDesksForRoom } from "../../services/deskService";
+import { getDesksForRoom, unadoptDesk } from "../../services/deskService";
 import { getReservations } from "../../services/reservationService";
 
 export default function DesksManagerPage() {
@@ -450,12 +450,12 @@ export default function DesksManagerPage() {
     };
 
     const handleDeleteDesk = async (deskId) => {
-        if (!confirm('Are you sure you want to delete this desk?')) {
+        if (!confirm('Are you sure you want to un-adopt this desk?')) {
             return;
         }
 
         try {
-            await del(`/${companyId}/desks/${deskId}`);
+            await unadoptDesk(companyId, deskId);
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
             console.error('Error deleting desk:', error);
