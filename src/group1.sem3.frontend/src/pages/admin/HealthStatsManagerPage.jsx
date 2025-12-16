@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { get } from "../../context/apiClient";
 import { useAuth } from "../../context/AuthContext";
+import { getReservations } from "../../services/reservationService";
+import { getDesks } from "../../services/deskService";
+import { getRooms } from "../../services/roomService";
+
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
 
 export default function HealthStatsManagerPage() {
@@ -49,9 +52,9 @@ export default function HealthStatsManagerPage() {
             }
 
             const [reservationsData, desksData, roomsData] = await Promise.all([
-                get(`/${currentCompany.id}/reservation`),
-                get(`/${currentCompany.id}/desks`),
-                get(`/${currentCompany.id}/rooms`)
+                getReservations(currentCompany.id),
+                getDesks(currentCompany.id),
+                getRooms(currentCompany.id)
             ]);
 
             setReservations(reservationsData || []);
