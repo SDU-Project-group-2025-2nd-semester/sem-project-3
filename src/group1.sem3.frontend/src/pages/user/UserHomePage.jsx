@@ -51,6 +51,8 @@ export default function UserHomePage() {
                     return new Date(a.end).getTime() - new Date(b.end).getTime();
                 });
 
+                const ongoingReservations = futurereservations.filter(r => new Date(r.start) <= now && new Date(r.end) >= now);
+
                 const currentMapped = futurereservations.map(r => {
                     const start = new Date(r.start);
                     const end = new Date(r.end);
@@ -64,6 +66,7 @@ export default function UserHomePage() {
                         room: r.roomLabel ?? r.roomId ?? "—",  // shows id until label exists
                         date,
                         time,
+                        isOngoing: ongoingReservations.some(ongoing => ongoing.id === r.id),
                     };
                 });
 
@@ -145,7 +148,7 @@ export default function UserHomePage() {
                     <div className="flex flex-wrap gap-4">
                         {currentBookings.map((booking) => (
                             <div key={booking.id}
-                                className="bg-white rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4"
+                                className={`rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4 ${booking.isOngoing ? 'bg-accent-50' : 'bg-white'}`}
                             >
 
                             <Link to={`/user/reservation/${booking.id}`}
