@@ -244,7 +244,6 @@ export default function UsersManagerPage() {
           >
             <option value={0}>User</option>
             <option value={1}>Janitor</option>
-            <option value={2}>Admin</option>
           </select>
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:flex max-lg:flex-row max-lg:gap-2 max-lg:mt-2">
@@ -290,7 +289,6 @@ export default function UsersManagerPage() {
         >
           <option value={0}>User</option>
           <option value={1}>Janitor</option>
-          <option value={2}>Admin</option>
         </select>
       </td>
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:mt-2">
