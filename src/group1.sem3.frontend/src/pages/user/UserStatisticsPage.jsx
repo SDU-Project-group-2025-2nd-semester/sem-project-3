@@ -202,7 +202,7 @@ export default function UserStatisticsPage() {
     const ViewButton = ({ mode, label }) => (
         <button
             onClick={() => setViewMode(mode)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === mode
+            className={`px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === mode
                 ? 'bg-accent text-white'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                 }`}
@@ -238,15 +238,15 @@ export default function UserStatisticsPage() {
     const deskUsageData = getDeskUsageStats();
 
     return (
-        <div className="relative bg-background min-h-screen px-4 pt-24">
-            <main className="max-w-6xl mx-auto flex flex-col gap-8 pb-32">
+        <div className="relative bg-background min-h-screen px-4 sm:px-6 lg:px-8 pt-24">
+            <main className="max-w-6xl mx-auto flex flex-col gap-6 sm:gap-8 pb-32">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-semibold text-gray-800">Desk Statistics</h1>
+                    <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800">Desk Statistics</h1>
                 </div>
 
                 {/* Pie chart - Sitting/Standing time */}
-                <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4">
                         Sitting vs Standing Time
                     </h2>
                     <div className="flex gap-4 text-sm mb-4">
@@ -256,32 +256,35 @@ export default function UserStatisticsPage() {
                         </span>
                     </div>
                     {userProfile && (userProfile.sittingTime >= 0 || userProfile.standingTime >= 0) ? (
-                        <PieChart width="100%" height={300}>
-                            <Pie
-                                data={getSittingStandingData()}
-                                labelLine={false}
-                                label={({ name, value }) => `${name}: ${formatTime(value)}`}
-                            >
-                                {getSittingStandingData().map((entry, index) => (
-                                    <Cell fill={entry.color} />
-                                ))}
-                            </Pie>
-                        </PieChart>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={getSittingStandingData()}
+                                    labelLine={false}
+                                >
+                                    {getSittingStandingData().map((entry, index) => (
+                                        <Cell fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip></Tooltip>
+                                <Legend></Legend>
+                            </PieChart>
+                        </ResponsiveContainer>
                     ) : (
                         <p className="text-gray-500 text-center py-12">No sitting/standing data available</p>
                     )}
                 </section>
 
                 {/* Time tabs */}
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                     <ViewButton mode="daily" label="Daily" />
                     <ViewButton mode="weekly" label="Weekly" />
                     <ViewButton mode="monthly" label="Monthly" />
                 </div>
 
                 {/* Duration per Day/Week/Month */}
-                <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4">
                         Total Desk Time
                     </h2>
                     {chartData.length > 0 ? (
@@ -311,8 +314,8 @@ export default function UserStatisticsPage() {
                 </section>
 
                 {/* Time Per Desk */}
-                <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4">
                         Time Per Desk
                     </h2>
                     {deskUsageData.length > 0 ? (

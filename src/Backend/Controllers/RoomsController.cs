@@ -1,5 +1,6 @@
-﻿using Backend.Data;
-using Backend.Services;
+﻿using Backend.Auth;
+using Backend.Data.Database;
+using Backend.Services.Rooms;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,14 +13,16 @@ public class RoomsController(IRoomService roomService) : ControllerBase
 {
 
     [HttpGet]
-    public async Task<ActionResult<List<Rooms>>> GetRooms(Guid companyId)
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
+    public async Task<ActionResult<List<Room>>> GetRooms(Guid companyId)
     {
         var rooms = await roomService.GetAllRoomsAsync(companyId);
         return Ok(rooms);
     }
 
     [HttpGet("{roomId}")]
-    public async Task<ActionResult<Rooms>> GetRoom(Guid companyId, Guid roomId)
+    [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
+    public async Task<ActionResult<Room>> GetRoom(Guid companyId, Guid roomId)
     {
         var room = await roomService.GetRoomAsync(companyId, roomId);
         if (room is null)
@@ -30,7 +33,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
 
     [HttpPost]
     [RequireRole(UserRole.Admin)]
-    public async Task<ActionResult<Rooms>> CreateRoom(Guid companyId, [FromBody] Rooms room)
+    public async Task<ActionResult<Room>> CreateRoom(Guid companyId, [FromBody] Room room)
     {
         var created = await roomService.CreateRoomAsync(companyId, room);
         return CreatedAtAction(nameof(GetRoom), new { companyId, roomId = created.Id }, created);
@@ -38,7 +41,7 @@ public class RoomsController(IRoomService roomService) : ControllerBase
 
     [HttpPut("{roomId}")]
     [RequireRole(UserRole.Admin)]
-    public async Task<IActionResult> UpdateRoom(Guid companyId, Guid roomId, [FromBody] Rooms updated)
+    public async Task<IActionResult> UpdateRoom(Guid companyId, Guid roomId, [FromBody] Room updated)
     {
         var update = await roomService.UpdateRoomAsync(companyId, roomId, updated);
         if (!update)
