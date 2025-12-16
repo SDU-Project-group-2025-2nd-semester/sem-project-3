@@ -8,7 +8,7 @@ public class Reservation
 
     public DateTime End { get; set; }
 
-    public string UserId { get; set; }
+    public string? UserId { get; set; }
 
     public Guid DeskId { get; set; }
 
@@ -20,7 +20,7 @@ public class Reservation
     public Company Company { get; set; }
 
     [JsonIgnore]
-    public User User { get; set; }
+    public User? User { get; set; }
 
     [JsonIgnore]
     public Desk Desk { get; set; }

@@ -3,7 +3,7 @@
 public enum HealthRemindersFrequency
 {
     /// <summary>
-    /// Every 15 minutes  
+    /// Every 60 minutes  
     /// </summary>
     Low,
 
@@ -13,7 +13,7 @@ public enum HealthRemindersFrequency
     Medium,
 
     /// <summary>
-    /// Every 60 minutes  
+    /// Every 15 minutes  
     /// </summary>
     High
 }
