@@ -1,10 +1,14 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
+import { getDeskFromMac } from "../user.services";
 
 // Hook for QR scanning
-export function useQrScanner() {
+export function useQrScanner(companyId) {
+    const navigate = useNavigate();
     const [scannedCodes, setScannedCodes] = useState([]);
+    const [lookupResults, setLookupResults] = useState([]);
 
-    const handleScan = useCallback((detectedCodes) => {
+    const handleScan = useCallback(async (detectedCodes) => {
         if (!detectedCodes || !detectedCodes.length) return;
 
         console.log("Detected codes:", detectedCodes);
@@ -13,14 +17,30 @@ export function useQrScanner() {
         });
 
         setScannedCodes(detectedCodes);
-        // call endpoint with mac
-        // get id
-        // call deskpage with id
-    }, []);
+
+        // Lookup all codes in parallel
+        const lookups = detectedCodes.map(async (code) => {
+            try {
+                const res = await getDeskFromMac(companyId, code.rawValue ?? "");
+                return res;
+            } catch (e) {
+                console.error("Lookup failed for code", code, e);
+                return null;
+            }
+        });
+
+        const results = await Promise.all(lookups);
+        setLookupResults(results);
+
+        if (results.length ===1 && results[0] && (results[0].id || results[0].deskId)) {
+            const deskId = results[0].id ?? results[0].deskId;
+            navigate('/user/desk', { state: { deskId } });
+        }
+    }, [companyId, navigate]);
 
     const handleError = useCallback((error) => {
         console.error("QR Scanner Error:", error);
     }, []);
 
-    return { scannedCodes, handleScan, handleError };
+    return { scannedCodes, lookupResults, handleScan, handleError };
 }

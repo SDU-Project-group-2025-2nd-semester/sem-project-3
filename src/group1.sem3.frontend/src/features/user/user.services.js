@@ -25,6 +25,12 @@ export async function putDeskHeight(companyId, deskId, newHeight) {
     return put(`/${companyId}/Desks/${deskId}/height`, newHeight);
 }
 
+// Lookup desk by MAC (scanner use-case)
+export async function getDeskFromMac(companyId, mac, opts) {
+ const scan = encodeURIComponent(mac ?? "");
+ return get(`/${companyId}/Desks/from-mac/${scan}`, opts);
+}
+
 // Reservations
 export async function getReservations(companyId, query = {}, opts) {
  // query: { startDate, endDate, userId, deskId }

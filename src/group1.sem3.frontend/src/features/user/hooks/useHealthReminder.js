@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export function useHealthReminder(initialOption = "Normal", initialEnabled = false) {
+export function useHealthReminder(initialOption = "Normal", initialEnabled) {
     // If initialEnabled is null/undefined, treat as enabled (true)
     const resolvedEnabled = initialEnabled == null ? true : initialEnabled;
     const [pillOption, setPillOption] = useState(initialOption ?? "Normal");
