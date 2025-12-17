@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getMyReservations, cancelReservation } from "../../services/reservationService";
+import { getMyReservations, cancelReservation, updateReservation } from "../../services/reservationService";
 import { getMyProfile } from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
 
@@ -127,6 +127,19 @@ export default function UserHomePage() {
         }
     }
 
+    async function finishBooking(id) {
+        if (!confirm('Are you sure you want to finish this reservation?')) {
+            return;
+        }
+        try {
+            const now = new Date();
+            await updateReservation(COMPANY_ID, id, {end: now});
+            setCurrentBookings(prev => prev.map(b => b.id === id ? { ...b, end: now } : b));
+        } catch (e) {
+            setErr(e.body?.message || e.message);
+        }
+    }
+
     return (
         <div className="relative bg-background min-h-screen px-4 pt-24">
             <main className="max-w-3xl mx-auto flex flex-col pb-32">
@@ -166,11 +179,21 @@ export default function UserHomePage() {
                             </div>
                             </Link>
 
-                            <button
-                            className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition shrink-0"
-                            onClick={(e) => cancelBooking(booking.id)}>
-                            Cancel
-                            </button>
+                            {booking.isOngoing ? (
+                                <button
+                                    className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition shrink-0"
+                                    onClick={(e) => finishBooking(booking.id)}
+                                >
+                                    Finish
+                                </button>
+                            ) : (
+                                <button
+                                    className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition shrink-0"
+                                    onClick={(e) => cancelBooking(booking.id)}
+                                >
+                                    Cancel
+                                </button>
+                            )}
                         </div> 
                     ))}
                     </div>
