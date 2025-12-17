@@ -9,4 +9,5 @@ public interface IReservationService
     Task<Reservation?> GetReservation(Guid reservationId);
     Task DeleteReservation(Reservation reservation);
     Task<Reservation?> CreateReservation(CreateReservationDto createReservationDto, string userId, Guid companyId);
+    Task UpdateReservation(Guid reservationId, UpdateReservationDto dto);
 }
