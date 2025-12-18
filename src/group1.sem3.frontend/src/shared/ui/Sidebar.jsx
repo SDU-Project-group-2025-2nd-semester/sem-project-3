@@ -6,13 +6,15 @@ import Icon from "@reacticons/bootstrap-icons";
 export default function Sidebar({ isOpen, onClose }) {
     const { currentUser, companies, currentCompany, setCurrentCompany } = useAuth();
     const location = useLocation();
-    const [showCompanies, setShowCompanies] = useState(false);
-
-    // don't render sidebar on login/signup pages
     if (["/", "/signuppage"].includes(location.pathname)) return null;
 
     const role = currentUser?.role;
 
+    // Compute join path by role
+    const joinBase = role === 0 ? "user" : role === 1 ? "staff" : null;
+    const joinPath = joinBase ? `/${joinBase}/companies/join` : null;
+
+    const [showCompanies, setShowCompanies] = useState(false);
     const selectedCompany = currentCompany?.name ?? (companies?.[0]?.name ?? "No company");
 
     function handleCompanySelect(company) {
@@ -88,7 +90,19 @@ export default function Sidebar({ isOpen, onClose }) {
                                         >
                                             {company.name}
                                         </li>
-                                    ))}
+                                    ))}    
+
+                                    {/* Joining a company */}
+                                    <li className="mt-2 list-none">
+                                        <Link
+                                            to={joinPath}
+                                            className="hover:text-blue-500 cursor-pointer"
+                                            onClick={onClose}
+                                        >
+                                            <Icon name="plus" className="mr-2" />
+                                            Join a new company
+                                        </Link>
+                                    </li>
                                 </ul>
                             )}
                         </div>

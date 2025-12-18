@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@features/auth/AuthContext";
 import Icon from '@reacticons/bootstrap-icons';
 import { homepagePathForRole } from "../utils/homepage";
+import logo from "../assets/logo_white-lamp.svg";
 
 export default function Header({ toggleSidebar }) {
     const { currentUser } = useAuth();
@@ -28,13 +29,13 @@ export default function Header({ toggleSidebar }) {
                 {showHomepageLink ? (
                     <Link
                         to={homepagePathForRole(currentUser?.role)} 
-                        className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center"
+                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center"
                     >
-                        <Icon name="image" className="w-8 h-8 text-black" />    
+                        <img src={logo} alt="BookaDesk logo" className="w-10 h-10 object-contain" />    
                     </Link>
                 ) : (
-                    <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <Icon name="image" className="w-8 h-8 text-black" />
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                        <img src={logo} alt="BookaDesk logo" className="w-10 h-10 object-contain" />
                     </div>
                 )}
             </div>
