@@ -3,6 +3,7 @@
 #include "hardware/i2c.h"
 #include "qrcodegen.hpp"
 #include <string.h>
+#include <string>
 #include <time.h>
 #include "pico/cyw43_arch.h"
 #include "lwip/pbuf.h"
@@ -94,16 +95,25 @@ void MyApp::buzz() {
     buzzTone(1000, 2000);
 }
 
-void MyApp::mqttClientInitialisation() {
-    MQTT_CLIENT_T *state = mqtt_client_init();
 
-    run_dns_lookup(state);
-}
+    
+
 
 void MyApp::run() {
 
     
+    MQTT_CLIENT_T *state = mqtt_client_init();
+
+    run_dns_lookup(state);
     
+    mqtt_create_client(state);
+
+    mqtt_test_connect(state);
+
+    mqtt_wait_for_connection(state);
+
+    mqtt_subscribe_to_topics(state);
+
     
 
     
@@ -125,8 +135,8 @@ void MyApp::run() {
     bool buzzing = true;
     int counter = 0;
     bool pressedEvent = false;
-    std::string status = "sitting"; //sitting, standing, buzzing, will be updated from the topic
-
+    std::string message = ""; //sitting, standing, buzzing, will be updated from the topic
+    //std::string message((const char*)buffer);
     //qr code generation
     const qrcodegen::QrCode qr = generateQRCode("address");
 
@@ -188,8 +198,13 @@ void MyApp::run() {
         } */
 
         
-
-        sleep_ms(50);                                                    
+        cyw43_arch_poll();
+        if (state != nullptr && state->message[0] != '\0') {
+            message.assign(state->message);
+        } else {
+            message.clear();
+        }
+        sleep_ms(10);                                                
     }
     cyw43_arch_deinit();
 }

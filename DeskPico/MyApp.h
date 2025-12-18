@@ -13,6 +13,7 @@
 //-------------------------------------------------------------------------
 
 #include "OLEDDisplay.h"
+#include "MqttClient.h"
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -31,8 +32,7 @@ public:
     qrcodegen::QrCode generateQRCode(std::string address);
     std::string getBarcode();
     void buzzTone(unsigned int frequency, unsigned int duration_ms);     
-    void buzz(); 
-    void mqttClientInitialisation();                                                        
+    void buzz();                                                       
 
 private:                                                   
     OLEDDisplay display;                                                 

@@ -43,6 +43,7 @@ typedef struct MQTT_CLIENT_T_ {
     u32_t received;
     u32_t counter;
     u32_t reconnect;
+    char message[1025];
 } MQTT_CLIENT_T;
  
 err_t mqtt_test_connect(MQTT_CLIENT_T *state);
@@ -104,6 +105,7 @@ static void mqtt_pub_start_cb(void *arg, const char *topic, u32_t tot_len) {
 }
 
 static void mqtt_pub_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
+    MQTT_CLIENT_T *state = (MQTT_CLIENT_T *)arg;
     if (data_in > 0) {
         data_in -= len;
         memcpy(&buffer[data_len], data, len);
@@ -112,6 +114,8 @@ static void mqtt_pub_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags)
         if (data_in == 0) {
             buffer[data_len] = 0;
             DEBUG_printf("Message received: %s\n", &buffer);
+
+            strcpy(state->message, (const char*)buffer);
         }
     }
 }
@@ -262,19 +266,17 @@ void mqtt_run_test(MQTT_CLIENT_T *state) {
 void mqtt_subscribe_to_topics(MQTT_CLIENT_T *state) {
 
     const char* topics[] = { "pico_w/recv", "desk/commands", "alerts/#" };
-        
+    
+    cyw43_arch_lwip_begin();
     for (size_t i = 0; i < sizeof(topics)/sizeof(topics[0]); ++i) {
-
-            err_t e = mqtt_sub_unsub(state->mqtt_client, topics[i], 0, mqtt_sub_request_cb, 0, 1);
-
-            if (e == ERR_INPROGRESS) {
-            // Wait for mqtt_sub_request_cb before subscribing to the next
+        err_t e = mqtt_sub_unsub(state->mqtt_client, topics[i], 0, mqtt_sub_request_cb, 0, 1);
+        if (e == ERR_INPROGRESS) {
             break;
-            } 
-            else if (e != ERR_OK) {
-                DEBUG_printf("Subscribe failed for %s: %d\n", topics[i], e);
-            }
+        } else if (e != ERR_OK) {
+            DEBUG_printf("Subscribe failed for %s: %d\n", topics[i], e);
+        }
     }
+    cyw43_arch_lwip_end();
         
 }
 
@@ -283,9 +285,7 @@ void mqtt_create_client(MQTT_CLIENT_T *state) {
 
     state->counter = 0;  
 
-    mqtt_set_inpub_callback(state->mqtt_client, mqtt_pub_start_cb, mqtt_pub_data_cb, 0);
-
-    mqtt_subscribe_to_topics(state->mqtt_client);
+    mqtt_set_inpub_callback(state->mqtt_client, mqtt_pub_start_cb, mqtt_pub_data_cb, (void *)state);
 
     if (state->mqtt_client == NULL) {
         DEBUG_printf("Failed to create new mqtt client\n");
@@ -293,25 +293,15 @@ void mqtt_create_client(MQTT_CLIENT_T *state) {
     } 
 }
 
-void mqtt_client_live(MQTT_CLIENT_T *state) {
-    if (mqtt_test_connect(state) == ERR_OK) {
-            
-            absolute_time_t timeout = nil_time;
-                
-            cyw43_arch_poll();
-            
-            absolute_time_t now = get_absolute_time();
-            
-                if (is_nil_time(timeout) || absolute_time_diff_us(now, timeout) <= 0) {
-                    if (mqtt_client_is_connected(state->mqtt_client)) {
-                        cyw43_arch_lwip_begin();
-                        cyw43_arch_lwip_end();
-                    } else {
-                        DEBUG_printf(".");
-                    }
-                }
-        }
+void mqtt_wait_for_connection(MQTT_CLIENT_T *state) {
+    while (!mqtt_client_is_connected(state->mqtt_client)) {
+        cyw43_arch_poll();
+        sleep_ms(10);
+    }
+    DEBUG_printf("MQTT connected!\n");
 }
+
+
 
 
 
