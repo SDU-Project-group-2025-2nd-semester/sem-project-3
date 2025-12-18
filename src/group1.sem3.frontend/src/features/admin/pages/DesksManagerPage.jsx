@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 // Use centralized admin services
 import {
     getMyCompanies,
     getRooms,
     deleteRoom,
     getDesksForRoom,
+    setRoomHeight,
     getReservations,
     getUnadoptedDesks,
     adoptDesk,
-    unadoptDesk as apiDeleteDesk,
+    unadoptDesk,
     getSimulatorSettings,
     updateSimulatorSettings,
     deleteReservation as apiDeleteReservation,
@@ -154,6 +154,7 @@ export default function DesksManagerPage() {
         saturday: false,
         sunday: false
     });
+    const [roomHeight, setRoomHeightInput] = useState('');
 
     const [simulatorLink, setSimulatorLink] = useState('');
     const [simulatorApiKey, setSimulatorApiKey] = useState('');
@@ -428,7 +429,7 @@ export default function DesksManagerPage() {
 
         try {
             await deleteRoom(companyId, currentRoom.id);
-            await fetchInitialData();;
+            await fetchInitialData();
         } catch (error) {
             console.error('Error deleting room:', error);
             alert('Failed to delete room: ' + error.message);
@@ -486,6 +487,22 @@ export default function DesksManagerPage() {
         setOpeningTime('');
         setClosingTime('');
     };
+
+    const handleSetRoomHeight = async () => {
+        if (!roomHeight || isNaN(roomHeight) || parseFloat(roomHeight) <= 0) {
+            alert('Please enter a valid room height');
+            return;
+        }
+        try {
+            console.log(parseFloat(roomHeight * 10));
+            await setRoomHeight(companyId, currentRoom.id, parseFloat(roomHeight * 10));
+            setRoomHeightInput('');
+            await fetchDesksForRoom(activeRoom);
+        } catch (error) {
+            console.error('Error setting room height:', error);
+            alert('Failed to set room height: ' + error.message);
+        }
+    }
 
     // Room button component
     const RoomButton = ({ roomId, label }) => (
@@ -574,6 +591,7 @@ export default function DesksManagerPage() {
         }
 
         try {
+            console.log(companyId, deskId)
             await unadoptDesk(companyId, deskId);
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
@@ -600,112 +618,112 @@ export default function DesksManagerPage() {
     }
 
     // Simulator
-    const Simulator = () => {
-        return (
-            <div className="overflow-hidden mb-6">
-                <div className="px-6 pt-6 pb-4">
-                    <h1 className="text-2xl font-semibold text-gray-800">Simulator Management</h1>
-                </div>
+    // const Simulator = () => {
+    //     return (
+    //         <div className="overflow-hidden mb-6">
+    //             <div className="px-6 pt-6 pb-4">
+    //                 <h1 className="text-2xl font-semibold text-gray-800">Simulator Management</h1>
+    //             </div>
 
-                <div className="p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Current Settings Display */}
-                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="material-symbols-outlined text-gray-600">settings</span>
-                                <h2 className="text-lg font-semibold text-gray-800">Current Settings</h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                                        Simulator Link
-                                    </label>
-                                    <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 break-all shadow-sm">
-                                        {currentSimulatorLink ? (
-                                            <span className="text-accent-600">{currentSimulatorLink}</span>
-                                        ) : (
-                                            <span className="text-gray-400 italic">Not configured</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                                        API Key
-                                    </label>
-                                    <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-sm">
-                                        {currentSimulatorLink ? (
-                                            <span className="text-gray-600 select-none">********************************</span>
-                                        ) : (
-                                            <span className="text-gray-400 italic">Not configured</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    //             <div className="p-6">
+    //                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    //                     {/* Current Settings Display */}
+    //                     <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
+    //                         <div className="flex items-center gap-2 mb-4">
+    //                             <span className="material-symbols-outlined text-gray-600">settings</span>
+    //                             <h2 className="text-lg font-semibold text-gray-800">Current Settings</h2>
+    //                         </div>
+    //                         <div className="space-y-4">
+    //                             <div>
+    //                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+    //                                     Simulator Link
+    //                                 </label>
+    //                                 <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 break-all shadow-sm">
+    //                                     {currentSimulatorLink ? (
+    //                                         <span className="text-accent-600">{currentSimulatorLink}</span>
+    //                                     ) : (
+    //                                         <span className="text-gray-400 italic">Not configured</span>
+    //                                     )}
+    //                                 </div>
+    //                             </div>
+    //                             <div>
+    //                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+    //                                     API Key
+    //                                 </label>
+    //                                 <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-sm">
+    //                                     {currentSimulatorLink ? (
+    //                                         <span className="text-gray-600 select-none">********************************</span>
+    //                                     ) : (
+    //                                         <span className="text-gray-400 italic">Not configured</span>
+    //                                     )}
+    //                                 </div>
+    //                             </div>
+    //                         </div>
+    //                     </div>
 
-                        {/* Update Form */}
-                        <form onSubmit={handleSaveSimulator} className="bg-white rounded-xl border border-gray-200 p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="material-symbols-outlined text-gray-600">edit</span>
-                                <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Simulator Link
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="https://simulator.example.com"
-                                        value={simulatorLink}
-                                        onChange={(e) => setSimulatorLink(e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-                                            }`}
-                                    />
-                                    {simulatorErrors.link && (
-                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm">error</span>
-                                            {simulatorErrors.link}
-                                        </p>
-                                    )}
-                                </div>
+    //                     {/* Update Form */}
+    //                     <form onSubmit={handleSaveSimulator} className="bg-white rounded-xl border border-gray-200 p-6">
+    //                         <div className="flex items-center gap-2 mb-4">
+    //                             <span className="material-symbols-outlined text-gray-600">edit</span>
+    //                             <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
+    //                         </div>
+    //                         <div className="space-y-4">
+    //                             <div>
+    //                                 <label className="block text-sm font-medium text-gray-700 mb-2">
+    //                                     Simulator Link
+    //                                 </label>
+    //                                 <input
+    //                                     type="text"
+    //                                     placeholder="https://simulator.example.com"
+    //                                     value={simulatorLink}
+    //                                     onChange={(e) => setSimulatorLink(e.target.value)}
+    //                                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+    //                                         }`}
+    //                                 />
+    //                                 {simulatorErrors.link && (
+    //                                     <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+    //                                         <span className="material-symbols-outlined text-sm">error</span>
+    //                                         {simulatorErrors.link}
+    //                                     </p>
+    //                                 )}
+    //                             </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        API Key
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Enter 32-character API key"
-                                        value={simulatorApiKey}
-                                        onChange={(e) => setSimulatorApiKey(e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-                                            }`}
-                                    />
-                                    {simulatorErrors.apiKey && (
-                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm">error</span>
-                                            {simulatorErrors.apiKey}
-                                        </p>
-                                    )}
-                                </div>
+    //                             <div>
+    //                                 <label className="block text-sm font-medium text-gray-700 mb-2">
+    //                                     API Key
+    //                                 </label>
+    //                                 <input
+    //                                     type="text"
+    //                                     placeholder="Enter 32-character API key"
+    //                                     value={simulatorApiKey}
+    //                                     onChange={(e) => setSimulatorApiKey(e.target.value)}
+    //                                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+    //                                         }`}
+    //                                 />
+    //                                 {simulatorErrors.apiKey && (
+    //                                     <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+    //                                         <span className="material-symbols-outlined text-sm">error</span>
+    //                                         {simulatorErrors.apiKey}
+    //                                     </p>
+    //                                 )}
+    //                             </div>
 
-                                <div className="pt-2">
-                                    <button
-                                        type="submit"
-                                        className="w-full px-6 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                                    >
-                                        <span className="material-symbols-outlined text-sm">save</span>
-                                        Save Settings
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        );
-    };
+    //                             <div className="pt-2">
+    //                                 <button
+    //                                     type="submit"
+    //                                     className="w-full px-6 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+    //                                 >
+    //                                     <span className="material-symbols-outlined text-sm">save</span>
+    //                                     Save Settings
+    //                                 </button>
+    //                             </div>
+    //                         </div>
+    //                     </form>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     );
+    // };
 
     const currentRoom = rooms.find(r => r.id === activeRoom);
     const isUnadoptedView = activeRoom === 'unadopted';
@@ -936,6 +954,28 @@ export default function DesksManagerPage() {
                                     >
                                         <span className="material-symbols-outlined text-sm leading-none">delete</span>
                                         Delete room
+                                    </button>
+                                </div>
+                                <div className="mt-3 flex gap-2 items-end">
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Room Height (cm)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            placeholder="Enter height in cm"
+                                            value={roomHeight}
+                                            onChange={(e) => setRoomHeightInput(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
+                                            min="0"
+                                            step="0.1"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={handleSetRoomHeight}
+                                        className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors inline-flex items-center gap-2"
+                                    >
+                                        Set Height
                                     </button>
                                 </div>
                             </div>
