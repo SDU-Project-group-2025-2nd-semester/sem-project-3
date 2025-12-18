@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getUsersByCompany, getMyProfile } from "../../services/userService";
 import { getReservations } from "../../services/reservationService";
 import { getDeskById } from "../../services/deskService";
-import { kickUser } from "../../services/companyService";
+import { updateUserRole, kickUser } from "../../services/companyService";
 
 export default function UsersManagerPage() {
   const navigate = useNavigate();
@@ -151,6 +151,24 @@ export default function UsersManagerPage() {
     }
   };
 
+  const handleRoleChange = async (userId, newRole) => {
+    const user = [...users, ...staff].find(u => u.id === userId);
+    const roleNames = { 0: 'User', 1: 'Janitor', 2: 'Admin' };
+
+    if (!confirm(`Change ${user?.firstName} ${user?.lastName}'s role to ${roleNames[newRole]}?`)) {
+      return;
+    }
+
+    try {
+      console.log(newRole);
+      await updateUserRole(companyId, userId, newRole);
+      await fetchUserAndStaff();
+    } catch (error) {
+      console.error('Error changing role:', error);
+      alert('Failed to change role: ' + error.message);
+    }
+  };
+
   const TableHeader = ({ columns }) => (
     <thead className="bg-gray-50 max-lg:hidden">
       <tr>
@@ -218,25 +236,33 @@ export default function UsersManagerPage() {
           {user.sittingTime ?? 'no time available'} min
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-          <MobileLabel>Actions</MobileLabel>
-          <div className="flex gap-2">
-            <button
-              className="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
-              disabled={!latestReservation || new Date(latestReservation.end) < new Date()}
-              onClick={() => handleCancelReservation(user.id)}
-              title={latestReservation && new Date(latestReservation.end) >= new Date() ? "Cancel reservation" : "No active reservation"}
-            >
-              Cancel Reservation
-            </button>
-            <button
-              className="bg-danger-500 text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center justify-center gap-1 max-lg:flex-1"
-              onClick={() => handleRemoveUser(user.id)}
-              title="Remove user account"
-            >
-              <span className="material-symbols-outlined text-sm leading-none">delete</span>
-              <span>Remove</span>
-            </button>
-          </div>
+          <MobileLabel>Role</MobileLabel>
+          <select
+            value={user.role}
+            onChange={(e) => handleRoleChange(user.id, Number(e.target.value))}
+            className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <option value={0}>User</option>
+            <option value={1}>Janitor</option>
+          </select>
+        </td>
+        <td className="px-4 py-3 text-sm max-lg:w-full max-lg:flex max-lg:flex-row max-lg:gap-2 max-lg:mt-2">
+          <button
+            className="bg-accent text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-accent-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all max-lg:flex-[4]"
+            disabled={!latestReservation || new Date(latestReservation.end) < new Date()}
+            onClick={() => handleCancelReservation(user.id)}
+            title={latestReservation && new Date(latestReservation.end) >= new Date() ? "Cancel reservation" : "No active reservation"}
+          >
+            Cancel Reservation
+          </button>
+          <button
+            className="bg-danger-500 text-white lg:ml-2 px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center justify-center gap-1 max-lg:flex-1"
+            onClick={() => handleRemoveUser(user.id)}
+            title="Remove user account"
+          >
+            <span className="material-symbols-outlined text-sm leading-none">delete</span>
+            <span>Remove</span>
+          </button>
         </td>
       </tr>
     );
@@ -253,31 +279,18 @@ export default function UsersManagerPage() {
         <MobileLabel>Job Description</MobileLabel>
         {staffMember.role === 1 ? 'Janitor' : staffMember.role === 2 ? 'Admin' : 'Staff'}
       </td>
-      {/* Working  schedule?*/}
-      {/* <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
-        <details className="cursor-pointer group">
-          <summary className="text-sm font-medium text-gray-600 hover:text-gray-700 list-none max-lg:font-semibold">
-            <span className="inline-flex items-center gap-1">
-              View schedule
-              <span className="material-symbols-outlined text-base group-open:rotate-180 transition-transform">
-                expand_more
-              </span>
-            </span>
-          </summary>
-          <div className="mt-2 text-xs space-y-1 pl-4 border-l-2 border-gray-200">
-            {staffMember.WorkingSchedule ? (
-              Object.entries(staffMember.WorkingSchedule).map(([day, time]) => (
-                <div key={day} className="flex gap-2">
-                  <span className="font-medium text-gray-700 min-w-[60px]">{day}:</span>
-                  <span className="text-gray-600">{time}</span>
-                </div>
-              ))
-            ) : (
-              <div className="text-gray-400">No schedule available</div>
-            )}
-          </div>
-        </details>
-      </td> */}
+      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+        <MobileLabel>Role</MobileLabel>
+        <select
+          value={staffMember.role}
+          onChange={(e) => handleRoleChange(staffMember.id, Number(e.target.value))}
+          className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-accent"
+          disabled={staffMember?.id === me?.id}
+        >
+          <option value={0}>User</option>
+          <option value={1}>Janitor</option>
+        </select>
+      </td>
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:mt-2">
         <button
           className="bg-danger-500 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -338,6 +351,7 @@ export default function UsersManagerPage() {
                     'Desk',
                     'Desk Time',
                     'Sitting Time',
+                    'Role',
                     'Actions'
                   ]}
                 />
@@ -366,7 +380,7 @@ export default function UsersManagerPage() {
                     'Name',
                     'Email',
                     'Job Description',
-                    // 'Working Schedule',
+                    'Role',
                     'Action'
                   ]}
                 />

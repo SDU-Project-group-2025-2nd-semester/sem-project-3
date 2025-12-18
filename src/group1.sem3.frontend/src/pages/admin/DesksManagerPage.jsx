@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { get, post, put, del } from "../../context/apiClient";
 import { getMyCompanies } from "../../services/companyService";
-import { getRooms } from "../../services/roomService";
-import { getDesksForRoom } from "../../services/deskService";
+import { getRooms, deleteRoom } from "../../services/roomService";
+import { getDesksForRoom, unadoptDesk } from "../../services/deskService";
 import { getReservations } from "../../services/reservationService";
 
 export default function DesksManagerPage() {
@@ -118,7 +118,7 @@ export default function DesksManagerPage() {
 
     const fetchUnadoptedDesks = async () => {
         if (!companyId) return;
-        
+
         try {
             setLoadingUnadopted(true);
             setError(null);
@@ -305,6 +305,20 @@ export default function DesksManagerPage() {
         setEditingHours(true);
     };
 
+    const handleDeleteRoom = async () => {
+        if (!confirm('Are you sure you want to delete this room?')) {
+            return;
+        }
+
+        try {
+            await deleteRoom(companyId, currentRoom.id);
+            await fetchInitialData();;
+        } catch (error) {
+            console.error('Error deleting room:', error);
+            alert('Failed to delete room: ' + error.message);
+        }
+    };
+
     const handleSaveHours = async () => {
         if (!openingTime || !closingTime) {
             alert('Please enter both opening and closing times');
@@ -436,12 +450,12 @@ export default function DesksManagerPage() {
     };
 
     const handleDeleteDesk = async (deskId) => {
-        if (!confirm('Are you sure you want to delete this desk?')) {
+        if (!confirm('Are you sure you want to un-adopt this desk?')) {
             return;
         }
 
         try {
-            await del(`/${companyId}/desks/${deskId}`);
+            await unadoptDesk(companyId, deskId);
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
             console.error('Error deleting desk:', error);
@@ -473,7 +487,7 @@ export default function DesksManagerPage() {
                 <div className="px-6 pt-6 pb-4">
                     <h1 className="text-2xl font-semibold text-gray-800">Simulator Management</h1>
                 </div>
-                
+
                 <div className="p-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Current Settings Display */}
@@ -526,9 +540,8 @@ export default function DesksManagerPage() {
                                         placeholder="https://simulator.example.com"
                                         value={simulatorLink}
                                         onChange={(e) => setSimulatorLink(e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${
-                                            simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-                                        }`}
+                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+                                            }`}
                                     />
                                     {simulatorErrors.link && (
                                         <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
@@ -547,9 +560,8 @@ export default function DesksManagerPage() {
                                         placeholder="Enter 32-character API key"
                                         value={simulatorApiKey}
                                         onChange={(e) => setSimulatorApiKey(e.target.value)}
-                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${
-                                            simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-                                        }`}
+                                        className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
+                                            }`}
                                     />
                                     {simulatorErrors.apiKey && (
                                         <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
@@ -558,7 +570,7 @@ export default function DesksManagerPage() {
                                         </p>
                                     )}
                                 </div>
-                                
+
                                 <div className="pt-2">
                                     <button
                                         type="submit"
@@ -783,6 +795,14 @@ export default function DesksManagerPage() {
                                             </button>
                                         </>
                                     )}
+                                    <button
+                                        onClick={handleDeleteRoom}
+                                        className="bg-danger text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1"
+                                        title="Delete room"
+                                    >
+                                        <span className="material-symbols-outlined text-sm leading-none">delete</span>
+                                        Delete room
+                                    </button>
                                 </div>
                             </div>
 

@@ -17,6 +17,9 @@ export async function updateSimulator(companyId, payload) {
  return put(`/Company/${companyId}/simulator`, payload);
 }
 
+export async function updateUserRole(companyId, userId, payload) {
+ return put(`/Company/${companyId}/users/${userId}?userRole=${payload}`);
+
 export async function enterCompany(companyId, accessCode) {
  return post(`/Company/${companyId}/access`, accessCode);
 }
