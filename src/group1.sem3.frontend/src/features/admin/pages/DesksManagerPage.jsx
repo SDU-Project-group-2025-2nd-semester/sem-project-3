@@ -494,7 +494,6 @@ export default function DesksManagerPage() {
             return;
         }
         try {
-            console.log(parseFloat(roomHeight * 10));
             await setRoomHeight(companyId, currentRoom.id, parseFloat(roomHeight * 10));
             setRoomHeightInput('');
             await fetchDesksForRoom(activeRoom);
@@ -591,7 +590,6 @@ export default function DesksManagerPage() {
         }
 
         try {
-            console.log(companyId, deskId)
             await unadoptDesk(companyId, deskId);
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
