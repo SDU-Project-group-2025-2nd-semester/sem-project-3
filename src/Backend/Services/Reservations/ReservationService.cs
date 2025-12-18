@@ -76,4 +76,18 @@ public class ReservationService(BackendContext dbContext, IReservationScheduler 
 
         return reservation; 
     }
+
+    public async Task UpdateReservation(Guid reservationId, UpdateReservationDto dto)
+    {
+        var reservation = await GetReservation(reservationId);
+
+        if (dto.Start.HasValue)
+            reservation.Start = dto.Start.Value;
+        if (dto.End.HasValue)
+            reservation.End = dto.End.Value;
+        if (dto.DeskId.HasValue)
+            reservation.DeskId = dto.DeskId.Value;
+
+        await dbContext.SaveChangesAsync();
+    }
 }
