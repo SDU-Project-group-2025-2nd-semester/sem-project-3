@@ -14,6 +14,7 @@
 
 #include "OLEDDisplay.h"
 #include "MqttClient.h"
+#include "NeoPixel.h"
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -36,6 +37,7 @@ public:
 
 private:                                                   
     OLEDDisplay display;                                                 
+    NeoPixel RGBLed;
 };
 
 #endif

@@ -16,11 +16,12 @@
 #include "crypto_consts.h"
 #include "tusb.h"
 #include "MqttClient.h"
+#include "NeoPixel.h"
 
 
 MyApp::MyApp()
-    :                                                                
-      display(i2c_default, 0x3C, 128, 32)                                  
+        : display(i2c_default, 0x3C, 128, 32),
+          RGBLed(6, 1)
 {
     stdio_init_all();
     
@@ -196,6 +197,16 @@ void MyApp::run() {
             }
             
         } */
+
+        if(message == "green") {
+            RGBLed.setPixelColor(0,0,255,0); //Free
+        }
+        else if (message == "yellow") {
+            RGBLed.setPixelColor(0,255,255,0); //Booked
+        }
+        else if (message == "red") {
+            RGBLed.setPixelColor(0,255,0,0); //Occupied
+        }
 
         
         cyw43_arch_poll();

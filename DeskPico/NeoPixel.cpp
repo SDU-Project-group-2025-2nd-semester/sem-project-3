@@ -13,7 +13,10 @@ NeoPixel::NeoPixel(uint8_t pinNumber, uint16_t numberOfPixels) {
     this->pixelSm = 0;                         // Use state machine 0 of the PIO
     this->pixelPio = pio0;                     // Use PIO0 hardware
     this->Init(pinNumber, numberOfPixels);     // Call initialization function
-}
+} 
+
+
+
 
 // Initializes the PIO program for controlling WS2812 LEDs (NeoPixel)
 void NeoPixel::Init(uint8_t pinNumber, uint16_t numberOfPixels) {
