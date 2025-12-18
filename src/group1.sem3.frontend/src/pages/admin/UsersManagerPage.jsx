@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUsersByCompany, getMyProfile, deleteUser } from "../../services/userService";
+import { getUsersByCompany, getMyProfile } from "../../services/userService";
 import { getReservations } from "../../services/reservationService";
 import { getDeskById } from "../../services/deskService";
-import { updateUserRole } from "../../services/companyService";
+import { updateUserRole, kickUser } from "../../services/companyService";
 
 export default function UsersManagerPage() {
   const navigate = useNavigate();
@@ -143,7 +143,7 @@ export default function UsersManagerPage() {
       return;
     }
     try {
-      await deleteUser(userId);
+      await kickUser(companyId, userId);
       await fetchUserAndStaff();
     } catch (error) {
       console.error(`Error removing user: `, error);

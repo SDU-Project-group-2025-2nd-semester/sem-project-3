@@ -1,4 +1,4 @@
-import { get, put } from "../context/apiClient";
+import { get, put, del } from "../context/apiClient";
 
 export async function getMyCompanies() {
  return get("/Users/me/companies");
@@ -14,4 +14,8 @@ export async function updateSimulator(companyId, payload) {
 
 export async function updateUserRole(companyId, userId, payload) {
  return put(`/Company/${companyId}/users/${userId}?userRole=${payload}`);
+}
+
+export async function kickUser(companyId, userId) {
+    return del(`/Company/${companyId}/users/${userId}`);
 }
