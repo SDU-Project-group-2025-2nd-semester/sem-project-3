@@ -7,6 +7,7 @@ import {
  getReservations,
  deleteReservation,
  getDeskById,
+ updateUserRole,
 } from "../admin.services";
 
 export function useUsersManager() {
@@ -147,6 +148,24 @@ export function useUsersManager() {
  }
  }, [users, staff, fetchUserAndStaff]);
 
+
+ const handleRoleChange = useCallback(async (userId, newRole) => {
+    const user = [...users, ...staff].find(u => u.id === userId);
+    const roleNames = { 0: 'User', 1: 'Janitor', 2: 'Admin' };
+
+    if (!confirm(`Change ${user?.firstName} ${user?.lastName}'s role to ${roleNames[newRole]}?`)) {
+      return;
+    }
+
+    try {
+      await updateUserRole(companyId, userId, newRole);
+      await fetchUserAndStaff();
+    } catch (error) {
+      console.error('Error changing role:', error);
+      alert('Failed to change role: ' + error.message);
+    }
+  }, [companyId, users, staff, fetchUserAndStaff]);
+
  return {
  users,
  staff,
@@ -161,5 +180,6 @@ export function useUsersManager() {
  formatDate,
  handleCancelReservation,
  handleRemoveUser,
+ handleRoleChange
  };
 }
