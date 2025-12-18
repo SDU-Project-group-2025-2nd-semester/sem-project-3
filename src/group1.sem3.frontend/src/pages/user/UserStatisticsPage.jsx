@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { get } from "../../context/apiClient";
 import { useAuth } from "../../context/AuthContext";
+import { GetCompanyStats, GetRoomStats, GetDeskStats, GetUserStats } from "../../services/statisticsService";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell
 } from 'recharts';
