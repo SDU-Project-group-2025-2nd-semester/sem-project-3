@@ -16,6 +16,7 @@ import Header from "./components/Header";
 import Scanning from "./pages/user/Scanning";
 import DeskPage from "./pages/user/DeskPage";
 import DamageReportPage from "./pages/staff/DamageReportPage";
+import CompanyJoinPage from "./pages/staff/CompanyJoinPage";
 import Sidebar from "./components/Sidebar";
 import { useState } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -50,6 +51,8 @@ export default function App() {
                         <Route path="/user/damagereport" element={<ProtectedRoute><DamageReportPage /></ProtectedRoute>} />
                         <Route path="/user/statistics" element={<ProtectedRoute><UserStatisticsPage /></ProtectedRoute>} />
                         <Route path="/user/reservation/:reservationId" element={<ProtectedRoute><DeskPage /></ProtectedRoute>} />
+                        <Route path="/user/companies/join" element={<CompanyJoinPage />} /> {/* should be protected? */}
+                        <Route path="/staff/companies/join" element={<CompanyJoinPage />} /> {/* should be protected? */}
                     </Routes>
                 </main>
             </div>
