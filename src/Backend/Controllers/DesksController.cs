@@ -79,13 +79,17 @@ public class DesksController(IDeskService deskService) : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{deskId}")]
+    /// <summary>
+    /// Un-adopts a desk, removing it from the database but keeping it available in the simulator.
+    /// The desk will appear in the "not-adopted" list after this operation.
+    /// </summary>
+    [HttpDelete("unadopt/{deskId}")]
     [RequireRole(UserRole.Admin)]
-    public async Task<IActionResult> DeleteDesk(Guid companyId, Guid deskId)
+    public async Task<IActionResult> UnadoptDesk(Guid companyId, Guid deskId)
     {
-        var deletedSuccessfully = await deskService.DeleteDeskAsync(companyId, deskId);
+        var unadoptedSuccessfully = await deskService.UnadoptDeskAsync(companyId, deskId);
 
-        if (!deletedSuccessfully)
+        if (!unadoptedSuccessfully)
             return NotFound();
 
         return NoContent();
