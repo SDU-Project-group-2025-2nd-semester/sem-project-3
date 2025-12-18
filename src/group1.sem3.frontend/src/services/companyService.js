@@ -12,6 +12,10 @@ export async function updateSimulator(companyId, payload) {
  return put(`/Company/${companyId}/simulator`, payload);
 }
 
+export async function updateUserRole(companyId, userId, payload) {
+ return put(`/Company/${companyId}/users/${userId}?userRole=${payload}`);
+}
+
 export async function kickUser(companyId, userId) {
     return del(`/Company/${companyId}/users/${userId}`);
 }

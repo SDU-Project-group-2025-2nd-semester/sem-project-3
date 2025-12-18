@@ -30,13 +30,18 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
 
     [HttpPut("{companyId}/users/{userId}")]
     [RequireRole(UserRole.Admin)]
-    public async Task<IActionResult> ManageUsers(Guid companyId, string userId ,UserRole userRole)
+    public async Task<IActionResult> ManageUsers(Guid companyId, string userId, UserRole userRole)
     {
         var userCompany = await dbContext.UserCompanies.Where(uc => uc.CompanyId == companyId && uc.UserId == userId).FirstOrDefaultAsync();
 
         if (userCompany is null)
         {
             return NotFound();
+        }
+
+        if (userRole == UserRole.Admin)
+        {
+            return BadRequest();
         }
 
         userCompany.Role = userRole;
