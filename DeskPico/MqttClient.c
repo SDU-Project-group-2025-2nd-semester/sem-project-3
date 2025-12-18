@@ -22,7 +22,7 @@
 
 #define MQTT_TLS 0 // needs to be 1 for AWS IoT. Also set published QoS to 0 or 1
 #define CRYPTO_MOSQUITTO_TEST
-#define MQTT_SERVER_HOST "test.mosquitto.org"
+#define MQTT_SERVER_HOST "broker.hivemq.com"
 #define MQTT_SERVER_PORT 1883
 
 #if MQTT_TLS
@@ -146,7 +146,7 @@ err_t mqtt_test_publish(MQTT_CLIENT_T *state)
   u8_t qos = 0; /* 0 1 or 2, see MQTT specification.  AWS IoT does not support QoS 2 */
   u8_t retain = 0;
   cyw43_arch_lwip_begin();
-  err = mqtt_publish(state->mqtt_client, "pico_w/test", buffer, strlen(buffer), qos, retain, mqtt_pub_request_cb, state);
+  err = mqtt_publish(state->mqtt_client, "gooby", buffer, strlen(buffer), qos, retain, mqtt_pub_request_cb, state);
   cyw43_arch_lwip_end();
   if(err != ERR_OK) {
     DEBUG_printf("Publish err: %d\n", err);
@@ -225,7 +225,7 @@ void mqtt_run_test(MQTT_CLIENT_T *state) {
         DEBUG_printf("Failed to create new mqtt client\n");
         return;
     } 
-    // psa_crypto_init();
+     //psa_crypto_init();
     if (mqtt_test_connect(state) == ERR_OK) {
         absolute_time_t timeout = nil_time;
         bool subscribed = false;
@@ -258,6 +258,62 @@ void mqtt_run_test(MQTT_CLIENT_T *state) {
         }
     }
 }
+
+void mqtt_subscribe_to_topics(MQTT_CLIENT_T *state) {
+
+    const char* topics[] = { "pico_w/recv", "desk/commands", "alerts/#" };
+        
+    for (size_t i = 0; i < sizeof(topics)/sizeof(topics[0]); ++i) {
+
+            err_t e = mqtt_sub_unsub(state->mqtt_client, topics[i], 0, mqtt_sub_request_cb, 0, 1);
+
+            if (e == ERR_INPROGRESS) {
+            // Wait for mqtt_sub_request_cb before subscribing to the next
+            break;
+            } 
+            else if (e != ERR_OK) {
+                DEBUG_printf("Subscribe failed for %s: %d\n", topics[i], e);
+            }
+    }
+        
+}
+
+void mqtt_create_client(MQTT_CLIENT_T *state) {
+    state->mqtt_client = mqtt_client_new();
+
+    state->counter = 0;  
+
+    mqtt_set_inpub_callback(state->mqtt_client, mqtt_pub_start_cb, mqtt_pub_data_cb, 0);
+
+    mqtt_subscribe_to_topics(state->mqtt_client);
+
+    if (state->mqtt_client == NULL) {
+        DEBUG_printf("Failed to create new mqtt client\n");
+        return;
+    } 
+}
+
+void mqtt_client_live(MQTT_CLIENT_T *state) {
+    if (mqtt_test_connect(state) == ERR_OK) {
+            
+            absolute_time_t timeout = nil_time;
+                
+            cyw43_arch_poll();
+            
+            absolute_time_t now = get_absolute_time();
+            
+                if (is_nil_time(timeout) || absolute_time_diff_us(now, timeout) <= 0) {
+                    if (mqtt_client_is_connected(state->mqtt_client)) {
+                        cyw43_arch_lwip_begin();
+                        cyw43_arch_lwip_end();
+                    } else {
+                        DEBUG_printf(".");
+                    }
+                }
+        }
+}
+
+
 
 /*int main() { 
     stdio_init_all();

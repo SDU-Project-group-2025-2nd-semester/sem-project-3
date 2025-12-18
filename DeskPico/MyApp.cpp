@@ -14,16 +14,7 @@
 #include "lwip/apps/mqtt_priv.h"
 #include "crypto_consts.h"
 #include "tusb.h"
-#include "picow_iot.h"
-
-typedef struct MQTT_CLIENT_T_ {
-    ip_addr_t remote_addr;
-    mqtt_client_t *mqtt_client;
-    u32_t received;
-    u32_t counter;
-    u32_t reconnect;
-} MQTT_CLIENT_T;
-
+#include "MqttClient.h"
 
 
 MyApp::MyApp()
@@ -47,9 +38,6 @@ MyApp::MyApp()
         printf("Connected.\n");
     }
 
-    
-
-    
 
     i2c_init(i2c_default, 400 * 1000);                                     
     gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);            
@@ -106,19 +94,21 @@ void MyApp::buzz() {
     buzzTone(1000, 2000);
 }
 
-
-
-void MyApp::run() {
-    stdio_init_all();
-
-
+void MyApp::mqttClientInitialisation() {
     MQTT_CLIENT_T *state = mqtt_client_init();
 
     run_dns_lookup(state);
- 
-    mqtt_run_test(state);
+}
 
-    cyw43_arch_deinit();
+void MyApp::run() {
+
+    
+    
+    
+
+    
+
+    
     
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, true);
@@ -159,10 +149,6 @@ void MyApp::run() {
 
         //gpio_put(LED_PIN, ledState ? LED_ON : LED_OFF);                                
         //display.drawQRCode(0, 0, qr, 1);
-       
-
-        
-
         //display.writeText(5, 16, "TEST");
         //display.render(); 
         //display.clear();
@@ -179,7 +165,7 @@ void MyApp::run() {
             display.writeText(5,16, "STAND");
         } */
 
-        if (pressedEvent) {
+        /* if (pressedEvent) {
             display.clear();
             switch(counter) {
                 case 1:
@@ -199,9 +185,11 @@ void MyApp::run() {
                     break;
             }
             
-        }
+        } */
 
+        
 
         sleep_ms(50);                                                    
     }
+    cyw43_arch_deinit();
 }

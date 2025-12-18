@@ -46,25 +46,29 @@ if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
     if (NOT TARGET pico_cyw43_arch)
         message("Skipping build as support is not available")
     else()
-        set(WIFI_SSID "UK-138" CACHE INTERNAL "WiFi SSID")
-        set(WIFI_PASSWORD "FtZTxzJN" CACHE INTERNAL "WiFi password")
+        set(WIFI_SSID "stehlovci" CACHE INTERNAL "WiFi SSID")
+        set(WIFI_PASSWORD "38481963" CACHE INTERNAL "WiFi password")
 
-        if ("UK-138" STREQUAL "")
+        if ("stehlovci" STREQUAL "")
             message("Skipping build as WIFI_SSID is not defined")
-        elseif ("FtZTxzJN" STREQUAL "")
+        elseif ("38481963" STREQUAL "")
             message("Skipping build as WIFI_PASSWORD is not defined")
         else()
             add_executable(DeskPico
                 DeskPico.cpp
                 MyApp.cpp
                 OLEDDisplay.cpp
-                picow_iot.c
+                NeoPixel.cpp
+                MqttClient.c
             )
+            
+            # Generate PIO header for WS2812
+            pico_generate_pio_header(DeskPico ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
 
 
             target_compile_definitions(DeskPico PRIVATE
-            WIFI_SSID=\"UK-138\"
-            WIFI_PASSWORD=\"FtZTxzJN\"
+            WIFI_SSID=\"stehlovci\"
+            WIFI_PASSWORD=\"38481963\"
             TEST_TCP_SERVER_IP=\"${TEST_TCP_SERVER_IP}\"
             NO_SYS=1
             )
@@ -83,6 +87,7 @@ if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
                 qrcodegencpp
                 hardware_i2c
                 hardware_adc
+                hardware_pio
             )
 
         endif()

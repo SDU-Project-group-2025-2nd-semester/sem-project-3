@@ -31,10 +31,11 @@ public:
     qrcodegen::QrCode generateQRCode(std::string address);
     std::string getBarcode();
     void buzzTone(unsigned int frequency, unsigned int duration_ms);     
-    void buzz();                                                         
+    void buzz(); 
+    void mqttClientInitialisation();                                                        
 
 private:                                                   
-    OLEDDisplay display;                                                  
+    OLEDDisplay display;                                                 
 };
 
 #endif

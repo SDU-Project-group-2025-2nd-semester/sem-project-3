@@ -1,5 +1,5 @@
-#ifndef PICOW_IOT_H
-#define PICOW_IOT_H
+#ifndef MQTTCLIENT_H
+#define MQTTCLIENT_H
 
 #include <stdint.h>
 #include "lwip/err.h"
