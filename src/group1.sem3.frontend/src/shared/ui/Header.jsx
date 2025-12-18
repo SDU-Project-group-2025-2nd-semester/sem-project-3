@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@features/auth/AuthContext";
 import Icon from '@reacticons/bootstrap-icons';
 import { homepagePathForRole } from "../utils/homepage";
-import logo from "../assets/logo_white-lamp.svg";
+import logo from "../../assets/logo_white-lamp.svg";
 
 export default function Header({ toggleSidebar }) {
     const { currentUser } = useAuth();

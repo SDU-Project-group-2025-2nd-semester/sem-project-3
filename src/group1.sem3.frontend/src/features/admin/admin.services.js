@@ -69,7 +69,7 @@ export async function adoptDesk(companyId, macAddress, rpiMacAddress, roomId) {
  return post(`/${companyId}/Desks`, payload);
 }
 
-export async function deleteDesk(companyId, deskId) {
+export async function unadoptDesk(companyId, deskId) {
  return del(`/${companyId}/Desks/${deskId}`);
 }
 

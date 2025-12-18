@@ -5,7 +5,6 @@ import { useAuth } from "@features/auth/AuthContext";
 export default function ProtectedRoute({ children, roles } = {}) {
   const { isHydrating, isAuthenticated, currentUser } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
 
   if (isHydrating) {
     // show a minimal loading state instead of rendering nothing
