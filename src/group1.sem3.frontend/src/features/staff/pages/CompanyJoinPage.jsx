@@ -1,3 +1,4 @@
+import NotificationBanner from "@shared/ui/NotificationBanner";
 import { useCompanyJoin } from "../hooks/useCompanyJoin";
 
 export default function CompanyJoinPage() {
@@ -30,11 +31,7 @@ export default function CompanyJoinPage() {
                     Please provide the invite code for the company you want to join.
                 </h1>
 
-                {error && (
-                <div className="mt-4 p-3 bg-red-50 text-red-700 border border-red-200 rounded">
-                    {error}
-                </div>
-                )}
+                {error && <NotificationBanner type="error">{String(error)}</NotificationBanner>}
 
                 {availableCompanies.length === 0 ? (
                     <p className="mt-6 text-gray-600">
