@@ -528,3 +528,36 @@ export function useDesksManagerPage() {
         handleDeleteDesk
     };
 }
+
+export function useUnadoptedDeskRow(macAddress, onAdopt) {
+    const [rpiMacAddress, setRpiMacAddress] = useState('');
+    const [selectedRoomId, setSelectedRoomId] = useState('');
+    const [isAdopting, setIsAdopting] = useState(false);
+
+    const handleAdopt = async () => {
+        if (!selectedRoomId) {
+            alert('Please select a room');
+            return;
+        }
+
+        setIsAdopting(true);
+        try {
+            await onAdopt(macAddress, rpiMacAddress, selectedRoomId);
+            setRpiMacAddress('');
+            setSelectedRoomId('');
+        } catch (error) {
+            console.error('Error in adopt handler:', error);
+        } finally {
+            setIsAdopting(false);
+        }
+    };
+
+    return {
+        rpiMacAddress,
+        setRpiMacAddress,
+        selectedRoomId,
+        setSelectedRoomId,
+        isAdopting,
+        handleAdopt
+    };
+}

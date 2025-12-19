@@ -1,4 +1,4 @@
-import { useDesksManagerPage } from "../hooks/useDeskManager"
+import { useDesksManagerPage, useUnadoptedDeskRow } from "../hooks/useDeskManager"
 
 function Simulator({
     currentSimulatorLink,
@@ -544,7 +544,7 @@ export default function DesksManagerPage() {
                                 <div className="mt-3 flex gap-2 items-end">
                                     <div className="flex-1">
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Room Height (cm)
+                                            Desk Height
                                         </label>
                                         <input
                                             type="number"
@@ -718,27 +718,14 @@ export default function DesksManagerPage() {
 
 // Component for unadopted desk row
 function UnadoptedDeskRow({ macAddress, rooms, onAdopt }) {
-    const [rpiMacAddress, setRpiMacAddress] = useState('');
-    const [selectedRoomId, setSelectedRoomId] = useState('');
-    const [isAdopting, setIsAdopting] = useState(false);
-
-    const handleAdopt = async () => {
-        if (!selectedRoomId) {
-            alert('Please select a room');
-            return;
-        }
-
-        setIsAdopting(true);
-        try {
-            await onAdopt(macAddress, rpiMacAddress, selectedRoomId);
-            setRpiMacAddress('');
-            setSelectedRoomId('');
-        } catch (error) {
-            console.error('Error in adopt handler:', error);
-        } finally {
-            setIsAdopting(false);
-        }
-    };
+    const {
+        rpiMacAddress,
+        setRpiMacAddress,
+        selectedRoomId,
+        setSelectedRoomId,
+        isAdopting,
+        handleAdopt
+    } = useUnadoptedDeskRow(macAddress, onAdopt);
 
     return (
         <tr className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
