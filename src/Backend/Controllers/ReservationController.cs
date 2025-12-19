@@ -1,5 +1,6 @@
 ﻿using Backend.Auth;
 using Backend.Data.Database;
+using Backend.Data.Dtos;
 using Backend.Services.Reservations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

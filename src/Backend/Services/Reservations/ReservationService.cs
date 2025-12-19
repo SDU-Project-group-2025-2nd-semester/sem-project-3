@@ -1,4 +1,5 @@
 ﻿using Backend.Data.Database;
+using Backend.Data.Dtos;
 
 namespace Backend.Services.Reservations;
 
@@ -74,19 +75,23 @@ public class ReservationService(BackendContext dbContext, IReservationScheduler 
 
         await dbContext.SaveChangesAsync();
 
-        return reservation; 
+        return reservation;
     }
 
     public async Task UpdateReservation(Guid reservationId, UpdateReservationDto dto)
     {
-        var reservation = await GetReservation(reservationId);
+        var reservation = await dbContext.Reservations
+            .FirstOrDefaultAsync(r => r.Id == reservationId); ;
+
+        if (reservation is null)
+        {
+            throw new ArgumentException("Reservation does not exists!", nameof(reservationId));
+        }
 
         if (dto.Start.HasValue)
             reservation.Start = dto.Start.Value;
         if (dto.End.HasValue)
             reservation.End = dto.End.Value;
-        if (dto.DeskId.HasValue)
-            reservation.DeskId = dto.DeskId.Value;
 
         await dbContext.SaveChangesAsync();
     }

@@ -1,3 +1,5 @@
+using Backend.Data.Dtos;
+
 namespace Backend.Services.Statistics;
 
 public interface IStatisticsService
