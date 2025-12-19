@@ -146,7 +146,7 @@ public class DeskService(ILogger<DeskService> logger, BackendContext dbContext, 
         return true;
     }
 
-    public async Task<bool> DeleteDeskAsync(Guid companyId, Guid deskId)
+    public async Task<bool> UnadoptDeskAsync(Guid companyId, Guid deskId)
     {
         var desk = await dbContext.Desks.FirstOrDefaultAsync(d => d.CompanyId == companyId && d.Id == deskId);
 
