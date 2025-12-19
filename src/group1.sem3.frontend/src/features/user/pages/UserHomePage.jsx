@@ -18,7 +18,7 @@ export default function UserHomePage() {
                     {!loading && currentBookings.length === 0 && <div className="text-gray-600">No upcoming bookings.</div>}
                     <div className="flex flex-wrap gap-4">
                         {currentBookings.map(b => (
-                            <div key={b.id} className="bg-white rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4">
+                            <div key={b.id} className={`rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4 ${b.isOngoing ? 'bg-accent-50' : 'bg-white'}`}>
                                 <Link to={`/user/reservation/${b.id}`} className="flex-1">
                                     <div>
                                         <p className="text-primary font-semibold">Desk: {b.desk}</p>
