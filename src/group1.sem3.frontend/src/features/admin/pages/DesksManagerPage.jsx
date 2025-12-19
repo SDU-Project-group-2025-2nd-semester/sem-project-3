@@ -1,4 +1,5 @@
 import { useDesksManagerPage, useUnadoptedDeskRow } from "../hooks/useDeskManager"
+import Button from "@shared/ui/Button";
 
 function Simulator({
     currentSimulatorLink,
@@ -99,13 +100,15 @@ function Simulator({
                             </div>
 
                             <div className="pt-2">
-                                <button
+                                <Button
+                                    variant="primary"
                                     type="submit"
-                                    className="w-full px-6 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                                    className="w-full px-6 py-2.5 text-xs inline-flex items-center justify-center gap-2 hover:shadow-md flex "
+                                    title="Remove user account"
                                 >
-                                    <span className="material-symbols-outlined text-sm">save</span>
-                                    Save Settings
-                                </button>
+                                    <span className="material-symbols-outlined text-sm leading-none">save</span>
+                                    <span>Save Settings</span>
+                                </Button>
                             </div>
                         </div>
                     </form>
@@ -172,7 +175,8 @@ export default function DesksManagerPage() {
 
     // Room button component
     const RoomButton = ({ roomId, label }) => (
-        <button
+        <Button
+            variant="ghost"
             onClick={() => setActiveRoom(roomId)}
             className={
                 `px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeRoom === roomId
@@ -182,133 +186,22 @@ export default function DesksManagerPage() {
             }
         >
             {label}
-        </button>
+        </Button>
     );
 
     // Error handling
     if (error) {
         return (
             <div className="relative bg-background min-h-screen px-4 mt-20 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-lg text-red-600">Error: {error}</div>
-                    <button
-                        onClick={fetchInitialData}
-                        className="mt-4 px-4 py-2 bg-accent text-white rounded-lg"
-                    >
-                        Retry
-                    </button>
+                <div className="w-full max-w-md">
+                    <NotificationBanner type="error">{String(error)}</NotificationBanner>
+                    <div className="mt-4 text-center">
+                        <Button onClick={fetchUserAndStaff} variant="primary">Retry</Button>
+                    </div>
                 </div>
             </div>
         );
     }
-
-    // Simulator
-    // const Simulator = () => {
-    //     return (
-    //         <div className="overflow-hidden mb-6">
-    //             <div className="px-6 pt-6 pb-4">
-    //                 <h1 className="text-2xl font-semibold text-gray-800">Simulator Management</h1>
-    //             </div>
-
-    //             <div className="p-6">
-    //                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    //                     {/* Current Settings Display */}
-    //                     <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 p-6">
-    //                         <div className="flex items-center gap-2 mb-4">
-    //                             <span className="material-symbols-outlined text-gray-600">settings</span>
-    //                             <h2 className="text-lg font-semibold text-gray-800">Current Settings</h2>
-    //                         </div>
-    //                         <div className="space-y-4">
-    //                             <div>
-    //                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-    //                                     Simulator Link
-    //                                 </label>
-    //                                 <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 break-all shadow-sm">
-    //                                     {currentSimulatorLink ? (
-    //                                         <span className="text-accent-600">{currentSimulatorLink}</span>
-    //                                     ) : (
-    //                                         <span className="text-gray-400 italic">Not configured</span>
-    //                                     )}
-    //                                 </div>
-    //                             </div>
-    //                             <div>
-    //                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-    //                                     API Key
-    //                                 </label>
-    //                                 <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-sm">
-    //                                     {currentSimulatorLink ? (
-    //                                         <span className="text-gray-600 select-none">********************************</span>
-    //                                     ) : (
-    //                                         <span className="text-gray-400 italic">Not configured</span>
-    //                                     )}
-    //                                 </div>
-    //                             </div>
-    //                         </div>
-    //                     </div>
-
-    //                     {/* Update Form */}
-    //                     <form onSubmit={handleSaveSimulator} className="bg-white rounded-xl border border-gray-200 p-6">
-    //                         <div className="flex items-center gap-2 mb-4">
-    //                             <span className="material-symbols-outlined text-gray-600">edit</span>
-    //                             <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
-    //                         </div>
-    //                         <div className="space-y-4">
-    //                             <div>
-    //                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-    //                                     Simulator Link
-    //                                 </label>
-    //                                 <input
-    //                                     type="text"
-    //                                     placeholder="https://simulator.example.com"
-    //                                     value={simulatorLink}
-    //                                     onChange={(e) => setSimulatorLink(e.target.value)}
-    //                                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-    //                                         }`}
-    //                                 />
-    //                                 {simulatorErrors.link && (
-    //                                     <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
-    //                                         <span className="material-symbols-outlined text-sm">error</span>
-    //                                         {simulatorErrors.link}
-    //                                     </p>
-    //                                 )}
-    //                             </div>
-
-    //                             <div>
-    //                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-    //                                     API Key
-    //                                 </label>
-    //                                 <input
-    //                                     type="text"
-    //                                     placeholder="Enter 32-character API key"
-    //                                     value={simulatorApiKey}
-    //                                     onChange={(e) => setSimulatorApiKey(e.target.value)}
-    //                                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-    //                                         }`}
-    //                                 />
-    //                                 {simulatorErrors.apiKey && (
-    //                                     <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
-    //                                         <span className="material-symbols-outlined text-sm">error</span>
-    //                                         {simulatorErrors.apiKey}
-    //                                     </p>
-    //                                 )}
-    //                             </div>
-
-    //                             <div className="pt-2">
-    //                                 <button
-    //                                     type="submit"
-    //                                     className="w-full px-6 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-    //                                 >
-    //                                     <span className="material-symbols-outlined text-sm">save</span>
-    //                                     Save Settings
-    //                                 </button>
-    //                             </div>
-    //                         </div>
-    //                     </form>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     );
-    // };
 
     const currentRoom = rooms.find(r => r.id === activeRoom);
     const isUnadoptedView = activeRoom === 'unadopted';
@@ -323,12 +216,13 @@ export default function DesksManagerPage() {
                     </div>
                     <div className="text-center py-12">
                         <p className="text-gray-600 mb-4">No rooms found for your company.</p>
-                        <button
+                        <Button
+                            variant="primary"
                             onClick={() => setShowNewRoomForm(true)}
-                            className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
+                            className="px-6 py-2.5 text-xs inline-flex items-center justify-center gap-2 hover:shadow-md flex "
                         >
                             Create First Room
-                        </button>
+                        </Button>
                     </div>
                     <Simulator
                         currentSimulatorLink={currentSimulatorLink}
@@ -369,15 +263,17 @@ export default function DesksManagerPage() {
                             <RoomButton key={room.id} roomId={room.id} label={room.readableId || 'Unknown Room'} />
                         ))}
                         <RoomButton roomId="unadopted" label="Unadopted" />
-                        <button
+                        <Button
+                            variant="primary"
                             onClick={() => setShowNewRoomForm(!showNewRoomForm)}
-                            className="px-4 py-2 text-sm font-medium rounded-lg bg-accent text-white hover:bg-accent-600 transition-all inline-flex items-center gap-2"
+                            className="px-4 py-2 text-sm inline-flex items-center gap-2 hover:shadow-md flex "
+                            title="Remove user account"
                         >
                             <span className="material-symbols-outlined text-base">
                                 {showNewRoomForm ? 'close' : 'add'}
                             </span>
                             <span>Room</span>
-                        </button>
+                        </Button>
                     </div>
 
                     {isUnadoptedView ? (
@@ -387,16 +283,17 @@ export default function DesksManagerPage() {
                                 <h3 className="text-lg font-semibold text-gray-700">
                                     Unadopted Desks
                                 </h3>
-                                <button
+                                <Button
+                                    variant="primary"
                                     onClick={fetchUnadoptedDesks}
-                                    className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors inline-flex items-center gap-2"
                                     disabled={loadingUnadopted}
+                                    className="px-4 py-2 text-xs inline-flex items-center justify-center gap-2 hover:shadow-md flex"
                                 >
                                     <span className="material-symbols-outlined text-base">
                                         refresh
                                     </span>
                                     <span>Refresh</span>
-                                </button>
+                                </Button>
                             </div>
 
                             {loadingUnadopted ? (
@@ -510,36 +407,22 @@ export default function DesksManagerPage() {
                                 </div>
                                 <div className="mt-3 flex gap-2">
                                     {!editingHours ? (
-                                        <button
-                                            onClick={handleEditHours}
-                                            className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
-                                        >
-                                            Edit Schedule
-                                        </button>
+                                        <Button onClick={handleEditHours} variant="primary" className="py-1.5">Edit Schedule</Button>
                                     ) : (
                                         <>
-                                            <button
-                                                onClick={handleSaveHours}
-                                                className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors"
-                                            >
-                                                Save
-                                            </button>
-                                            <button
-                                                onClick={handleCancelEditHours}
-                                                className="px-4 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
+                                            <Button onClick={handleSaveHours} variant="primary" className="py-1.5">Save</Button>
+                                            <Button onClick={handleCancelEditHours} variant="ghost" className="py-1.5 border border-gray-200 hover:bg-gray-50">Cancel</Button>
                                         </>
                                     )}
-                                    <button
+                                    <Button
                                         onClick={handleDeleteRoom}
-                                        className="bg-danger text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1"
+                                        variant="danger"
+                                        className="py-1.5"
                                         title="Delete room"
                                     >
                                         <span className="material-symbols-outlined text-sm leading-none">delete</span>
                                         Delete room
-                                    </button>
+                                    </Button>
                                 </div>
                                 <div className="mt-3 flex gap-2 items-end">
                                     <div className="flex-1">
@@ -556,12 +439,13 @@ export default function DesksManagerPage() {
                                             step="0.1"
                                         />
                                     </div>
-                                    <button
+                                    <Button
+                                        variant="primary"
                                         onClick={handleSetRoomHeight}
-                                        className="px-4 py-1.5 bg-accent text-white rounded-lg text-sm hover:bg-accent-600 transition-colors inline-flex items-center gap-2"
+                                        className="px-6 py-2.5 text-sm inline-flex items-center justify-center gap-2 hover:shadow-md flex "
                                     >
                                         Set Height
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
 
@@ -609,22 +493,24 @@ export default function DesksManagerPage() {
                                                             {desk.macAddress || 'Not set'}
                                                         </td>
                                                         <td className="px-4 py-3 text-sm max-lg:w-full">
-                                                            <button
+                                                            <Button
+                                                                variant="danger"
                                                                 onClick={() => handleDeleteDesk(desk.id)}
-                                                                className="bg-danger text-white px-3 py-1.5 rounded-lg text-xs hover:bg-danger-600 transition-all inline-flex items-center gap-1"
                                                                 title="Delete desk"
+                                                                className="text-sm inline-flex items-center justify-center gap-2 hover:shadow-md flex"
                                                             >
                                                                 <span className="material-symbols-outlined text-sm leading-none">delete</span>
                                                                 <span className="lg:hidden">Delete</span>
-                                                            </button>
-                                                            <button
+                                                            </Button>
+                                                            <Button
+                                                                variant="primary"
                                                                 onClick={() => handleDeskUnBook(desk.id)}
-                                                                className="bg-accent text-white px-3 py-1.5 ml-2 rounded-lg text-xs hover:bg-accent-600 transition-all inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                                                 title="Cancel desk booking"
+                                                                className="ml-2 text-sm inline-flex items-center justify-center gap-2 hover:shadow-md flex "
                                                                 disabled={status !== 'booked'}
                                                             >
-                                                                <span>Cancel Booking</span>
-                                                            </button>
+                                                                Cancel Booking
+                                                            </Button>
                                                         </td>
                                                     </tr>
                                                 );
@@ -694,25 +580,14 @@ export default function DesksManagerPage() {
                             </div>
 
                             <div className="flex gap-3">
-                                <button
-                                    type="submit"
-                                    className="px-6 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors font-medium"
-                                >
-                                    Save
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleCancelNewRoom}
-                                    className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
-                                >
-                                    Cancel
-                                </button>
+                                <Button type="submit" variant="primary">Save</Button>
+                                <Button type="button" onClick={handleCancelNewRoom} variant="ghost" className="border border-gray-300 rounded-lg hover:bg-gray-100">Cancel</Button>
                             </div>
                         </form>
                     )}
                 </section>
             </main>
-        </div>
+        </div >
     );
 }
 
@@ -760,10 +635,11 @@ function UnadoptedDeskRow({ macAddress, rooms, onAdopt }) {
                 </select>
             </td>
             <td className="px-4 py-3 text-sm max-lg:w-full">
-                <button
+                <Button
+                    variant="primary"
                     onClick={handleAdopt}
                     disabled={!selectedRoomId || isAdopting}
-                    className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-600 transition-all inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center justify-center"
                 >
                     {isAdopting ? (
                         <>
@@ -776,7 +652,7 @@ function UnadoptedDeskRow({ macAddress, rooms, onAdopt }) {
                             <span>Adopt</span>
                         </>
                     )}
-                </button>
+                </Button>
             </td>
         </tr>
     );
