@@ -1,5 +1,8 @@
 import { useDesksManagerPage, useUnadoptedDeskRow } from "../hooks/useDeskManager"
 import Button from "@shared/ui/Button";
+import Card from "@shared/ui/Card";
+import ConfirmDialog from "@shared/ui/ConfirmDialog";
+import Input from "@shared/ui/Input";
 
 function Simulator({
     currentSimulatorLink,
@@ -29,7 +32,7 @@ function Simulator({
                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                                     Simulator Link
                                 </label>
-                                <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 break-all shadow-sm">
+                                <div className="w-full px-3 py-2 rounded border border-secondary outline-none focus:ring-2 focus:ring-accent bg-background text-primary">
                                     {currentSimulatorLink ? (
                                         <span className="text-accent-600">{currentSimulatorLink}</span>
                                     ) : (
@@ -41,7 +44,7 @@ function Simulator({
                                 <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                                     API Key
                                 </label>
-                                <div className="text-sm text-gray-800 font-mono bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-sm">
+                                <div className="w-full px-3 py-2 rounded border border-secondary outline-none focus:ring-2 focus:ring-accent bg-background text-primary">
                                     {currentSimulatorLink ? (
                                         <span className="text-gray-600 select-none">********************************</span>
                                     ) : (
@@ -53,65 +56,53 @@ function Simulator({
                     </div>
 
                     {/* Update Form */}
-                    <form onSubmit={handleSaveSimulator} className="bg-white rounded-xl border border-gray-200 p-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="material-symbols-outlined text-gray-600">edit</span>
-                            <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Simulator Link
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="https://simulator.example.com"
-                                    value={simulatorLink}
-                                    onChange={(e) => setSimulatorLink(e.target.value)}
-                                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all ${simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-                                        }`}
-                                />
-                                {simulatorErrors.link && (
-                                    <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
-                                        <span className="material-symbols-outlined text-sm">error</span>
-                                        {simulatorErrors.link}
-                                    </p>
-                                )}
+                    <Card className="rounded-xl p-6">
+                        <form onSubmit={handleSaveSimulator}>
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="material-symbols-outlined text-gray-600">edit</span>
+                                <h2 className="text-lg font-semibold text-gray-800">Update Settings</h2>
                             </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Simulator Link
+                                    </label>
+                                    <Input value={simulatorLink} onChange={e => setSimulatorLink(e.target.value)} placeholder="https://simulator.example.com" className={`${simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'}`} />
+                                    {simulatorErrors.link && (
+                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">error</span>
+                                            {simulatorErrors.link}
+                                        </p>
+                                    )}
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    API Key
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="Enter 32-character API key"
-                                    value={simulatorApiKey}
-                                    onChange={(e) => setSimulatorApiKey(e.target.value)}
-                                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-mono text-sm ${simulatorErrors.apiKey ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'
-                                        }`}
-                                />
-                                {simulatorErrors.apiKey && (
-                                    <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
-                                        <span className="material-symbols-outlined text-sm">error</span>
-                                        {simulatorErrors.apiKey}
-                                    </p>
-                                )}
-                            </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        API Key
+                                    </label>
+                                    <Input value={simulatorApiKey} onChange={e => setSimulatorApiKey(e.target.value)} placeholder="Enter 32-character API key" className={`${simulatorErrors.link ? 'border-danger-500 bg-danger-50' : 'border-gray-300 bg-white'}`} />
+                                    {simulatorErrors.apiKey && (
+                                        <p className="text-danger-600 text-xs mt-1.5 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">error</span>
+                                            {simulatorErrors.apiKey}
+                                        </p>
+                                    )}
+                                </div>
 
-                            <div className="pt-2">
-                                <Button
-                                    variant="primary"
-                                    type="submit"
-                                    className="w-full px-6 py-2.5 text-xs inline-flex items-center justify-center gap-2 hover:shadow-md flex "
-                                    title="Remove user account"
-                                >
-                                    <span className="material-symbols-outlined text-sm leading-none">save</span>
-                                    <span>Save Settings</span>
-                                </Button>
+                                <div className="pt-2">
+                                    <Button
+                                        variant="primary"
+                                        type="submit"
+                                        className="w-full px-6 py-2.5 text-xs inline-flex items-center justify-center gap-2 hover:shadow-md flex "
+                                        title="Remove user account"
+                                    >
+                                        <span className="material-symbols-outlined text-sm leading-none">save</span>
+                                        <span>Save Settings</span>
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    </Card>
                 </div>
             </div>
         </div>
@@ -170,7 +161,10 @@ export default function DesksManagerPage() {
         getStatusColor,
         getStatusText,
         handleDeskUnBook,
-        handleDeleteDesk
+        handleDeleteDesk,
+        dialog,
+        handleDialogConfirm,
+        closeDialog
     } = useDesksManagerPage();
 
     // Room button component
@@ -278,7 +272,7 @@ export default function DesksManagerPage() {
 
                     {isUnadoptedView ? (
                         /* Unadopted Desks View */
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+                        <Card className="overflow-hidden mb-6 p-0">
                             <div className="flex items-center justify-between p-4 border-b border-gray-100">
                                 <h3 className="text-lg font-semibold text-gray-700">
                                     Unadopted Desks
@@ -332,12 +326,12 @@ export default function DesksManagerPage() {
                                     </table>
                                 </div>
                             )}
-                        </div>
+                        </Card>
                     ) : (
                         /* Regular Room View */
                         <>
                             {/* Info card */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+                            <Card className="rounded-xl p-4 mb-4">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm items-center">
                                     <div>
                                         <span className="text-gray-600">Desks:</span>
@@ -370,33 +364,19 @@ export default function DesksManagerPage() {
                                         <>
                                             <div>
                                                 <label className="text-gray-600 text-xs block mb-1">Opening:</label>
-                                                <input
-                                                    type="time"
-                                                    value={openingTime}
-                                                    onChange={(e) => setOpeningTime(e.target.value)}
-                                                    className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
-                                                />
+                                                <Input type="time" value={openingTime} onChange={e => setOpeningTime(e.target.value)} className="w-auto" />
                                             </div>
                                             <div>
                                                 <label className="text-gray-600 text-xs block mb-1">Closing:</label>
-                                                <input
-                                                    type="time"
-                                                    value={closingTime}
-                                                    onChange={(e) => setClosingTime(e.target.value)}
-                                                    className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
-                                                />
+                                                <Input type="time" value={closingTime} onChange={e => setClosingTime(e.target.value)} className="w-auto" />
+                                                <Input type="time" value={closingTime} onChange={e => setClosingTime(e.target.value)} className="w-auto" />
                                             </div>
                                             <div>
                                                 <label className="text-gray-600 text-xs block mb-1">Set open days:</label>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
                                                         <label key={day} className="flex items-center gap-2 cursor-pointer">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={!!DaysOpen[day]}
-                                                                onChange={e => setDaysOpen({ ...DaysOpen, [day]: e.target.checked })}
-                                                                className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
-                                                            />
+                                                            <Input type="checkbox" checked={!!DaysOpen[day]} onChange={e => setDaysOpen({ ...DaysOpen, [day]: e.target.checked })} className="w-auto" />
                                                             <span className="text-sm text-gray-700 capitalize">{day}</span>
                                                         </label>
                                                     ))}
@@ -429,15 +409,8 @@ export default function DesksManagerPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Desk Height
                                         </label>
-                                        <input
-                                            type="number"
-                                            placeholder="Enter height in cm"
-                                            value={roomHeight}
-                                            onChange={(e) => setRoomHeightInput(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                                            min="0"
-                                            step="0.1"
-                                        />
+                                        <Input type="number" placeholder="Enter height in cm" value={roomHeight} onChange={(e) => setRoomHeightInput(e.target.value)} min="60" max="120" step="0.1" />
+
                                     </div>
                                     <Button
                                         variant="primary"
@@ -447,10 +420,10 @@ export default function DesksManagerPage() {
                                         Set Height
                                     </Button>
                                 </div>
-                            </div>
+                            </Card>
 
                             {/* Desks table*/}
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+                            <Card className="overflow-hidden mb-6 p-0">
                                 <div className="flex items-center justify-between p-4 border-b border-gray-100">
                                     <h3 className="text-lg font-semibold text-gray-700">
                                         Desks
@@ -525,69 +498,61 @@ export default function DesksManagerPage() {
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            </Card>
                         </>
                     )}
 
                     {/* New Room form */}
                     {showNewRoomForm && (
-                        <form onSubmit={handleSaveNewRoom} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">New Room</h3>
+                        <Card className="max-w-md">
+                            <form onSubmit={handleSaveNewRoom}>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">New Room</h3>
 
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Opening Time
-                                </label>
-                                <input
-                                    type="time"
-                                    required
-                                    value={newRoomOpeningTime}
-                                    onChange={(e) => setNewRoomOpeningTime(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                                />
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Closing Time
-                                </label>
-                                <input
-                                    type="time"
-                                    required
-                                    value={newRoomClosingTime}
-                                    onChange={(e) => setNewRoomClosingTime(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                                />
-                            </div>
-
-                            <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Days of Week
-                                </label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                                        <label key={day} className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={newRoomDays[day]}
-                                                onChange={(e) => setNewRoomDays({ ...newRoomDays, [day]: e.target.checked })}
-                                                className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
-                                            />
-                                            <span className="text-sm text-gray-700 capitalize">{day}</span>
-                                        </label>
-                                    ))}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Opening Time
+                                    </label>
+                                    <Input type="time" required={true} value={newRoomOpeningTime} onChange={e => setNewRoomOpeningTime(e.target.value)} className="w-full" />
                                 </div>
-                            </div>
 
-                            <div className="flex gap-3">
-                                <Button type="submit" variant="primary">Save</Button>
-                                <Button type="button" onClick={handleCancelNewRoom} variant="ghost" className="border border-gray-300 rounded-lg hover:bg-gray-100">Cancel</Button>
-                            </div>
-                        </form>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Closing Time
+                                    </label>
+                                    <Input type="time" required={true} value={newRoomClosingTime} onChange={e => setNewRoomClosingTime(e.target.value)} className="w-full" />
+                                </div>
+
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Days of Week
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                                            <label key={day} className="flex items-center gap-2 cursor-pointer">
+                                                <Input type="checkbox" checked={newRoomDays[day]} onChange={e => setNewRoomDays({ ...newRoomDays, [day]: e.target.checked })} className="w-auto " />
+                                                <span className="text-sm text-gray-700 capitalize">{day}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <Button type="submit" variant="primary">Save</Button>
+                                    <Button type="button" onClick={handleCancelNewRoom} variant="ghost" className="border border-gray-300 rounded-lg hover:bg-gray-100">Cancel</Button>
+                                </div>
+                            </form>
+                        </Card>
                     )}
                 </section>
-            </main>
-        </div >
+            </main>            {dialog.isOpen && (
+                <ConfirmDialog
+                    message={dialog.message}
+                    onConfirm={handleDialogConfirm}
+                    onCancel={closeDialog}
+                    confirmLabel={dialog.confirmLabel}
+                    cancelLabel={dialog.cancelLabel}
+                />
+            )}        </div >
     );
 }
 
@@ -599,61 +564,68 @@ function UnadoptedDeskRow({ macAddress, rooms, onAdopt }) {
         selectedRoomId,
         setSelectedRoomId,
         isAdopting,
-        handleAdopt
+        handleAdopt,
+        dialog,
+        handleDialogConfirm,
+        closeDialog
     } = useUnadoptedDeskRow(macAddress, onAdopt);
 
     return (
-        <tr className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
-            <td className="px-4 py-3 text-sm font-medium max-lg:w-full">
-                <span className="font-semibold lg:hidden">MAC Address: </span>
-                <span className="font-mono">{macAddress}</span>
-            </td>
-            <td className="px-4 py-3 text-sm max-lg:w-full">
-                <span className="font-semibold lg:hidden">RPI MAC Address: </span>
-                <input
-                    type="text"
-                    placeholder="XX:XX:XX:XX:XX:XX"
-                    value={rpiMacAddress}
-                    onChange={(e) => setRpiMacAddress(e.target.value)}
-                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none font-mono max-w-xs"
-                    maxLength={17}
+        <>
+            <tr className="border-t last:border-b hover:bg-gray-50 transition-colors max-lg:flex max-lg:flex-wrap max-lg:border-b max-lg:py-2">
+                <td className="px-4 py-3 text-sm font-medium max-lg:w-full">
+                    <span className="font-semibold lg:hidden">MAC Address: </span>
+                    <span className="font-mono">{macAddress}</span>
+                </td>
+                <td className="px-4 py-3 text-sm max-lg:w-full">
+                    <span className="font-semibold lg:hidden">RPI MAC Address: </span>
+                    <Input placeholder="XX:XX:XX:XX:XX:XX" value={rpiMacAddress} onChange={e => setRpiMacAddress(e.target.value)} max={17} className="w-auto" />
+                </td>
+                <td className="px-4 py-3 text-sm max-lg:w-full">
+                    <span className="font-semibold lg:hidden">Room: </span>
+                    <select
+                        value={selectedRoomId}
+                        onChange={(e) => setSelectedRoomId(e.target.value)}
+                        className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
+                    >
+                        <option value="">Select a room</option>
+                        {rooms.map(room => (
+                            <option key={room.id} value={room.id}>
+                                {room.readableId || 'Unknown Room'}
+                            </option>
+                        ))}
+                    </select>
+                </td>
+                <td className="px-4 py-3 text-sm max-lg:w-full">
+                    <Button
+                        variant="primary"
+                        onClick={handleAdopt}
+                        disabled={!selectedRoomId || isAdopting}
+                        className="inline-flex items-center justify-center"
+                    >
+                        {isAdopting ? (
+                            <>
+                                <span className="material-symbols-outlined text-base animate-spin">sync</span>
+                                <span>Adopting...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined text-base">add</span>
+                                <span>Adopt</span>
+                            </>
+                        )}
+                    </Button>
+                </td>
+            </tr>
+            {dialog.isOpen && (
+                <ConfirmDialog
+                    message={dialog.message}
+                    onConfirm={handleDialogConfirm}
+                    onCancel={closeDialog}
+                    confirmLabel={dialog.confirmLabel}
+                    cancelLabel={dialog.cancelLabel}
                 />
-            </td>
-            <td className="px-4 py-3 text-sm max-lg:w-full">
-                <span className="font-semibold lg:hidden">Room: </span>
-                <select
-                    value={selectedRoomId}
-                    onChange={(e) => setSelectedRoomId(e.target.value)}
-                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-accent outline-none"
-                >
-                    <option value="">Select a room</option>
-                    {rooms.map(room => (
-                        <option key={room.id} value={room.id}>
-                            {room.readableId || 'Unknown Room'}
-                        </option>
-                    ))}
-                </select>
-            </td>
-            <td className="px-4 py-3 text-sm max-lg:w-full">
-                <Button
-                    variant="primary"
-                    onClick={handleAdopt}
-                    disabled={!selectedRoomId || isAdopting}
-                    className="inline-flex items-center justify-center"
-                >
-                    {isAdopting ? (
-                        <>
-                            <span className="material-symbols-outlined text-base animate-spin">sync</span>
-                            <span>Adopting...</span>
-                        </>
-                    ) : (
-                        <>
-                            <span className="material-symbols-outlined text-base">add</span>
-                            <span>Adopt</span>
-                        </>
-                    )}
-                </Button>
-            </td>
-        </tr>
+            )}
+        </>
     );
 }

@@ -48,6 +48,30 @@ export function useDesksManagerPage() {
     const [editingHours, setEditingHours] = useState(false);
     const [openingTime, setOpeningTime] = useState('');
     const [closingTime, setClosingTime] = useState('');
+
+    // Dialog state
+    const [dialog, setDialog] = useState({
+        isOpen: false,
+        message: '',
+        onConfirm: null,
+        confirmLabel: 'OK',
+        cancelLabel: 'Cancel'
+    });
+
+    const showDialog = (message, onConfirm = null, confirmLabel = 'OK', cancelLabel = 'Cancel') => {
+        setDialog({ isOpen: true, message, onConfirm, confirmLabel, cancelLabel });
+    };
+
+    const closeDialog = () => {
+        setDialog({ isOpen: false, message: '', onConfirm: null, confirmLabel: 'OK', cancelLabel: 'Cancel' });
+    };
+
+    const handleDialogConfirm = () => {
+        if (dialog.onConfirm) {
+            dialog.onConfirm();
+        }
+        closeDialog();
+    };
     const [DaysOpen, setDaysOpen] = useState({
         monday: true,
         tuesday: true,
@@ -139,7 +163,7 @@ export function useDesksManagerPage() {
 
     const handleAdoptDesk =  useCallback(async (macAddress, rpiMacAddress, roomId) => {
         if (!roomId || roomId === '') {
-            alert('Please select a room');
+            showDialog('Please select a room');
             return;
         }
 
@@ -156,12 +180,12 @@ export function useDesksManagerPage() {
 
             await adoptDesk(companyId, newDesk.macAddress, newDesk.rpiMacAddress, newDesk.roomId);
             await fetchUnadoptedDesks(); // Refresh the list
-            alert('Desk adopted successfully!');
+            showDialog('Desk adopted successfully!');
         } catch (error) {
             console.error('Error adopting desk:', error);
             console.error('Error body:', error.body);
             const errorMessage = error.body?.error || error.body?.message || error.message || 'Unknown error';
-            alert('Failed to adopt desk: ' + errorMessage);
+            showDialog('Failed to adopt desk: ' + errorMessage);
         }
     }, [companyId, fetchUnadoptedDesks]);
 
@@ -208,14 +232,14 @@ export function useDesksManagerPage() {
             };
 
             await updateSimulatorSettings(companyId, simulatorSettings);
-            alert('Simulator settings saved successfully!');
+            showDialog('Simulator settings saved successfully!');
             setSimulatorLink('');
             setSimulatorApiKey('');
             setSimulatorErrors({});
             await fetchSimulatorSettings();
         } catch (error) {
             console.error('Error saving simulator:', error);
-            alert('Failed to save simulator: ' + error.message);
+            showDialog('Failed to save simulator: ' + error.message);
         }
     }, [companyId, simulatorLink, simulatorApiKey, fetchSimulatorSettings]);
 
@@ -271,7 +295,7 @@ export function useDesksManagerPage() {
             setActiveRoom(createdRoom.id);
         } catch (error) {
             console.error('Error creating room:', error);
-            alert('Failed to create room: ' + error.message);
+            showDialog('Failed to create room: ' + error.message);
         }
     }, [companyId, newRoomDays, newRoomOpeningTime, newRoomClosingTime, fetchInitialData]);
 
@@ -310,22 +334,25 @@ export function useDesksManagerPage() {
     };
 
     const handleDeleteRoom =  useCallback(async () => {
-        if (!confirm('Are you sure you want to delete this room?')) {
-            return;
-        }
-
-        try {
-            await deleteRoom(companyId, currentRoom.id);
-            await fetchInitialData();
-        } catch (error) {
-            console.error('Error deleting room:', error);
-            alert('Failed to delete room: ' + error.message);
-        }
+        showDialog(
+            'Are you sure you want to delete this room?',
+            async () => {
+                try {
+                    await deleteRoom(companyId, currentRoom.id);
+                    await fetchInitialData();
+                } catch (error) {
+                    console.error('Error deleting room:', error);
+                    showDialog('Failed to delete room: ' + error.message);
+                }
+            },
+            'Delete',
+            'Cancel'
+        );
     }, [companyId, currentRoom, fetchInitialData]);
 
     const handleSaveHours =  useCallback(async () => {
         if (!openingTime || !closingTime) {
-            alert('Please enter both opening and closing times');
+            showDialog('Please enter both opening and closing times');
             return;
         }
 
@@ -362,10 +389,10 @@ export function useDesksManagerPage() {
             await updateRoom(companyId, currentRoom.id, updatedRoom);
             await fetchInitialData();
             setEditingHours(false);
-            alert('Room schedule updated successfully!');
+            showDialog('Room schedule updated successfully!');
         } catch (error) {
             console.error('Error updating opening hours:', error);
-            alert('Failed to update room schedule: ' + error.message);
+            showDialog('Failed to update room schedule: ' + error.message);
         }
     }, [companyId, currentRoom, openingTime, closingTime, DaysOpen, fetchInitialData]);
 
@@ -377,7 +404,7 @@ export function useDesksManagerPage() {
 
     const handleSetRoomHeight =  useCallback(async () => {
         if (!roomHeight || isNaN(roomHeight) || parseFloat(roomHeight) <= 0) {
-            alert('Please enter a valid room height');
+            showDialog('Please enter a valid room height');
             return;
         }
         try {
@@ -386,7 +413,7 @@ export function useDesksManagerPage() {
             await fetchDesksForRoom(activeRoom);
         } catch (error) {
             console.error('Error setting room height:', error);
-            alert('Failed to set room height: ' + error.message);
+            showDialog('Failed to set room height: ' + error.message);
         }
     }, [companyId, currentRoom, roomHeight, activeRoom, fetchDesksForRoom]);
 
@@ -443,33 +470,44 @@ export function useDesksManagerPage() {
             });
 
             if (!activeReservation) {
-                alert(`No booking found for that desk`);
+                showDialog('No booking found for that desk');
                 return;
             }
-            if (!confirm('Are you sure you want to cancel this booking?')) {
-                return;
-            }
-
-            await apiDeleteReservation(companyId, activeReservation.id);
-            await fetchDesksForRoom(activeRoom);
+            showDialog(
+                'Are you sure you want to cancel this booking?',
+                async () => {
+                    try {
+                        await apiDeleteReservation(companyId, activeReservation.id);
+                        await fetchDesksForRoom(activeRoom);
+                    } catch (error) {
+                        console.error('Error canceling booking:', error);
+                        showDialog('Failed to cancel booking: ' + error.message);
+                    }
+                },
+                'Cancel Booking',
+                'Cancel'
+            );
         } catch (error) {
             console.error('Error canceling booking:', error);
-            alert('Failed to cancel booking: ' + error.message);
+            showDialog('Failed to cancel booking: ' + error.message);
         }
     }, [companyId, reservations, activeRoom, fetchDesksForRoom]);
 
     const handleDeleteDesk =  useCallback(async (deskId) => {
-        if (!confirm('Are you sure you want to un-adopt this desk?')) {
-            return;
-        }
-
-        try {
-            await unadoptDesk(companyId, deskId);
-            await fetchDesksForRoom(activeRoom);
-        } catch (error) {
-            console.error('Error deleting desk:', error);
-            alert('Failed to delete desk: ' + error.message);
-        }
+        showDialog(
+            'Are you sure you want to un-adopt this desk?',
+            async () => {
+                try {
+                    await unadoptDesk(companyId, deskId);
+                    await fetchDesksForRoom(activeRoom);
+                } catch (error) {
+                    console.error('Error deleting desk:', error);
+                    showDialog('Failed to delete desk: ' + error.message);
+                }
+            },
+            'Un-adopt',
+            'Cancel'
+        );
     }, [companyId, activeRoom, fetchDesksForRoom]);
 
     // Return all state and functions for use in components
@@ -486,6 +524,9 @@ export function useDesksManagerPage() {
         error,
         companyId,
         currentRoom,
+        dialog,
+        handleDialogConfirm,
+        closeDialog,
         newRoomOpeningTime,
         setNewRoomOpeningTime,
         newRoomClosingTime,
@@ -534,9 +575,33 @@ export function useUnadoptedDeskRow(macAddress, onAdopt) {
     const [selectedRoomId, setSelectedRoomId] = useState('');
     const [isAdopting, setIsAdopting] = useState(false);
 
+    // Dialog state
+    const [dialog, setDialog] = useState({
+        isOpen: false,
+        message: '',
+        onConfirm: null,
+        confirmLabel: 'OK',
+        cancelLabel: 'Cancel'
+    });
+
+    const showDialog = (message, onConfirm = null, confirmLabel = 'OK', cancelLabel = 'Cancel') => {
+        setDialog({ isOpen: true, message, onConfirm, confirmLabel, cancelLabel });
+    };
+
+    const closeDialog = () => {
+        setDialog({ isOpen: false, message: '', onConfirm: null, confirmLabel: 'OK', cancelLabel: 'Cancel' });
+    };
+
+    const handleDialogConfirm = () => {
+        if (dialog.onConfirm) {
+            dialog.onConfirm();
+        }
+        closeDialog();
+    };
+
     const handleAdopt = async () => {
         if (!selectedRoomId) {
-            alert('Please select a room');
+            showDialog('Please select a room');
             return;
         }
 
@@ -558,6 +623,9 @@ export function useUnadoptedDeskRow(macAddress, onAdopt) {
         selectedRoomId,
         setSelectedRoomId,
         isAdopting,
-        handleAdopt
+        handleAdopt,
+        dialog,
+        handleDialogConfirm,
+        closeDialog
     };
 }
