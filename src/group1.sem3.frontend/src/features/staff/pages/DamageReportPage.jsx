@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@features/auth/AuthContext";
 import Card from "@shared/ui/Card";
-import Input from "@shared/ui/Input";
 import Button from "@shared/ui/Button";
 import NotificationBanner from "@shared/ui/NotificationBanner";
 import { useDamageReport } from "../hooks/useDamageReport";
