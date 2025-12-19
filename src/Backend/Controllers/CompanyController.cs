@@ -72,7 +72,18 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
         {
             return Conflict("User is already a member of this company.");
         }
-        var uc = new UserCompany() { Company = company, User = user, Role = UserRole.User };
+
+        var role = User.IsInRole(nameof(UserRole.Janitor))
+            ? UserRole.Janitor
+            : UserRole.User;
+
+        var uc = new UserCompany()
+        {
+            Company = company,
+            User = user,
+            Role = role
+        };
+        
         dbContext.UserCompanies.Add(uc);
         await dbContext.SaveChangesAsync();
         return Ok();
@@ -110,7 +121,7 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
         // Ensure the company has a SecretInviteCode set before allowing access
         if (string.IsNullOrEmpty(company.SecretInviteCode) || company.SecretInviteCode != accessCode)
         {
-            return Unauthorized();
+            return Unauthorized("Invalid invite code");
         }
 
         var currentUserId = User.GetUserId();
@@ -129,7 +140,17 @@ public class CompanyController(BackendContext dbContext) : ControllerBase
             return Conflict("User is already a member of this company.");
         }
 
-        var uc = new UserCompany() { Company = company, User = user, Role = UserRole.User };
+        var role = User.IsInRole(nameof(UserRole.Janitor))
+            ? UserRole.Janitor
+            : UserRole.User;
+
+        var uc = new UserCompany()
+        {
+            Company = company,
+            User = user,
+            Role = role
+        };
+        
         dbContext.UserCompanies.Add(uc);
         await dbContext.SaveChangesAsync();
 
