@@ -47,6 +47,9 @@ export function useUserBookings() {
                     .filter(r => new Date(r.end) > now)
                     .sort((a, b) => new Date(a.start) - new Date(b.start));
 
+                const ongoingReservations = futureReservations
+                    .filter(r => new Date(r.start) <= now && new Date(r.end) >= now);
+
                 const currentMapped = futureReservations.map(r => {
                     const start = new Date(r.start);
                     const end = new Date(r.end);
@@ -60,6 +63,7 @@ export function useUserBookings() {
                         room: r.roomLabel ?? r.roomId ?? "—",
                         date,
                         time,
+                        isOngoing: ongoingReservations.some(ongoing => ongoing.id === r.id),
                     };
                 });
 
@@ -116,6 +120,18 @@ export function useUserBookings() {
         }
     }, [COMPANY_ID]);
 
+    const finishBooking = useCallback(async (id) => {
+        if (!confirm('Are you sure you want to finish this reservation?')) return;
+        
+        try {
+            const now = new Date();
+            await userService.updateReservation(COMPANY_ID, id, { end: now });
+            setCurrentBookings(prev => prev.map(b => b.id === id ? { ...b, end: now } : b));
+        } catch (e) {
+            setErr(e.body?.message || e.message);
+        }
+    }, [COMPANY_ID]);
+
     return {
         currentBookings,
         recentBookings,
@@ -123,5 +139,6 @@ export function useUserBookings() {
         loading,
         err,
         cancelBooking,
+        finishBooking,
     };
 }
