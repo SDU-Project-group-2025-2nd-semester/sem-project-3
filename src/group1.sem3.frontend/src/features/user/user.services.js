@@ -54,6 +54,10 @@ export async function deleteReservation(companyId, reservationId) {
  return del(`/${companyId}/Reservation/${reservationId}`);
 }
 
+export async function updateReservation(companyId, reservationId, payload) {
+ return put(`/${companyId}/reservation/${reservationId}`, payload);
+}
+
 // User profile
 export async function getMyProfile(opts) {
  return get(`/Users/me`, opts);

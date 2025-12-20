@@ -11,6 +11,7 @@ export function useUserBookings() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState();
+    const [refreshCounter, setRefreshCounter] = useState(0);
 
     useEffect(() => {
         const ctrl = new AbortController();
@@ -36,6 +37,9 @@ export function useUserBookings() {
                     userService.getMyProfile({ signal: ctrl.signal }),
                 ]);
 
+                // To check if end time changed
+                console.log('Fetched reservations:', myReservations);
+
                 if (ctrl.signal.aborted) return;
 
                 setProfile(myProfile);
@@ -46,6 +50,9 @@ export function useUserBookings() {
                 const futureReservations = (myReservations ?? [])
                     .filter(r => new Date(r.end) > now)
                     .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+                const ongoingReservations = futureReservations
+                    .filter(r => new Date(r.start) <= now && new Date(r.end) >= now);
 
                 const currentMapped = futureReservations.map(r => {
                     const start = new Date(r.start);
@@ -60,6 +67,7 @@ export function useUserBookings() {
                         room: r.roomLabel ?? r.roomId ?? "—",
                         date,
                         time,
+                        isOngoing: ongoingReservations.some(ongoing => ongoing.id === r.id),
                     };
                 });
 
@@ -103,7 +111,7 @@ export function useUserBookings() {
 
         load();
         return () => ctrl.abort();
-    }, [COMPANY_ID, isHydrating]);
+    }, [COMPANY_ID, isHydrating, refreshCounter]);
 
     const cancelBooking = useCallback(async (id) => {
         if (!confirm("Are you sure you want to cancel this reservation?")) return;
@@ -116,6 +124,19 @@ export function useUserBookings() {
         }
     }, [COMPANY_ID]);
 
+    const finishBooking = useCallback(async (id) => {
+        if (!confirm('Are you sure you want to finish this reservation?')) return;
+        
+        try {
+            const now = new Date();
+            await userService.updateReservation(COMPANY_ID, id, { end: now });
+            setCurrentBookings(prev => prev.map(b => b.id === id ? { ...b, end: now } : b));
+            setRefreshCounter(prev => prev + 1); // trigger re-fetch
+        } catch (e) {
+            setErr(e.body?.message || e.message);
+        }
+    }, [COMPANY_ID]);
+
     return {
         currentBookings,
         recentBookings,
@@ -123,5 +144,6 @@ export function useUserBookings() {
         loading,
         err,
         cancelBooking,
+        finishBooking,
     };
 }

@@ -1,4 +1,6 @@
-﻿namespace Backend.Data.Database;
+﻿using Backend.Data.Dtos;
+
+namespace Backend.Data.Database;
 
 public class Reservation
 {
