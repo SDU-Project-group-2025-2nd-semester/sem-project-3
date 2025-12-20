@@ -289,6 +289,8 @@ export function useBooking() {
 
     async function handleBook() {
         if (!canBook) return;
+        // clear any previous error before submitting
+        setBookingError(null);
         setBookingSubmitting(true);
         try {
             await createReservation(COMPANY_ID, {
