@@ -50,6 +50,11 @@ export function useUserStatistics() {
         return sittingMinutes + standingMinutes;
     };
 
+    const getHeights = () => ({
+        sitting: (userStats?.sittingHeight || 0) / 10,
+        standing: (userStats?.standingHeight || 0) / 10,
+    });
+
     return {
         userStats,
         loading,
@@ -57,5 +62,6 @@ export function useUserStatistics() {
         getSittingStandingData,
         totalDeskTime,
         fetchUserData,
+        getHeights
     };
 }

@@ -15,7 +15,8 @@ export default function UserStatisticsPage() {
         error,
         getSittingStandingData,
         totalDeskTime,
-        fetchUserData
+        fetchUserData,
+        getHeights
     } = useUserStatistics();
 
     const formatTime = (minutes) => {
@@ -109,19 +110,19 @@ export default function UserStatisticsPage() {
                 </section>
 
                 {/* Height Preferences */}
-                {userStats && (userStats.sittingHeight || userStats.standingHeight) && (
+                {userStats && (getHeights().sitting || getHeights().standing) && (
                     <Card>
                         <h2 className="text-xl font-semibold text-gray-700 mb-4">Height Preferences</h2>
                         <div className="grid grid-cols-2 gap-6">
-                            {userStats.sittingHeight && (
+                            {getHeights().sitting && (
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-accent">{userStats.sittingHeight} cm</div>
+                                    <div className="text-2xl font-bold text-accent">{getHeights().sitting} cm</div>
                                     <div className="text-sm text-gray-600 mt-1">Sitting Height</div>
                                 </div>
                             )}
-                            {userStats.standingHeight && (
+                            {getHeights().standing && (
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-accent">{userStats.standingHeight} cm</div>
+                                    <div className="text-2xl font-bold text-accent">{getHeights().standing} cm</div>
                                     <div className="text-sm text-gray-600 mt-1">Standing Height</div>
                                 </div>
                             )}
