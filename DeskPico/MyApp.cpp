@@ -96,10 +96,6 @@ void MyApp::buzz() {
     buzzTone(1000, 2000);
 }
 
-
-    
-
-
 void MyApp::run() {
 
     
@@ -115,12 +111,6 @@ void MyApp::run() {
 
     mqtt_subscribe_to_topics(state);
 
-    
-
-    
-
-    
-    
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, true);
 
