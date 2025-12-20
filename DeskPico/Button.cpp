@@ -9,3 +9,7 @@ Button::Button(unsigned int pinNumber) : pin(pinNumber) {
     gpio_pull_down(pin);
 }
 
+bool Button::read() const {
+    return gpio_get(pin);
+}
+

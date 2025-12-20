@@ -55,24 +55,6 @@ MyApp::MyApp()
     display.clear();                                                       
 }
 
-    const uint LED_PIN = 7;
-    const uint BTN_PIN = 10;
-    const uint LED_OFF = 0;
-    const uint LED_ON = 1;
-    const uint BUZZ_PIN = 20;
-
-std::string MyApp::updateStatus() {
-    // Logic for receiveing message from mqtt
-    std::string str = "";
-    return str;
-}
-
-std::string MyApp::receiveAdress() {
-    // Logic for receiving the address of the pico from mqtt
-    std::string str = "";
-    return str;
-}
-
 qrcodegen::QrCode MyApp::generateQRCode(std::string address) {
     const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(address.c_str(), qrcodegen::QrCode::Ecc::LOW);
     return qr;
@@ -94,95 +76,80 @@ void MyApp::run() {
     mqtt_wait_for_connection(state);
 
     mqtt_subscribe_to_topics(state);
+
+    cyw43_arch_poll(); // To get the QR code from the mqtt broker
         
-    bool ledState = false;
-    bool prevPressed = false;
-    uint32_t lastDebounce = 0;
-    const uint32_t debounceMs = 50;
-    bool stand = true;
-    bool buzzing = true;
-    int counter = 0;
-    bool pressedEvent = false;
     std::string message = ""; //sitting, standing, buzzing, will be updated from the topic
     //std::string message((const char*)buffer);
     //qr code generation
-    const qrcodegen::QrCode qr = generateQRCode("address");
-
+    const qrcodegen::QrCode qr = generateQRCode("");
+    display.clear();
     display.drawQRCode(20,0, qr, 1);
-    display.renderRaw(); 
+    display.renderRaw();
     
+    bool booked = false; //false = qr code show, true = booked state
+
+    // button edge detection
+    bool prevButtonState = false;
+
     while (true) {
-        
-        bool rawPressed = (gpio_get(BTN_PIN) == 1);
-        uint32_t now = to_ms_since_boot(get_absolute_time());
-        
-        pressedEvent = false;
-        if (rawPressed && !prevPressed && (now - lastDebounce) > debounceMs) {
-            counter = (counter % 3) + 1;
-            pressedEvent = true;
-            lastDebounce = now;
-        }
-        
-        prevPressed = rawPressed;
 
-        //gpio_put(LED_PIN, ledState ? LED_ON : LED_OFF);                                
-        //display.drawQRCode(0, 0, qr, 1);
-        //display.writeText(5, 16, "TEST");
-        //display.render(); 
-        //display.clear();
-        
-        /* if(status == "buzzing") {
-            display.writeText(5,16, "STAND UP");
-            buzzer.buzzTone();
-        }
-        else if(status == "sitting") {
-            display.writeText(5,16, "SIT");
-        }
-        else if(status == "standing") {
-            gpio_put(LED_PIN, LED_OFF);
-            display.writeText(5,16, "STAND");
-        } */
-
-        /* if (pressedEvent) {
+    if(booked) {
+        if(message == "sit") {
             display.clear();
-            switch(counter) {
-                case 1:
-                    display.writeText(5,16, "STAND UP");
-                    display.render();
-                    gpio_put(LED_PIN, LED_ON);
-                    buzz();
-                    gpio_put(LED_PIN, LED_OFF);
-                    break;
-                case 2:
-                    display.writeText(5,16, "STANDING");
-                    display.render();
-                    break;
-                case 3:
-                    display.writeText(5,16, "SITTING");
-                    display.render();
-                    break;
-            }
-            
-        } */
-
+            RLed.on();
+            buzzer.buzzTone(1000, 500);
+            display.writeText(5,16, "SIT DOWN");
+            display.render();
+            sleep_ms(10000);
+            display.clear();
+            display.writeText(5,16,"SITTING");
+            display.render();
+            RLed.off();
+        }
+        else if(message == "stand") {
+            display.clear();
+            RLed.on();
+            buzzer.buzzTone(1000, 500);
+            display.writeText(5,16, "STAND UP");
+            display.render();
+            sleep_ms(10000);
+            display.clear();
+            display.writeText(5,16,"STANDING");
+            display.render();
+            RLed.off();
+        }
+            RGBLed.setPixelColor(0,255,0,0); //Occupied
+    }
+    if(!booked) {
         if(message == "green") {
             RGBLed.setPixelColor(0,0,255,0); //Free
         }
-        else if (message == "yellow") {
+        else if (message == "yellow") { // Is reserved
             RGBLed.setPixelColor(0,255,255,0); //Booked
         }
-        else if (message == "red") {
-            RGBLed.setPixelColor(0,255,0,0); //Occupied
-        }
+    }
 
-        
-        cyw43_arch_poll();
-        if (state != nullptr && state->message[0] != '\0') {
-            message.assign(state->message);
-        } else {
-            message.clear();
+    cyw43_arch_poll();
+    
+    bool btn = button.read();
+
+    if (btn && !prevButtonState) {
+        sleep_ms(50);
+        if (button.read()) {
+            booked = !booked;
+            sleep_ms(150);
         }
-        sleep_ms(10);                                                
+    }
+    
+    prevButtonState = btn;
+
+    if (state != nullptr && state->message[0] != '\0') {
+        message.assign(state->message);
+    } else {
+        message.clear();
+    }
+    sleep_ms(10);
     }
     cyw43_arch_deinit();
 }
