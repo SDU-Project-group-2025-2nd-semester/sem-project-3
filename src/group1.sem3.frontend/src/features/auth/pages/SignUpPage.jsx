@@ -75,7 +75,7 @@ export default function SignUpPage() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background px-4">
-            <Card>
+            <Card className="w-full max-w-xl">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-6 text-primary">
                     Welcome!
                 </h2>
