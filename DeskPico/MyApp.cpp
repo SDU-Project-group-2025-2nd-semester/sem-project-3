@@ -21,7 +21,11 @@
 
 MyApp::MyApp()
         : display(i2c_default, 0x3C, 128, 32),
-          RGBLed(6, 1)
+          RGBLed(6, 1),
+          RLed(7),
+          buzzer(20),
+          button(10)
+
 {
     stdio_init_all();
     
@@ -75,26 +79,6 @@ qrcodegen::QrCode MyApp::generateQRCode(std::string address) {
 }
 
 
-void MyApp::buzzTone(unsigned int frequency, unsigned int duration_ms) {
-    if (frequency == 0 || duration_ms == 0) return;
-
-    gpio_init(BUZZ_PIN);
-    gpio_set_dir(BUZZ_PIN, true);
-
-    unsigned int cycles = (frequency * duration_ms) / 1000;
-    unsigned int half_period_us = 500000u / frequency;
-
-    for (unsigned int i = 0; i < cycles; ++i) {
-        gpio_put(BUZZ_PIN, 1);
-        sleep_us(half_period_us);
-        gpio_put(BUZZ_PIN, 0);
-        sleep_us(half_period_us);
-    }
-}
-
-void MyApp::buzz() {
-    buzzTone(1000, 2000);
-}
 
 void MyApp::run() {
 
@@ -156,7 +140,7 @@ void MyApp::run() {
         
         /* if(status == "buzzing") {
             display.writeText(5,16, "STAND UP");
-            buzz();
+            buzzer.buzzTone();
         }
         else if(status == "sitting") {
             display.writeText(5,16, "SIT");

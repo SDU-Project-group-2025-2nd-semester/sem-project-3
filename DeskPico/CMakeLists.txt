@@ -59,6 +59,9 @@ if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
                 MyApp.cpp
                 OLEDDisplay.cpp
                 NeoPixel.cpp
+                RedLed.cpp
+                Buzzer.cpp
+                Button.cpp
                 MqttClient.c
             )
             

@@ -5,7 +5,7 @@
 
 class RedLed {
 public:
-	explicit RedLed(unsigned int pinNumber);
+	RedLed(unsigned int pinNumber);
 	void on();
 	void off();
 
