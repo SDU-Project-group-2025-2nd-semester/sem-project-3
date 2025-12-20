@@ -21,6 +21,10 @@ export async function deleteUser(userId) {
  return del(`/Users/${userId}`);
 }
 
+export async function updateUserRole(companyId, userId, newRole) {
+  return put(`/Company/${companyId}/users/${userId}?userRole=${newRole}`);
+}
+
 // Rooms
 export async function getRooms(companyId, opts) {
  return get(`/${companyId}/Rooms`, opts);

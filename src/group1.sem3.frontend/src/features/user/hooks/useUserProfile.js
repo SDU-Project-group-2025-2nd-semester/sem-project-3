@@ -133,5 +133,6 @@ export function useUserProfile() {
         profile,
         setProfile,
         updateProfile,
+        applyUser, // expose applyUser for tests and advanced usage
     };
 }

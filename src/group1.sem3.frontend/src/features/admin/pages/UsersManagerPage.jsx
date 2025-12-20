@@ -14,6 +14,7 @@ export default function UsersManagerPage() {
     formatDate,
     handleCancelReservation,
     handleRemoveUser,
+    handleRoleChange,
     me,
   } = useUsersManager();
 
@@ -49,9 +50,9 @@ export default function UsersManagerPage() {
       const start = new Date(reservation.start);
       const end = new Date(reservation.end);
       const durationMs = end - start;
-      const hours = Math.floor(durationMs / (1000 *60 *60));
-      const minutes = Math.floor((durationMs % (1000 *60 *60)) / (1000 *60));
-      return hours >0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+      const hours = Math.floor(durationMs / (1000 * 60 * 60));
+      const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+      return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
     };
 
     return (
@@ -82,6 +83,17 @@ export default function UsersManagerPage() {
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
           <MobileLabel>Sitting Time</MobileLabel>
           {user.sittingTime ?? 'no time available'} min
+        </td>
+        <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+          <MobileLabel>Role</MobileLabel>
+          <select
+            value={user.role}
+            onChange={(e) => handleRoleChange(user.id, Number(e.target.value))}
+            className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            <option value={0}>User</option>
+            <option value={1}>Janitor</option>
+          </select>
         </td>
         <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
           <MobileLabel>Actions</MobileLabel>
@@ -120,7 +132,19 @@ export default function UsersManagerPage() {
       </td>
       <td className="px-4 py-3 text-sm text-gray-600 max-lg:w-full max-lg:py-1">
         <MobileLabel>Job Description</MobileLabel>
-        {staffMember.role ===1 ? 'Janitor' : staffMember.role ===2 ? 'Admin' : 'Staff'}
+        {staffMember.role === 1 ? 'Janitor' : staffMember.role === 2 ? 'Admin' : 'Staff'}
+      </td>
+      <td className="px-4 py-3 text-sm max-lg:w-full max-lg:py-1">
+        <MobileLabel>Role</MobileLabel>
+        <select
+          value={staffMember.role}
+          onChange={(e) => handleRoleChange(staffMember.id, Number(e.target.value))}
+          className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-accent"
+          disabled={staffMember?.id === me?.id}
+        >
+          <option value={0}>User</option>
+          <option value={1}>Janitor</option>
+        </select>
       </td>
       <td className="px-4 py-3 text-sm max-lg:w-full max-lg:mt-2">
         <Button
@@ -180,11 +204,12 @@ export default function UsersManagerPage() {
                     'Desk',
                     'Desk Time',
                     'Sitting Time',
+                    'Role',
                     'Actions'
                   ]}
                 />
                 <tbody className="max-lg:block divide-y divide-gray-100">
-                  {users.length >0 ? (
+                  {users.length > 0 ? (
                     users.map((user) => <UserRow key={user.id} user={user} />)
                   ) : (
                     <EmptyState colSpan="8" message="No users found" />
@@ -208,12 +233,12 @@ export default function UsersManagerPage() {
                     'Name',
                     'Email',
                     'Job Description',
-                    // 'Working Schedule',
+                    'Role',
                     'Action'
                   ]}
                 />
                 <tbody className="max-lg:block divide-y divide-gray-100">
-                  {staff.length >0 ? (
+                  {staff.length > 0 ? (
                     staff.map((staffMember) => (
                       <StaffRow key={staffMember.id} staffMember={staffMember} />
                     ))
