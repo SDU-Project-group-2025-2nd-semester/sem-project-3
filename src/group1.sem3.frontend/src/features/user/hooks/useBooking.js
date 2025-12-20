@@ -69,13 +69,17 @@ function isFullyBooked(reservations, openStart, openEnd) {
     );
 }
 
-function generateTicks(intervals, step = 15) {
+// generateTicks now accepts an optional minDate to exclude ticks at or before that datetime
+function generateTicks(intervals, step = 15, minDate = null) {
     const out = [];
     for (const { start, end } of intervals) {
         let t = new Date(start);
         t.setMinutes(Math.ceil(t.getMinutes() / step) * step, 0, 0);
         while (t < end) {
-            out.push(hhmmFromDate(t));
+            // if a minDate is provided, skip ticks that are <= minDate
+            if (!minDate || t > minDate) {
+                out.push(hhmmFromDate(t));
+            }
             t = new Date(t.getTime() + step * 60000);
         }
     }
@@ -276,10 +280,11 @@ export function useBooking() {
         return slots;
     }, [selectedTable, openingWindow, reservationsByDesk]);
 
-    const startOptions = useMemo(
-        () => generateTicks(availableIntervals),
-        [availableIntervals]
-    );
+    const startOptions = useMemo(() => {
+        // if selected date is today, pass current time as minDate to exclude past ticks
+        const minDate = selectedDate === todayStr ? new Date() : null;
+        return generateTicks(availableIntervals, 15, minDate);
+    }, [availableIntervals, selectedDate, todayStr]);
 
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
@@ -291,10 +296,12 @@ export function useBooking() {
                 hhmmFromDate(i.start) <= startTime &&
                 startTime < hhmmFromDate(i.end)
         );
-        return interval
-            ? generateTicks([interval]).filter((t) => t > startTime)
+        const minDate = selectedDate === todayStr ? new Date() : null;
+        const opts = interval
+            ? generateTicks([interval], 15, minDate).filter((t) => t > startTime)
             : [];
-    }, [startTime, availableIntervals]);
+        return opts;
+    }, [startTime, availableIntervals, selectedDate, todayStr]);
 
     const canBook =
         !!selectedDate && !!selectedTable && !!startTime && !!endTime;
