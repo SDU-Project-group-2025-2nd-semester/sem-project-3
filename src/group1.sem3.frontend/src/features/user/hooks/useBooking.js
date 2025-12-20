@@ -82,6 +82,12 @@ function generateTicks(intervals, step = 15) {
     return [...new Set(out)];
 }
 
+function isRoomOpenOnDate(room, date) {
+    if (!room || !room.openingHours) return false;
+    const flag = DayFlag[date.getDay()];
+    return Boolean((room.openingHours.daysOfTheWeek ?? 0) & flag);
+}
+
 /* -------------------- hook -------------------- */
 
 export function useBooking() {
@@ -145,8 +151,9 @@ export function useBooking() {
         if (!rooms || !rooms.length) return;
         if (selectedRoom) return;
         const found = rooms.find((r) => String(r.id) === String(navState.roomId));
-        if (found) setSelectedRoom(found);
-    }, [rooms, navState?.roomId, selectedRoom]);
+        // only preset if the room is open on the currently selected date
+        if (found && isRoomOpenOnDate(found, selectedDateObj)) setSelectedRoom(found);
+    }, [rooms, navState?.roomId, selectedRoom, selectedDateObj]);
 
     /* ---------------- desks ---------------- */
 
@@ -173,6 +180,16 @@ export function useBooking() {
         const found = desks.find((d) => String(d.id) === String(navState.deskId));
         if (found) setSelectedTable(found);
     }, [desks, navState?.deskId, selectedTable]);
+
+    // clear selected room/table/desks if the selected date makes the room closed
+    useEffect(() => {
+        if (!selectedRoom) return;
+        if (!isRoomOpenOnDate(selectedRoom, selectedDateObj)) {
+            setSelectedRoom(null);
+            setSelectedTable(null);
+            setDesks([]);
+        }
+    }, [selectedRoom, selectedDateObj]);
 
     /* ---------------- reservations ---------------- */
 
