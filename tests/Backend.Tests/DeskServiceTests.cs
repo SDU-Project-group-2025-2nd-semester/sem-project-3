@@ -287,7 +287,7 @@ public class DeskServiceTests(DatabaseFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task DeleteDeskAsync_ShouldDeleteDesk_WhenExists()
+    public async Task UnadoptDeskAsync_ShouldDeleteDesk_WhenExists()
     {
         // Arrange
         var deskToDelete = new Desk
@@ -309,7 +309,7 @@ public class DeskServiceTests(DatabaseFixture fixture) : IAsyncLifetime
         await fixture.DbContext.SaveChangesAsync();
 
         // Act
-        var result = await _deskService.DeleteDeskAsync(_testCompany.Id, deskToDelete.Id);
+        var result = await _deskService.UnadoptDeskAsync(_testCompany.Id, deskToDelete.Id);
 
         // Assert
         Assert.True(result);
@@ -318,13 +318,13 @@ public class DeskServiceTests(DatabaseFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
-    public async Task DeleteDeskAsync_ShouldReturnFalse_WhenNotExists()
+    public async Task UnadoptDeskAsync_ShouldReturnFalse_WhenNotExists()
     {
         // Arrange
         var nonExistentId = Guid.NewGuid();
 
         // Act
-        var result = await _deskService.DeleteDeskAsync(_testCompany.Id, nonExistentId);
+        var result = await _deskService.UnadoptDeskAsync(_testCompany.Id, nonExistentId);
 
         // Assert
         Assert.False(result);
