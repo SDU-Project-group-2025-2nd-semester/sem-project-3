@@ -1,5 +1,6 @@
 ﻿using Backend.Auth;
 using Backend.Data.Database;
+using Backend.Data.Dtos;
 using Backend.Services.Reservations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -115,5 +116,25 @@ public class ReservationController(IReservationService reservationService, Backe
         await reservationService.DeleteReservation(reservation);
 
         return Ok();
+    }
+
+    [HttpPut("{reservationId}")]
+    [RequireRole(UserRole.User, UserRole.Admin, UserRole.Janitor)]
+    public async Task<ActionResult<Reservation>> UpdateReservation([FromBody] UpdateReservationDto updateReservationDto, Guid reservationId) 
+    {
+        var reservation = await reservationService.GetReservation(reservationId);
+
+        if (reservation is null)
+        {
+            return NotFound();
+        }    
+
+        // Authorization checks?
+
+        await reservationService.UpdateReservation(reservationId, updateReservationDto);
+
+        var updatedReservation = await reservationService.GetReservation(reservationId);
+
+        return Ok(updatedReservation);
     }
 }

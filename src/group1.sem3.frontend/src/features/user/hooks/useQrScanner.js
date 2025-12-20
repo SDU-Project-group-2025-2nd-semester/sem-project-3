@@ -18,6 +18,12 @@ export function useQrScanner(companyId) {
 
         setScannedCodes(detectedCodes);
 
+        // If no companyId is provided, skip lookup (tests and scanning without company should not call API)
+        if (!companyId) {
+            setLookupResults([]);
+            return;
+        }
+
         // Lookup all codes in parallel
         const lookups = detectedCodes.map(async (code) => {
             try {

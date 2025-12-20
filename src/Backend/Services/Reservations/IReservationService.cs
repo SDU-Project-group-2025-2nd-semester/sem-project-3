@@ -1,4 +1,5 @@
 ﻿using Backend.Data.Database;
+using Backend.Data.Dtos;
 
 namespace Backend.Services.Reservations;
 
@@ -9,4 +10,5 @@ public interface IReservationService
     Task<Reservation?> GetReservation(Guid reservationId);
     Task DeleteReservation(Reservation reservation);
     Task<Reservation?> CreateReservation(CreateReservationDto createReservationDto, string userId, Guid companyId);
+    Task UpdateReservation(Guid reservationId, UpdateReservationDto dto);
 }

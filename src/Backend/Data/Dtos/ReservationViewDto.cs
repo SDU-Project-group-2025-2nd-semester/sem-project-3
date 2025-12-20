@@ -1,4 +1,4 @@
-namespace Backend.Data;
+namespace Backend.Data.Dtos;
 
 public record ReservationViewDto(
     Guid Id,
