@@ -19,6 +19,7 @@ vi.mock('../../../../src/features/user/user.services', () => ({
  getDeskById: vi.fn(),
  getRoomById: vi.fn(),
  putDeskHeight: vi.fn(),
+ getReservation: vi.fn(),
 }));
 
 import * as userServices from '../../../../src/features/user/user.services';
@@ -59,8 +60,8 @@ test('loads reservation and desk details and allows setting heights and reportin
 
  userServices.getMyProfile.mockResolvedValueOnce({ sittingHeight:700, standingHeight:1100 });
 
- // First getDeskById for reservation details
- userServices.getDeskById.mockResolvedValueOnce({ deskId:11, start, end });
+ // First getReservation for reservation details
+ userServices.getReservation.mockResolvedValueOnce({ deskId:11, start, end });
  // Second call for desk details
  userServices.getDeskById.mockResolvedValueOnce({ readableId: 'Desk-11', room: { readableId: 'Room A' }, height:750 });
 
@@ -104,8 +105,8 @@ test('setSittingHeight and setStandingHeight only run when active', async () => 
 
  // getMyProfile to set user heights
  userServices.getMyProfile.mockResolvedValueOnce({ sittingHeight:700, standingHeight:1100 });
- // getDeskById for reservation details
- userServices.getDeskById.mockResolvedValueOnce({ deskId:11, start, end });
+ // getReservation for reservation details
+ userServices.getReservation.mockResolvedValueOnce({ deskId:11, start, end });
  // getDeskById for desk details when deskId changes
  userServices.getDeskById.mockResolvedValueOnce({ readableId: 'Desk-11', room: { readableId: 'Room A' }, height:750 });
 
@@ -130,7 +131,7 @@ test('setSittingHeight and setStandingHeight only run when active', async () => 
 
 test('reportDamage navigates with correct state when deskId present', async () => {
  userServices.getMyProfile.mockResolvedValueOnce({ sittingHeight:700, standingHeight:1100 });
- userServices.getDeskById.mockResolvedValueOnce({ deskId:22, start: new Date().toISOString(), end: new Date().toISOString() });
+ userServices.getReservation.mockResolvedValueOnce({ deskId:22, start: new Date().toISOString(), end: new Date().toISOString() });
  userServices.getDeskById.mockResolvedValueOnce({ readableId: 'Desk-22', room: { readableId: 'Room B' }, height:750 });
 
  navigateMock = vi.fn();
@@ -151,7 +152,7 @@ test('setSittingHeight does not attempt to set when reservation not active', asy
  const end = new Date(now.getTime() -3 *60 *60 *1000).toISOString();
 
  userServices.getMyProfile.mockResolvedValueOnce({ sittingHeight:700, standingHeight:1100 });
- userServices.getDeskById.mockResolvedValueOnce({ deskId:11, start, end });
+ userServices.getReservation.mockResolvedValueOnce({ deskId:11, start, end });
  userServices.getDeskById.mockResolvedValueOnce({ readableId: 'Desk-11', room: { readableId: 'Room A' }, height:750 });
 
  const { result } = renderHook(() => useDeskDetails({ reservationId:101 }));
@@ -175,7 +176,7 @@ test('setStandingHeight handles putDeskHeight rejection without throwing', async
  const end = new Date(now.getTime() +60 *60 *1000).toISOString();
 
  userServices.getMyProfile.mockResolvedValueOnce({ sittingHeight:700, standingHeight:1100 });
- userServices.getDeskById.mockResolvedValueOnce({ deskId:11, start, end });
+ userServices.getReservation.mockResolvedValueOnce({ deskId:11, start, end });
  userServices.getDeskById.mockResolvedValueOnce({ readableId: 'Desk-11', room: { readableId: 'Room A' }, height:750 });
 
  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
