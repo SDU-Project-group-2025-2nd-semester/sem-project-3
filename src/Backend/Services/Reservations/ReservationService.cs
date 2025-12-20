@@ -45,9 +45,12 @@ public class ReservationService(BackendContext dbContext, IReservationScheduler 
     {
         await scheduler.CancelScheduledAdjustment(reservation.Id);
 
-        dbContext.Reservations.Remove(reservation);
-
-        await dbContext.SaveChangesAsync();
+        var trackedReservation = await dbContext.Reservations.FindAsync(reservation.Id);
+        if (trackedReservation != null)
+        {
+            dbContext.Reservations.Remove(trackedReservation);
+            await dbContext.SaveChangesAsync();
+        }
     }
 
     public async Task<Reservation?> CreateReservation(CreateReservationDto createReservationDto, string userId,
@@ -74,6 +77,6 @@ public class ReservationService(BackendContext dbContext, IReservationScheduler 
 
         await dbContext.SaveChangesAsync();
 
-        return reservation; 
+        return reservation;
     }
 }
