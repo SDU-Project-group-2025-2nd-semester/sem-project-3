@@ -128,3 +128,12 @@ export async function getDeskStats(companyId, deskId) {
 export async function getUserStats(companyId, userId) {
   return get(`/${companyId}/Statistics/users/${userId}`);
 }
+
+// Companies
+export async function getPublicCompanies() {
+ return get(`/Company/publiclyAccessible`);
+}
+
+export async function enterCompany(companyId, accessCode) {
+ return post(`/Company/${companyId}/access`, accessCode);
+}
