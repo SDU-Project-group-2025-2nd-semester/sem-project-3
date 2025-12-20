@@ -94,13 +94,6 @@ void MyApp::run() {
     mqtt_wait_for_connection(state);
 
     mqtt_subscribe_to_topics(state);
-
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, true);
-
-    gpio_init(BTN_PIN);
-    gpio_set_dir(BTN_PIN, false);
-    gpio_pull_down(BTN_PIN);
         
     bool ledState = false;
     bool prevPressed = false;

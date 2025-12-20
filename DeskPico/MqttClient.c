@@ -265,7 +265,7 @@ void mqtt_run_test(MQTT_CLIENT_T *state) {
 
 void mqtt_subscribe_to_topics(MQTT_CLIENT_T *state) {
 
-    const char* topics[] = { "pico_w/recv", "desk/commands", "alerts/#" };
+    const char* topics[] = { "desks/#" };
     
     cyw43_arch_lwip_begin();
     for (size_t i = 0; i < sizeof(topics)/sizeof(topics[0]); ++i) {
