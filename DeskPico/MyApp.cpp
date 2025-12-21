@@ -76,35 +76,45 @@ void MyApp::run() {
     mqtt_wait_for_connection(state);
 
     mqtt_subscribe_to_topics(state);
-
-    cyw43_arch_poll(); // To get the QR code from the mqtt broker
         
-    std::string message = ""; //sitting, standing, buzzing, will be updated from the topic
-    //std::string message((const char*)buffer);
-    //qr code generation
-    const qrcodegen::QrCode qr = generateQRCode("");
-    display.clear();
-    display.drawQRCode(20,0, qr, 1);
-    display.renderRaw();
+    std::string message = "free";
+    const qrcodegen::QrCode qr = generateQRCode("f1:50:c2:b8:bf:22");
     
     bool booked = false; //false = qr code show, true = booked state
 
-    // button edge detection
     bool prevButtonState = false;
 
     while (true) {
+    
+    cyw43_arch_poll();
 
+    if (state != nullptr && state->message[0] != '\0') {
+        message.assign(state->message);
+    }
+    else {
+        message.clear();
+        continue;
+    }
+
+    if(message == "booked") {
+        booked = true;
+    }
+    else if(message == "free") {
+        booked = false;
+    } 
+    
     if(booked) {
+        display.clear();
+        display.writeText(5,16,"Occupied");
+        display.render();
+        RGBLed.setPixelColor(0,255,0,0);
         if(message == "sit") {
             display.clear();
             RLed.on();
             buzzer.buzzTone(1000, 500);
             display.writeText(5,16, "SIT DOWN");
             display.render();
-            sleep_ms(10000);
-            display.clear();
-            display.writeText(5,16,"SITTING");
-            display.render();
+            sleep_ms(5000);
             RLed.off();
         }
         else if(message == "stand") {
@@ -113,43 +123,37 @@ void MyApp::run() {
             buzzer.buzzTone(1000, 500);
             display.writeText(5,16, "STAND UP");
             display.render();
-            sleep_ms(10000);
-            display.clear();
-            display.writeText(5,16,"STANDING");
-            display.render();
+            sleep_ms(5000);
             RLed.off();
         }
-            RGBLed.setPixelColor(0,255,0,0); //Occupied
     }
-    if(!booked) {
-        if(message == "green") {
+    else {
+        if(message == "free") {
+            display.clear();
+            display.drawQRCode(20,0, qr, 1);
+            display.renderRaw();
             RGBLed.setPixelColor(0,0,255,0); //Free
         }
-        else if (message == "yellow") { // Is reserved
-            RGBLed.setPixelColor(0,255,255,0); //Booked
+        else if (message == "reserved") { // Is reserved - Yellow
+            display.clear();
+            display.writeText(5,16,"RESERVED");
+            display.render();
+            RGBLed.setPixelColor(0,255,255,0); //Booked - Green
         }
     }
-
-    cyw43_arch_poll();
     
     bool btn = button.read();
 
-    if (btn && !prevButtonState) {
+    /* if (btn && !prevButtonState) {
         sleep_ms(50);
         if (button.read()) {
             booked = !booked;
             sleep_ms(150);
         }
-    }
-    
-    prevButtonState = btn;
+    } */
 
-    if (state != nullptr && state->message[0] != '\0') {
-        message.assign(state->message);
-    } else {
-        message.clear();
-    }
-    sleep_ms(10);
-    }
+    //prevButtonState = btn;
+    message = "";
     cyw43_arch_deinit();
+}
 }

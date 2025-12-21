@@ -5,7 +5,7 @@
 Button::Button(unsigned int pinNumber) : pin(pinNumber) {
 
 	gpio_init(pin);
-    gpio_set_dir(pin, false);
+    gpio_set_dir(pin, GPIO_IN);
     gpio_pull_down(pin);
 }
 

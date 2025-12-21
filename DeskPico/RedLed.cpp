@@ -5,7 +5,7 @@
 RedLed::RedLed(unsigned int pinNumber) : pin(pinNumber) {
 
 	gpio_init(pin);
-	gpio_set_dir(pin, 1);
+	gpio_set_dir(pin, GPIO_OUT);
 	gpio_put(pin, 0);
 }
 

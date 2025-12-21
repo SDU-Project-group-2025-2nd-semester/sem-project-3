@@ -4,7 +4,7 @@
 
 Buzzer::Buzzer(unsigned int pinNumber) : pin(pinNumber) {
     gpio_init(pin);
-    gpio_set_dir(pin, true);
+    gpio_set_dir(pin, GPIO_OUT);
 }
 
 
