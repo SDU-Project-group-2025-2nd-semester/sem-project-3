@@ -46,12 +46,12 @@ if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
     if (NOT TARGET pico_cyw43_arch)
         message("Skipping build as support is not available")
     else()
-        set(WIFI_SSID "demcak_ap" CACHE INTERNAL "WiFi SSID")
-        set(WIFI_PASSWORD "hqZ3gTs7KmS6@" CACHE INTERNAL "WiFi password")
+        set(WIFI_SSID "{ssid}" CACHE INTERNAL "WiFi SSID")
+        set(WIFI_PASSWORD "{password}" CACHE INTERNAL "WiFi password")
 
-        if ("demcak_ap" STREQUAL "")
+        if ("{ssid}" STREQUAL "")
             message("Skipping build as WIFI_SSID is not defined")
-        elseif ("hqZ3gTs7KmS6@" STREQUAL "")
+        elseif ("{password}" STREQUAL "")
             message("Skipping build as WIFI_PASSWORD is not defined")
         else()
             add_executable(DeskPico
@@ -70,8 +70,8 @@ if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
 
 
             target_compile_definitions(DeskPico PRIVATE
-            WIFI_SSID=\"demcak_ap\"
-            WIFI_PASSWORD=\"hqZ3gTs7KmS6@\"
+            WIFI_SSID=\"{ssid}\"
+            WIFI_PASSWORD=\"{password}\"
             TEST_TCP_SERVER_IP=\"${TEST_TCP_SERVER_IP}\"
             NO_SYS=1
             )
