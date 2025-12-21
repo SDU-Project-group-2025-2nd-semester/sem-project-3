@@ -60,7 +60,18 @@ qrcodegen::QrCode MyApp::generateQRCode(std::string address) {
     return qr;
 }
 
-
+void MyApp::changePositionEvent(std::string text) {
+    RLed.on();
+    displayText(text);
+    buzzer.buzzTone(1000, 300);
+    sleep_ms(5000);
+    RLed.off();
+}
+void MyApp::displayText(std::string text) {
+    display.clear();
+    display.writeText(5,16,text.c_str());
+    display.render();
+}
 
 void MyApp::run() {
 
@@ -80,13 +91,12 @@ void MyApp::run() {
     std::string message = "free";
     const qrcodegen::QrCode qr = generateQRCode("f1:50:c2:b8:bf:22");
     
-    bool booked = false; //false = qr code show, true = booked state
+    bool occupied = false; //false = qr code show, true = booked state
 
-    bool prevButtonState = false;
+    //bool prevButtonState = false;
 
     while (true) {
 
-    message.clear();
     cyw43_arch_poll();
 
     if (state != nullptr && state->message[0] != '\0') {
@@ -98,42 +108,22 @@ void MyApp::run() {
         continue;
     }
 
-    if(message == "booked") {
-        booked = true;
+    if(message == "occupied") {
+        occupied = true;
     }
     else if(message == "free") {
-        booked = false;
+        occupied = false;
     } 
     
-    if(booked) {
-        display.clear();
-        display.writeText(5,16,"Occupied");
-        display.render();
-        RGBLed.setPixelColor(0,255,0,0);
+    if(occupied) {  
         if(message == "sit") {
-            display.clear();
-            RLed.on();
-            buzzer.buzzTone(1000, 500);
-            display.writeText(5,16, "SIT DOWN");
-            display.render();
-            sleep_ms(5000);
-            display.clear();
-            display.writeText(5,16,"Occupied");
-            display.render();
-            RLed.off();
+            changePositionEvent("SIT DOWN");
         }
         else if(message == "stand") {
-            display.clear();
-            RLed.on();
-            buzzer.buzzTone(1000, 500);
-            display.writeText(5,16, "STAND UP");
-            display.render();
-            sleep_ms(5000);
-            display.clear();
-            display.writeText(5,16,"Occupied");
-            display.render();
-            RLed.off();
+            changePositionEvent("STAND UP");
         }
+        displayText("OCCUPIED");
+        RGBLed.setPixelColor(0,255,0,0);
     }
     else {
         if(message == "free") {
@@ -143,19 +133,17 @@ void MyApp::run() {
             RGBLed.setPixelColor(0,0,255,0); //Free
         }
         else if (message == "reserved") { // Is reserved - Yellow
-            display.clear();
-            display.writeText(5,16,"RESERVED");
-            display.render();
+            displayText("RESERVED");
             RGBLed.setPixelColor(0,255,255,0); //Booked - Green
         }
     }
     
-    bool btn = button.read();
+    //bool btn = button.read();
 
     /* if (btn && !prevButtonState) {
         sleep_ms(50);
         if (button.read()) {
-            booked = !booked;
+            occupied = !occupied;
             sleep_ms(150);
         }
     } */
