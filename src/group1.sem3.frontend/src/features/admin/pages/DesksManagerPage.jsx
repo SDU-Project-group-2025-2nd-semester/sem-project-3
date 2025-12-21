@@ -369,7 +369,6 @@ export default function DesksManagerPage() {
                                             <div>
                                                 <label className="text-gray-600 text-xs block mb-1">Closing:</label>
                                                 <Input type="time" value={closingTime} onChange={e => setClosingTime(e.target.value)} className="w-auto" />
-                                                <Input type="time" value={closingTime} onChange={e => setClosingTime(e.target.value)} className="w-auto" />
                                             </div>
                                             <div>
                                                 <label className="text-gray-600 text-xs block mb-1">Set open days:</label>
