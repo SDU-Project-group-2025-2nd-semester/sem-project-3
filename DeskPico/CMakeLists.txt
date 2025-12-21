@@ -35,11 +35,71 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(DeskPico 
-        DeskPico.cpp
-        MyApp.cpp
-        OLEDDisplay.cpp
-         )
+add_compile_options(-Wall
+        -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+        -Wno-unused-function # we have some for the docs that aren't called
+        -Wno-maybe-uninitialized
+        )
+
+
+if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
+    if (NOT TARGET pico_cyw43_arch)
+        message("Skipping build as support is not available")
+    else()
+        set(WIFI_SSID "{ssid}" CACHE INTERNAL "WiFi SSID")
+        set(WIFI_PASSWORD "{password}" CACHE INTERNAL "WiFi password")
+
+        if ("{ssid}" STREQUAL "")
+            message("Skipping build as WIFI_SSID is not defined")
+        elseif ("{password}" STREQUAL "")
+            message("Skipping build as WIFI_PASSWORD is not defined")
+        else()
+            add_executable(DeskPico
+                DeskPico.cpp
+                MyApp.cpp
+                OLEDDisplay.cpp
+                NeoPixel.cpp
+                RedLed.cpp
+                Buzzer.cpp
+                Button.cpp
+                MqttClient.c
+            )
+            
+            # Generate PIO header for WS2812
+            pico_generate_pio_header(DeskPico ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+
+
+            target_compile_definitions(DeskPico PRIVATE
+            WIFI_SSID=\"{ssid}\"
+            WIFI_PASSWORD=\"{password}\"
+            TEST_TCP_SERVER_IP=\"${TEST_TCP_SERVER_IP}\"
+            NO_SYS=1
+            )
+
+            target_include_directories(DeskPico PRIVATE
+                ${CMAKE_CURRENT_LIST_DIR}
+                ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts
+            )
+
+            target_link_libraries(DeskPico
+                pico_cyw43_arch_lwip_poll
+                pico_stdlib
+                pico_lwip_mbedtls
+                pico_mbedtls
+                pico_lwip_mqtt
+                qrcodegencpp
+                hardware_i2c
+                hardware_adc
+                hardware_pio
+            )
+
+        endif()
+    endif()
+endif()
+
+
+
+
 
 pico_set_program_name(DeskPico "DeskPico")
 pico_set_program_version(DeskPico "0.1")
@@ -49,9 +109,11 @@ pico_enable_stdio_uart(DeskPico 1)
 pico_enable_stdio_usb(DeskPico 1)
 
 # Add the standard library to the build
-target_link_libraries(DeskPico
-        pico_stdlib
-        qrcodegencpp)
+#target_link_libraries(DeskPico
+ #       pico_stdlib
+  #      qrcodegencpp
+   #     hardware_i2c
+    #    hardware_adc )
 
 # Add the standard include files to the build
 target_include_directories(DeskPico PRIVATE
@@ -81,18 +143,15 @@ target_include_directories(QrCodeGeneratorDemo PRIVATE
 )
 pico_set_program_name(QrCodeGeneratorDemo "QrCodeGeneratorDemo")
 pico_set_program_version(QrCodeGeneratorDemo "0.1")
-# Enable stdio for the demo as well
+#Enable stdio for the demo as well
 pico_enable_stdio_uart(QrCodeGeneratorDemo 1)
 pico_enable_stdio_usb(QrCodeGeneratorDemo 1)
 
 # Produce UF2/bin outputs for the demo too
 pico_add_extra_outputs(QrCodeGeneratorDemo)
 
-# Add any user requested libraries
-target_link_libraries(DeskPico 
-        hardware_i2c
-        hardware_adc        
-        )
 
 pico_add_extra_outputs(DeskPico)
+
+
 
