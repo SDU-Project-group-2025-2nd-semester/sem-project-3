@@ -2,23 +2,23 @@ import { get, post, put, del } from "@shared/api/apiClient";
 
 // Rooms & Desks
 export async function getRooms(companyId, opts) {
- return get(`/${companyId}/Rooms`, opts);
+    return get(`/${companyId}/Rooms`, opts);
 }
 
 export async function getDesks(companyId, opts) {
- return get(`/${companyId}/Desks`, opts);
+    return get(`/${companyId}/Desks`, opts);
 }
 
 export async function getDesksForRoom(companyId, roomId, opts) {
- return get(`/${companyId}/Desks/room/${roomId}`, opts);
+    return get(`/${companyId}/Desks/room/${roomId}`, opts);
 }
 
 export async function getDeskById(companyId, deskId, opts) {
- return get(`/${companyId}/Desks/${deskId}`, opts);
+    return get(`/${companyId}/Desks/${deskId}`, opts);
 }
 
 export async function getRoomById(companyId, roomId, opts) {
- return get(`/${companyId}/Rooms/${roomId}`, opts);
+    return get(`/${companyId}/Rooms/${roomId}`, opts);
 }
 
 export async function putDeskHeight(companyId, deskId, newHeight) {
@@ -27,38 +27,47 @@ export async function putDeskHeight(companyId, deskId, newHeight) {
 
 // Lookup desk by MAC (scanner use-case)
 export async function getDeskFromMac(companyId, mac, opts) {
- const scan = encodeURIComponent(mac ?? "");
- return get(`/${companyId}/Desks/from-mac/${scan}`, opts);
+    const scan = encodeURIComponent(mac ?? "");
+    return get(`/${companyId}/Desks/from-mac/${scan}`, opts);
 }
 
 // Reservations
 export async function getReservations(companyId, query = {}, opts) {
- // query: { startDate, endDate, userId, deskId }
- const qs = Object.keys(query || {}).length ? `?${new URLSearchParams(query).toString()}` : "";
- return get(`/${companyId}/Reservation${qs}`, opts);
+    // query: { startDate, endDate, userId, deskId }
+    const qs = Object.keys(query || {}).length ? `?${new URLSearchParams(query).toString()}` : "";
+    return get(`/${companyId}/Reservation${qs}`, opts);
 }
 
 export async function getMyReservations(companyId, opts) {
- return get(`/${companyId}/Reservation/me`, opts);
+    return get(`/${companyId}/Reservation/me`, opts);
 }
 
 export async function getReservation(companyId, reservationId, opts) {
- return get(`/${companyId}/Reservation/${reservationId}`, opts);
+    return get(`/${companyId}/Reservation/${reservationId}`, opts);
 }
 
 export async function createReservation(companyId, payload) {
- return post(`/${companyId}/Reservation`, payload);
+    return post(`/${companyId}/Reservation`, payload);
 }
 
 export async function deleteReservation(companyId, reservationId) {
- return del(`/${companyId}/Reservation/${reservationId}`);
+    return del(`/${companyId}/Reservation/${reservationId}`);
+}
+
+export async function updateReservation(companyId, reservationId, payload) {
+ return put(`/${companyId}/reservation/${reservationId}`, payload);
 }
 
 // User profile
 export async function getMyProfile(opts) {
- return get(`/Users/me`, opts);
+    return get(`/Users/me`, opts);
 }
 
 export async function updateMyProfile(payload) {
- return put(`/Users/me`, payload);
+    return put(`/Users/me`, payload);
+}
+
+// Statistics
+export async function getUserStats(companyId, userId) {
+    return get(`/${companyId}/Statistics/users/${userId}`);
 }

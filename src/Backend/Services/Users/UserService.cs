@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Backend.Services.Users;
 
-public class UserService(ILogger<UserService> logger, BackendContext dbContext) : IUserService
+public class UserService(ILogger<UserService> logger, BackendContext dbContext, UserManager<User> userManager) : IUserService
 {
     public async Task<User?> GetUserAsync(string userId)
     {
@@ -18,6 +18,59 @@ public class UserService(ILogger<UserService> logger, BackendContext dbContext) 
         return await dbContext.Users.ToListAsync();
     }
 
+    public async Task<bool> UpdateUserAsync(string userId, UpdateUserDto updated)
+    {
+        //if (!string.IsNullOrEmpty(updated.NewPassword))
+        //{
+        //    return false; // NewPassword updates are not allowed through this method
+        //}
+
+        return await UpdateUserAsyncInternal(userId, updated);
+    }
+
+    private async Task<bool> UpdateUserAsyncInternal(string userId, UpdateUserDto updated)
+    {
+        var user = await dbContext.Users.FindAsync(userId);
+
+        if (user is null)
+            return false;
+
+        if (!string.IsNullOrEmpty(updated.FirstName))
+        {
+            user.FirstName = updated.FirstName;
+        }
+
+        if (!string.IsNullOrEmpty(updated.LastName))
+        {
+            user.LastName = updated.LastName;
+        }
+
+        
+        if (updated.SittingHeight.HasValue)
+        {
+            user.SittingHeight = updated.SittingHeight.Value;
+        }
+
+        if (updated.StandingHeight.HasValue)
+        {
+            user.StandingHeight = updated.StandingHeight.Value;
+        }
+
+        if (updated.HealthRemindersFrequency.HasValue)
+        {
+            user.HealthRemindersFrequency = updated.HealthRemindersFrequency.Value;
+        }
+
+        
+        await dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UpdateMyInfoAsync(string userId, UpdateUserDto updated)
+    {
+        return await UpdateUserAsyncInternal(userId, updated);
+    }
+
     public async Task<bool> DeleteUserAsync(string userId)
     {
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -26,51 +79,6 @@ public class UserService(ILogger<UserService> logger, BackendContext dbContext) 
             return false;
 
         dbContext.Users.Remove(user);
-        await dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    public async Task<bool> UpdateUserAsync(string userId, User updated)
-    {
-        var existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-        if (existing is null)
-            return false;
-
-        existing.FirstName = updated.FirstName;
-        existing.LastName = updated.LastName;
-        existing.SittingHeight = updated.SittingHeight;
-        existing.StandingHeight = updated.StandingHeight;
-        existing.HealthRemindersFrequency = updated.HealthRemindersFrequency;
-
-        await dbContext.SaveChangesAsync();
-        return true;
-    }
-    public async Task<bool> UpdateMyInfoAsync(string userId, User updated)
-    {
-        var existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-        if (existing is null)
-            return false;
-
-        existing.FirstName = updated.FirstName;
-        existing.LastName = updated.LastName;
-        existing.SittingHeight = updated.SittingHeight;
-        existing.StandingHeight = updated.StandingHeight;
-        existing.HealthRemindersFrequency = updated.HealthRemindersFrequency;
-
-        if (!string.IsNullOrWhiteSpace(updated.Email) && updated.Email != existing.Email)
-        {
-            existing.Email = updated.Email;
-            existing.NormalizedEmail = updated.Email.ToUpperInvariant();
-        }
-
-        if (!string.IsNullOrWhiteSpace(updated.PasswordHash))
-        {
-            var hasher = new PasswordHasher<User>();
-            existing.PasswordHash = hasher.HashPassword(existing, updated.PasswordHash);
-        }
-
         await dbContext.SaveChangesAsync();
         return true;
     }
