@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 
 vi.mock('../../../../src/features/user/user.services', () => ({
  getDeskFromMac: vi.fn(),
+ createReservation: vi.fn(),
 }));
 
 // module-level navigate mock
@@ -13,9 +14,16 @@ vi.mock('react-router-dom', () => ({ useNavigate: () => navigateMock }));
 import * as userServices from '../../../../src/features/user/user.services';
 import { useQrScanner } from '../../../../src/features/user/hooks/useQrScanner';
 
+beforeEach(() => {
+ // reset mocks before each test
+ vi.clearAllMocks();
+ navigateMock = vi.fn();
+});
+
 test('handleScan stores detected codes and performs lookup when companyId provided', async () => {
  const fakeRes = { id:11, readableId: 'Desk-11' };
  userServices.getDeskFromMac.mockResolvedValueOnce(fakeRes);
+ userServices.createReservation.mockResolvedValueOnce({ id:55 });
 
  // ensure navigateMock is a fresh spy
  navigateMock = vi.fn();
@@ -29,6 +37,7 @@ test('handleScan stores detected codes and performs lookup when companyId provid
 
  expect(result.current.scannedCodes).toEqual([{ format: 'QR_CODE', rawValue: 'AA:BB:CC' }]);
  expect(result.current.lookupResults).toEqual([fakeRes]);
+ expect(userServices.createReservation).toHaveBeenCalled();
 });
 
 test('handleScan stores detected codes but skips lookup when no companyId', async () => {
@@ -42,16 +51,18 @@ test('handleScan stores detected codes but skips lookup when no companyId', asyn
 
  expect(result.current.scannedCodes).toEqual([{ format: 'QR_CODE', rawValue: '1234' }]);
  expect(result.current.lookupResults).toEqual([]);
+ expect(userServices.createReservation).not.toHaveBeenCalled();
 });
 
-// merged extra test: navigation when single lookup returns desk id
-test('handleScan navigates when single lookup returns desk id', async () => {
+test('handleScan navigates when reservation created for scanned desk', async () => {
  // set navigateMock to spy
  navigateMock = vi.fn();
  userServices.getDeskFromMac.mockResolvedValueOnce({ id:33 });
+ userServices.createReservation.mockResolvedValueOnce({ id:77 });
  const { result } = renderHook(() => useQrScanner(10));
  await act(async () => { await result.current.handleScan([{ format: 'QR_CODE', rawValue: 'AA:BB' }]); });
  expect(result.current.lookupResults[0]).toEqual({ id:33 });
- // ensure navigate was called with expected path/state
- expect(navigateMock).toHaveBeenCalled();
+ // ensure createReservation and navigate were called with expected path
+ expect(userServices.createReservation).toHaveBeenCalled();
+ expect(navigateMock).toHaveBeenCalledWith(`/user/reservation/77`);
 });
