@@ -22,7 +22,7 @@
 
 #define MQTT_TLS 0 // needs to be 1 for AWS IoT. Also set published QoS to 0 or 1
 #define CRYPTO_MOSQUITTO_TEST
-#define MQTT_SERVER_HOST "broker.hivemq.com"
+#define MQTT_SERVER_HOST "broker.hivemq.com"   //broker.hivemq.com
 #define MQTT_SERVER_PORT 1883
 
 #if MQTT_TLS

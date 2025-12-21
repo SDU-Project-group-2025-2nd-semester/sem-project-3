@@ -85,11 +85,13 @@ void MyApp::run() {
     bool prevButtonState = false;
 
     while (true) {
-    
+
+    message.clear();
     cyw43_arch_poll();
 
     if (state != nullptr && state->message[0] != '\0') {
         message.assign(state->message);
+        state->message[0] = '\0';
     }
     else {
         message.clear();
@@ -115,6 +117,9 @@ void MyApp::run() {
             display.writeText(5,16, "SIT DOWN");
             display.render();
             sleep_ms(5000);
+            display.clear();
+            display.writeText(5,16,"Occupied");
+            display.render();
             RLed.off();
         }
         else if(message == "stand") {
@@ -124,6 +129,9 @@ void MyApp::run() {
             display.writeText(5,16, "STAND UP");
             display.render();
             sleep_ms(5000);
+            display.clear();
+            display.writeText(5,16,"Occupied");
+            display.render();
             RLed.off();
         }
     }
@@ -154,6 +162,6 @@ void MyApp::run() {
 
     //prevButtonState = btn;
     message = "";
-    cyw43_arch_deinit();
 }
+    cyw43_arch_deinit();
 }
