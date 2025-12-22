@@ -2,6 +2,16 @@
 import { renderHook } from '@testing-library/react';
 import { vi } from 'vitest';
 
+// Prevent real network fetches during tests
+vi.stubGlobal('fetch', vi.fn(async () => ({
+ ok: true,
+ status:200,
+ headers: { get: () => 'application/json' },
+ json: async () => ({}),
+ text: async () => '',
+})));
+
+
 vi.mock('@features/auth/AuthContext', () => ({
  useAuth: () => ({ currentCompany: { id:1 } }),
 }));
@@ -17,12 +27,14 @@ import { useHealthStatsManager } from '../../../../src/features/admin/hooks/useH
 beforeEach(() => vi.clearAllMocks());
 
 test('basic smoke: hook exports and initial values', () => {
- const { result } = renderHook(() => useHealthStatsManager('daily', 'company'));
+ // hook signature expects single viewType
+ const { result } = renderHook(() => useHealthStatsManager('company'));
  expect(typeof result.current.fetchData).toBe('function');
- expect(typeof result.current.getTotalDeskTime).toBe('function');
+ // hook does not expose getTotalDeskTime/reservations in reverted version
  expect(Array.isArray(result.current.chartData)).toBe(true);
- const total = result.current.getTotalDeskTime();
- expect(typeof total).toBe('number');
- // initial reservations empty
- expect(Array.isArray(result.current.reservations)).toBe(true);
+ // initial stats empty/nullable as implemented
+ expect(Array.isArray(result.current.roomStats)).toBe(true);
+ expect(Array.isArray(result.current.deskStats)).toBe(true);
+ expect(result.current.companyStats).toBeNull();
 });
+
