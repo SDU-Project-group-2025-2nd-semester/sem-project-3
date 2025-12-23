@@ -108,10 +108,10 @@ void MyApp::run() {
         continue;
     }
 
-    if(message == "occupied") {
+    if(message == "red") {
         occupied = true;
     }
-    else if(message == "free") {
+    else if(message == "green") {
         occupied = false;
     } 
     
@@ -126,16 +126,16 @@ void MyApp::run() {
         RGBLed.setPixelColor(0,255,0,0);
     }
     else {
-        if(message == "free") {
+        if(message == "green") {
             display.clear();
             display.drawQRCode(20,0, qr, 1);
             display.renderRaw();
             RGBLed.setPixelColor(0,0,255,0); //Free
         }
-        else if (message == "reserved") { // Is reserved - Yellow
+        /*else if (message == "reserved") { // Is reserved - Yellow
             displayText("RESERVED");
             RGBLed.setPixelColor(0,255,255,0); //Booked - Green
-        }
+        }*/
     }
     
     //bool btn = button.read();
