@@ -27,5 +27,16 @@ public class User : IdentityUser
 
     public List<Guid> CompanyMembershipsIds { get; set; } = [];
     
-    // TODO: Implement time-series db for tracking user posture over time 
+}
+
+public class UpdateUserDto
+{
+    //public string? Email { get; set; }
+    //public string? NewPassword { get; set; }
+    //public string? CurrentPassword { get; set; }
+    [MaxLength(100)] public string? FirstName { get; set; }
+    [MaxLength(100)] public string? LastName { get; set; }
+    public int? StandingHeight { get; set; } // In mm
+    public int? SittingHeight { get; set; }
+    public HealthRemindersFrequency? HealthRemindersFrequency { get; set; }
 }

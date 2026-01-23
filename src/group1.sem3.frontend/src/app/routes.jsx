@@ -15,6 +15,7 @@ import HealthStatsManagerPage from "@features/admin/pages/HealthStatsManagerPage
 import Scanning from "@features/user/pages/Scanning";
 import DeskPage from "@features/user/pages/DeskPage";
 import DamageReportPage from "@features/staff/pages/DamageReportPage";
+import CompanyJoinPage from "@features/staff/pages/CompanyJoinPage";
 import ProtectedRoute from "@shared/ui/ProtectedRoute";
 
 export default function AppRoutes() {
@@ -37,6 +38,8 @@ export default function AppRoutes() {
  <Route path="/user/desk" element={<ProtectedRoute><DeskPage /></ProtectedRoute>} />
  <Route path="/staff/damagereport" element={<ProtectedRoute roles={[1,2]}><DamageReportPage /></ProtectedRoute>} />
  <Route path="/user/damagereport" element={<ProtectedRoute><DamageReportPage /></ProtectedRoute>} />
+ <Route path="/staff/companies/join" element={<ProtectedRoute roles={[1,2]}><CompanyJoinPage /></ProtectedRoute>} />
+ <Route path="/user/companies/join" element={<ProtectedRoute><CompanyJoinPage /></ProtectedRoute>} />
  <Route path="/user/statistics" element={<ProtectedRoute><UserStatisticsPage /></ProtectedRoute>} />
  <Route path="/user/reservation/:reservationId" element={<ProtectedRoute><DeskPage /></ProtectedRoute>} />
  </Routes>

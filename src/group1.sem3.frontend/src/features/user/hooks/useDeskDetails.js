@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@features/auth/AuthContext";
-import { getMyProfile, getDeskById, getRoomById, putDeskHeight } from "../user.services";
+import { getMyProfile, getDeskById, getRoomById, putDeskHeight, getReservation } from "../user.services";
 
 export function useDeskDetails({ reservationId }) {
     const { currentCompany } = useAuth();
@@ -91,7 +91,7 @@ export function useDeskDetails({ reservationId }) {
             try {
                 setLoadingDetails(true);
                 setErr(null);
-                const rsv = await getDeskById(COMPANY_ID, reservationId, { signal: ctrl.signal });
+                const rsv = await getReservation(COMPANY_ID, reservationId, { signal: ctrl.signal });
                 if (ctrl.signal.aborted) return;
                 setDeskId(rsv.deskId);
                 setReservationDate(fmtDate(rsv.start));

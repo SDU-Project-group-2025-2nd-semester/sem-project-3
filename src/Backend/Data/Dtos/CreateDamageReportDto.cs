@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Backend.Data;
+namespace Backend.Data.Dtos;
 
 public class CreateDamageReportDto
 {

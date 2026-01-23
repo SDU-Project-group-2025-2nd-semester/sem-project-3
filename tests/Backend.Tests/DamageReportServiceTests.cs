@@ -1,5 +1,6 @@
 using Backend.Data;
 using Backend.Data.Database;
+using Backend.Data.Dtos;
 using Backend.Services.DamageReports;
 
 namespace Backend.Tests;

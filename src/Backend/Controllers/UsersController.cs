@@ -61,7 +61,7 @@ public class UsersController(IUserService userService) : ControllerBase
 
     [HttpPut("{userId}")]
     [RequireRole(UserRole.Admin)]
-    public async Task<IActionResult> UpdateUser(string userId, [FromBody] User updated)
+    public async Task<IActionResult> UpdateUser(string userId, [FromBody] UpdateUserDto updated)
     {
         var success = await userService.UpdateUserAsync(userId, updated);
 
@@ -93,7 +93,7 @@ public class UsersController(IUserService userService) : ControllerBase
     }
 
     [HttpPut("me")]
-    public async Task<IActionResult> UpdateMyInfo([FromBody] User updated)
+    public async Task<IActionResult> UpdateMyInfo([FromBody] UpdateUserDto updated)
     {
         var currentUserId = User.GetUserId();
 

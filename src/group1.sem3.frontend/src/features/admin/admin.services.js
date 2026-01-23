@@ -111,3 +111,29 @@ export async function updateDamageReportStatus(companyId, damageId, isResolved) 
 export async function deleteDamageReport(companyId, damageId) {
  return del(`/${companyId}/DamageReport/${damageId}`);
 }
+
+// Statistics
+export async function getCompanyStats(companyId) {
+  return get(`/${companyId}/Statistics/company`);
+}
+
+export async function getRoomStats(companyId, roomId) {
+  return get(`/${companyId}/Statistics/rooms/${roomId}`);
+}
+
+export async function getDeskStats(companyId, deskId) {
+  return get(`/${companyId}/Statistics/desks/${deskId}`);
+}
+
+export async function getUserStats(companyId, userId) {
+  return get(`/${companyId}/Statistics/users/${userId}`);
+}
+
+// Companies
+export async function getPublicCompanies() {
+ return get(`/Company/publiclyAccessible`);
+}
+
+export async function enterCompany(companyId, accessCode) {
+ return post(`/Company/${companyId}/access`, accessCode);
+}

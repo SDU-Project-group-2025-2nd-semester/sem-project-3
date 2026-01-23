@@ -1,5 +1,6 @@
 ﻿using Backend.Auth;
 using Backend.Data.Database;
+using Backend.Data.Dtos;
 using Backend.Services.DeskApis;
 using Backend.Services.Desks;
 using Microsoft.AspNetCore.Authorization;
@@ -32,8 +33,8 @@ public class DesksController(IDeskService deskService) : ControllerBase
 
         return Ok(desks);
     }
-    
-    
+
+
     [HttpGet("{deskId}")]
     [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<Desk>> GetDesk(Guid companyId, Guid deskId)
@@ -45,7 +46,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
         return Ok(desk);
     }
 
-    
+
 
     [HttpPost]
     [RequireRole(UserRole.Admin)]
@@ -68,7 +69,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
     }
 
     [HttpPut("{deskId}/height")]
-    [RequireRole(UserRole.Admin, UserRole.Janitor)]
+    [RequireRole(UserRole.User, UserRole.Admin, UserRole.Janitor)]
     public async Task<IActionResult> UpdateHeightDesk(Guid companyId, Guid deskId, [FromBody] int newHeight)
     {
         var updatedSuccessfully = await deskService.UpdateDeskHeightAsync(companyId, deskId, newHeight);
@@ -118,7 +119,7 @@ public class DesksController(IDeskService deskService) : ControllerBase
             return StatusCode(502, new { error = ex.Message });
         }
     }
-    
+
     [HttpGet("from-mac/{macAddress}")]
     [RequireRole(UserRole.User, UserRole.Janitor, UserRole.Admin)]
     public async Task<ActionResult<Guid>> GetDeskIdByMac(Guid companyId, string macAddress)

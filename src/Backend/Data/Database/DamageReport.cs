@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Backend.Data.Dtos;
+using System.ComponentModel.DataAnnotations;
 
 namespace Backend.Data.Database;
 

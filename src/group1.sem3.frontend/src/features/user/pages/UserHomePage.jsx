@@ -4,7 +4,7 @@ import NotificationBanner from "@shared/ui/NotificationBanner";
 import { useUserBookings } from "../hooks/useUserBookings";
 
 export default function UserHomePage() {
-    const { currentBookings, recentBookings, profile, loading, err, cancelBooking } = useUserBookings();
+    const { currentBookings, recentBookings, profile, loading, err, cancelBooking, finishBooking } = useUserBookings();
 
     return (
         <div className="relative bg-background min-h-screen px-4 pt-24">
@@ -18,15 +18,25 @@ export default function UserHomePage() {
                     {!loading && currentBookings.length === 0 && <div className="text-gray-600">No upcoming bookings.</div>}
                     <div className="flex flex-wrap gap-4">
                         {currentBookings.map(b => (
-                            <div key={b.id} className="bg-white rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4">
+                            <div key={b.id} className={`rounded-2xl shadow p-4 flex items-center justify-between w-full gap-4 ${b.isOngoing ? 'bg-accent-50' : 'bg-white'}`}>
                                 <Link to={`/user/reservation/${b.id}`} className="flex-1">
                                     <div>
                                         <p className="text-primary font-semibold">Desk: {b.desk}</p>
                                         <p className="text-primary font-semibold">Room: {b.room ?? "-"}</p>
+                                        <p className="text-primary text-sm mt-1">{b.date} | {b.time}</p>
                                     </div>
                                 </Link>
-                                <button className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition shrink-0"
-                                    onClick={() => cancelBooking(b.id)}>Cancel</button>
+                                {b.isOngoing ? (
+                                    <button
+                                        className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition shrink-0"
+                                        onClick={() => finishBooking(b.id)}>Finish
+                                    </button>
+                                    ) : (
+                                    <button
+                                        className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition shrink-0"
+                                        onClick={() => cancelBooking(b.id)}>Cancel
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>

@@ -26,4 +26,24 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    files: ['**/tests/**/*.{js,jsx}', '**/*.test.{js,jsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        describe: 'readonly',
+        vi: 'readonly',
+        jest: 'readonly',
+      },
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+  },
 ])

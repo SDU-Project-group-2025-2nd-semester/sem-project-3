@@ -4,7 +4,7 @@ import Button from "@shared/ui/Button";
 import { useQrScanner } from "../hooks/useQrScanner";
 
 export default function Scanning() {
-    const { handleScan, handleError } = useQrScanner();
+    const { handleScan, handleError, reservationError } = useQrScanner();
 
     return (
         <div className="pt-24 pl-1 pr-1">
@@ -12,6 +12,12 @@ export default function Scanning() {
                 onScan={handleScan}
                 onError={handleError}
             />
+
+            {reservationError && (
+                <div className="mt-4 mx-auto max-w-xl bg-red-100 border border-red-300 text-red-800 px-4 py-2 rounded text-center">
+                    {reservationError}
+                </div>
+            )}
 
             <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
                 <Link to="/user/homepage">
