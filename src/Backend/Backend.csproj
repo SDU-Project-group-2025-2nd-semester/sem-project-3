@@ -9,11 +9,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-
-		<!-- Disable build-time OpenAPI document generation -->
 		<OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
-
-		<OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
 		<OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)</OpenApiDocumentsDirectory>
 		<DockerfileContext>..\..</DockerfileContext>
 		<DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
