@@ -2,6 +2,7 @@ using Backend.Data.Database;
 using Backend.Services.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace Backend.Tests;
 
@@ -18,7 +19,14 @@ public class UserServiceTests(DatabaseFixture fixture) : IAsyncLifetime
     public async Task InitializeAsync()
     {
         var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<UserService>();
-        _userService = new UserService(logger, fixture.DbContext);
+        
+        // Mock UserManager<User>
+        var userStoreMock = new Mock<IUserStore<User>>();
+        var userManagerMock = new Mock<UserManager<User>>(
+            userStoreMock.Object,
+            null, null, null, null, null, null, null, null);
+        
+        _userService = new UserService(logger, fixture.DbContext, userManagerMock.Object);
 
         // Setup test companies
         _testCompany = new Company
@@ -204,7 +212,7 @@ public class UserServiceTests(DatabaseFixture fixture) : IAsyncLifetime
     public async Task UpdateUserAsync_ShouldUpdateUser_WhenExists()
     {
         // Arrange
-        var updatedUser = new User
+        var updatedUser = new UpdateUserDto
         {
             FirstName = "Updated",
             LastName = "Name",
@@ -232,7 +240,7 @@ public class UserServiceTests(DatabaseFixture fixture) : IAsyncLifetime
     {
         // Arrange
         var nonExistentId = Guid.NewGuid().ToString();
-        var updatedUser = new User
+        var updatedUser = new UpdateUserDto
         {
             FirstName = "Updated",
             LastName = "Name"
@@ -249,11 +257,10 @@ public class UserServiceTests(DatabaseFixture fixture) : IAsyncLifetime
     public async Task UpdateMyInfoAsync_ShouldUpdateUserInfo()
     {
         // Arrange
-        var updatedUser = new User
+        var updatedUser = new UpdateUserDto
         {
             FirstName = "NewFirst",
             LastName = "NewLast",
-            Email = "newemail@test.com",
             SittingHeight = 85,
             StandingHeight = 130,
             HealthRemindersFrequency = HealthRemindersFrequency.High
@@ -268,24 +275,21 @@ public class UserServiceTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.NotNull(updated);
         Assert.Equal("NewFirst", updated.FirstName);
         Assert.Equal("NewLast", updated.LastName);
-        Assert.Equal("newemail@test.com", updated.Email);
-        Assert.Equal("NEWEMAIL@TEST.COM", updated.NormalizedEmail);
         Assert.Equal(85, updated.SittingHeight);
         Assert.Equal(130, updated.StandingHeight);
     }
 
     [Fact]
-    public async Task UpdateMyInfoAsync_ShouldUpdatePassword_WhenProvided()
+    public async Task UpdateMyInfoAsync_ShouldUpdateBasicInfo()
     {
         // Arrange
-        var updatedUser = new User
+        var updatedUser = new UpdateUserDto
         {
-            FirstName = _testUser.FirstName,
-            LastName = _testUser.LastName,
-            PasswordHash = "NewPassword123!"
+            FirstName = "UpdatedFirst",
+            LastName = "UpdatedLast",
+            SittingHeight = 90,
+            StandingHeight = 135
         };
-
-        var oldPasswordHash = _testUser.PasswordHash;
 
         // Act
         var result = await _userService.UpdateMyInfoAsync(_testUser.Id, updatedUser);
@@ -294,8 +298,10 @@ public class UserServiceTests(DatabaseFixture fixture) : IAsyncLifetime
         Assert.True(result);
         var updated = await fixture.DbContext.Users.FindAsync(_testUser.Id);
         Assert.NotNull(updated);
-        Assert.NotEqual(oldPasswordHash, updated.PasswordHash);
-        Assert.NotNull(updated.PasswordHash);
+        Assert.Equal("UpdatedFirst", updated.FirstName);
+        Assert.Equal("UpdatedLast", updated.LastName);
+        Assert.Equal(90, updated.SittingHeight);
+        Assert.Equal(135, updated.StandingHeight);
     }
 
     [Fact]

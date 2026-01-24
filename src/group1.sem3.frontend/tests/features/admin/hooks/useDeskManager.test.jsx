@@ -1,5 +1,29 @@
 import { renderHook } from '@testing-library/react';
-import { test, expect } from 'vitest';
+import { test, expect, vi } from 'vitest';
+
+// Prevent real network fetches during tests
+vi.stubGlobal('fetch', vi.fn(async () => ({
+ ok: true,
+ status:200,
+ headers: { get: () => 'application/json' },
+ json: async () => ({}),
+ text: async () => '',
+})));
+vi.mock('../../../../src/features/admin/admin.services', () => ({
+ getMyCompanies: vi.fn(() => Promise.resolve([{ companyId:1 }])),
+ getRooms: vi.fn(() => Promise.resolve([])),
+ getDesksForRoom: vi.fn(() => Promise.resolve([])),
+ getReservations: vi.fn(() => Promise.resolve([])),
+ getUnadoptedDesks: vi.fn(() => Promise.resolve([])),
+ getSimulatorSettings: vi.fn(() => Promise.resolve({ simulatorLink: null })),
+ adoptDesk: vi.fn(),
+ unadoptDesk: vi.fn(),
+ updateSimulatorSettings: vi.fn(),
+ deleteRoom: vi.fn(),
+ createRoom: vi.fn(),
+ updateRoom: vi.fn(),
+ deleteReservation: vi.fn(),
+}));
 import { useDesksManagerPage } from '../../../../src/features/admin/hooks/useDeskManager';
 
 test('smoke test for useDeskManager existence', () => {

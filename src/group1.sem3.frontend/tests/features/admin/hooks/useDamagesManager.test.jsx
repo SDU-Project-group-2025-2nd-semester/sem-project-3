@@ -1,5 +1,14 @@
-import { renderHook, act } from '@testing-library/react';
-import { vi } from 'vitest';
+import { renderHook } from '@testing-library/react';
+
+// Prevent real network fetches during tests
+vi.stubGlobal('fetch', vi.fn(async () => ({
+ ok: true,
+ status:200,
+ headers: { get: () => 'application/json' },
+ json: async () => ({}),
+ text: async () => '',
+})));
+
 
 import { useDamagesManager } from '../../../../src/features/admin/hooks/useDamagesManager';
 
@@ -25,3 +34,4 @@ test('exposes handler functions', () => {
  expect(typeof result.current.handleResolveIssue).toBe('function');
  expect(typeof result.current.handleRemoveDamage).toBe('function');
 });
+
