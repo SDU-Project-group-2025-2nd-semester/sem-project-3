@@ -1962,17 +1962,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             }
           },
@@ -2060,17 +2060,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             }
           },
@@ -2516,6 +2516,10 @@
           }
         }
       },
+      "NullableOfHealthRemindersFrequency": {
+        "type": "integer",
+        "nullable": true
+      },
       "OpeningHours": {
         "type": "object",
         "properties": {
@@ -2743,11 +2747,34 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
-          },
-          "deskId": {
+          }
+        }
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "maxLength": 100,
             "type": "string",
-            "format": "uuid",
             "nullable": true
+          },
+          "lastName": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "standingHeight": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sittingHeight": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "healthRemindersFrequency": {
+            "$ref": "#/components/schemas/NullableOfHealthRemindersFrequency"
           }
         }
       },
