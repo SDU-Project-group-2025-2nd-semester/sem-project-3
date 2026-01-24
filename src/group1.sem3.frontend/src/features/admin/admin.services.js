@@ -74,7 +74,7 @@ export async function adoptDesk(companyId, macAddress, rpiMacAddress, roomId) {
 }
 
 export async function unadoptDesk(companyId, deskId) {
- return del(`/${companyId}/Desks/${deskId}`);
+ return del(`/${companyId}/Desks/unadopt/${deskId}`);
 }
 
 export async function getUnadoptedDesks(companyId) {
