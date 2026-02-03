@@ -1,8 +1,8 @@
 ## Desk Simulator 
 
-- **Company based - every company will have its own simulator with a link and an api key.** (in progress)
+- **Company based - every company will have its own simulator with a link and an api key.**
 
-## 🌐 Deployment Links
+## 🌐 Deployment Links (currently down as the project period ended)
 
 ### Frontend
 - **Production (Main)**: https://s3-fe-main.michalvalko.eu/
